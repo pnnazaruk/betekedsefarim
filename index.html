@@ -20,6 +20,7 @@
         /* Slidery */
         .slider-wrapper { padding: 10px 0; }
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
+        #hebYearSlider { direction: rtl; }
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
         
         /* Listy miast */
@@ -177,6 +178,11 @@
             return cell.f ? cell.f : (cell.v !== null && cell.v !== undefined ? String(cell.v) : "");
         }
 
+        function isUnknownCity(val) {
+            var v = val.trim();
+            return !v || v === "---" || v === "-";
+        }
+
         function updateInlineCounter(count) {
             document.getElementById('inlineCounter').innerText = count;
         }
@@ -185,11 +191,6 @@
         
         function updateHebYearLabel(val) {
             document.getElementById('hebYearVal').innerText = numberToHebrewYear(val);
-        }
-
-        function isUnknownCity(val) {
-            var v = val.trim();
-            return !v || v === "---" || v === "-";
         }
 
         function populateFacets() {
@@ -211,11 +212,9 @@
                 }
             });
 
-            // Lista PL
-            var sortedPL = Object.keys(citiesPL).sort(function(a,b){return a.localeCompare(b, 'pl')});
             var listPL = document.getElementById('cityListPL');
-            listPL.innerHTML = '<li class="city-item" onclick="filterCity(null, \'PL\')">Wszystkie / All</li>';
-            sortedPL.forEach(function(city) {
+            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null, \'PL\')">Wszystkie / All</li>';
+            Object.keys(citiesPL).sort((a,b) => a.localeCompare(b, 'pl')).forEach(city => {
                 var li = document.createElement('li');
                 li.className = 'city-item';
                 li.onclick = function() { filterCity(city, 'PL'); };
@@ -230,11 +229,9 @@
                 listPL.appendChild(liU);
             }
 
-            // Lista HE
-            var sortedHE = Object.keys(citiesHE).sort(function(a,b){return a.localeCompare(b, 'he')});
             var listHE = document.getElementById('cityListHE');
-            listHE.innerHTML = '<li class="city-item heb" onclick="filterCity(null, \'HE\')">הכל</li>';
-            sortedHE.forEach(function(city) {
+            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null, \'HE\')">הכל</li>';
+            Object.keys(citiesHE).sort((a,b) => a.localeCompare(b, 'he')).forEach(city => {
                 var li = document.createElement('li');
                 li.className = 'city-item heb';
                 li.onclick = function() { filterCity(city, 'HE'); };
@@ -276,26 +273,20 @@
 
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                var rowCityPL = getVal(r.c[7]);
-                var rowCityHE = getVal(r.c[22]) || rowCityPL;
+                var rowCityPL = getVal(r.c[7]).trim();
+                var rowCityHE = (getVal(r.c[22]) || rowCityPL).trim();
 
                 var matchText = r.c.some(function(cell) { return cell && getVal(cell).toLowerCase().indexOf(term) > -1; });
                 var matchYear = rowYear <= maxYear;
                 var matchHebYear = rowHebYear <= maxHebYear;
                 
                 var matchCity = true;
-                if (activeCityPL) {
-                   if (activeCityPL === "_UNKNOWN_ID_") {
-                       matchCity = isUnknownCity(rowCityPL);
-                   } else {
-                       matchCity = (rowCityPL.trim() === activeCityPL);
-                   }
+                if (activeCityPL === "_UNKNOWN_ID_" || activeCityHE === "_UNKNOWN_ID_") {
+                    matchCity = isUnknownCity(rowCityPL);
+                } else if (activeCityPL) {
+                    matchCity = (rowCityPL === activeCityPL);
                 } else if (activeCityHE) {
-                   if (activeCityHE === "_UNKNOWN_ID_") {
-                       matchCity = isUnknownCity(rowCityPL);
-                   } else {
-                       matchCity = ((getVal(r.c[22]) || rowCityPL).trim() === activeCityHE);
-                   }
+                    matchCity = (rowCityHE === activeCityHE);
                 }
 
                 return matchText && matchYear && matchHebYear && matchCity;
