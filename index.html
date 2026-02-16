@@ -45,20 +45,27 @@
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         
         .search-wrapper { position: relative; width: 100%; }
-        
-        /* ZMIENIONA RAMKA WYSZUKIWARKI (ZMNIEJSZONA DO 1PX) */
         #search { 
             width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; 
             border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
         }
-        
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
         
+        /* MODYFIKACJA KLAWIATURY */
+        .keyboard { 
+            display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; 
+            padding: 10px 0; border-top: 0; dir: rtl; margin-bottom: 10px; 
+        }
+        .key { 
+            background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; 
+            text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px;
+            transition: background 0.2s ease;
+        }
+        .key:hover { background: #f0f0f0; }
+
         .sort-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
         .sort-container { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; flex: 1; min-width: 180px; }
         .sort-container.heb { flex-direction: row-reverse; font-family: "SBL Hebrew", serif; font-size: 14px; }
-        
-        /* Ramka sortowania (referencyjna) */
         select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
 
         #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; width: 100%; box-sizing: border-box; background: #fff; position: relative; scroll-behavior: smooth; }
@@ -73,7 +80,6 @@
         .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .column-he { font-size: 16px; color: #222; text-align: right; dir: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
 
-        /* MODAL */
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 30px; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; font-weight: bold; border: none; background: none; line-height: 1; }
@@ -88,8 +94,6 @@
 
         #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
-        .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; background: #f0f0f0; padding: 10px; border: 1px solid #1a1a1a; dir: rtl; margin-bottom: 10px; }
-        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; }
     </style></head><body>
 
     <header id="main-header">
@@ -366,8 +370,7 @@
 
         function numberToHebrewYear(num) {
             var n = parseInt(num); if (n > 5000) n -= 5000;
-            var heb = "";
-            var v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+            var heb = "", v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
             var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
             for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
