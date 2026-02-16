@@ -138,14 +138,19 @@
                 <div class="sort-wrapper">
                     <div class="sort-container"><span>Sortuj wg / Sort by:</span>
                         <select id="sortSelectPL" onchange="updateSort('PL')">
-                            <option value="none">Default</option><option value="title">Tytuł</option>
-                            <option value="author">Autor</option><option value="year">Rok</option>
+                            <option value="none">Default</option>
+                            <option value="title">Tytuł (A-Z)</option>
+                            <option value="author">Autor (A-Z)</option>
+                            <option value="year_asc">Rok (Rosnąco)</option>
+                            <option value="year_desc">Rok (Malejąco)</option>
                         </select>
                     </div>
                     <div class="sort-container heb"><span>:מיין לפי</span>
                         <select id="sortSelectHE" onchange="updateSort('HE')">
-                            <option value="none">סדר מקורי</option><option value="title_he">כותרת</option>
-                            <option value="year_he">שנה</option>
+                            <option value="none">סדר מקורי</option>
+                            <option value="title_he">כותרת</option>
+                            <option value="year_asc_he">שנה (מהישן לחדש)</option>
+                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
                         </select>
                     </div>
                 </div>
@@ -264,17 +269,29 @@
                 if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                return matchText && matchYear && matchHebYear && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
+                return matchText && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
-               if(sortVal === 'title') filtered.sort((a,b) => getVal(a.c[1]).localeCompare(getVal(b.c[1]), 'pl'));
-               if(sortVal === 'author') filtered.sort((a,b) => getVal(a.c[3]).localeCompare(getVal(b.c[3]), 'pl'));
-               if(sortVal === 'place') filtered.sort((a,b) => getVal(a.c[7]).localeCompare(getVal(b.c[7]), 'pl'));
-               if(sortVal === 'year') filtered.sort((a,b) => (parseInt(getVal(a.c[5]).replace(/\D/g,'')) || 0) - (parseInt(getVal(b.c[5]).replace(/\D/g,'')) || 0));
-               if(sortVal === 'title_he') filtered.sort((a,b) => getVal(a.c[2]).localeCompare(getVal(b.c[2]), 'he'));
-               if(sortVal === 'year_he') filtered.sort((a,b) => hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6])));
+               filtered.sort((a, b) => {
+                    // Logika sortowania chronologicznego
+                    if (sortVal.includes("year")) {
+                        var vA, vB;
+                        if (sortVal.includes("_he")) {
+                            vA = hebrewYearToNumber(getVal(a.c[6]));
+                            vB = hebrewYearToNumber(getVal(b.c[6]));
+                        } else {
+                            vA = parseInt(getVal(a.c[5]).replace(/\D/g,'')) || 0;
+                            vB = parseInt(getVal(b.c[5]).replace(/\D/g,'')) || 0;
+                        }
+                        return sortVal.includes("desc") ? vB - vA : vA - vB;
+                    }
+                    
+                    // Sortowanie alfabetyczne
+                    var i = (sortVal==='title'||sortVal==='title_he')?1:(sortVal==='author')?3:1;
+                    return getVal(a.c[i]).localeCompare(getVal(b.c[i]), (sortVal.includes('_he')?'he':'pl'), {numeric:true});
+                });
             }
             render(filtered);
         }
@@ -341,4 +358,3 @@
         function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
         init();
     </script></body></html>
-
