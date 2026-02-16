@@ -1,88 +1,110 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
+<!DOCTYPE html><html lang="pl"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title> Library of Yeshivas Chachmei Lublin </title>
         <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <style>
+        /* Twoje oryginalne style */
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
-        body { display: flex; flex-direction: row; } /* Zmiana na rzędy dla paska bocznego */
-
-        /* PASEK BOCZNY */
+        body { display: flex; flex-direction: row; } /* Zmieniono na row dla paska bocznego */
+        
+        /* Styl Paska Bocznego */
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
             padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
         }
-        .facet-title { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #1a1a1a; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; display: block; }
+        .facet-section { display: flex; flex-direction: column; gap: 10px; }
+        .facet-title { font-size: 11px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .facet-title.heb { font-family: "SBL Hebrew", serif; text-align: right; font-size: 14px; text-transform: none; }
         
-        /* FILTR LAT */
-        .range-container { padding: 0 10px; }
-        #yearRange { width: 100%; margin: 10px 0; accent-color: #1a1a1a; }
-        .range-labels { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
-
-        /* LISTA MIAST */
-        .city-list { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
-        .city-item { 
-            font-size: 13px; padding: 6px 8px; cursor: pointer; display: flex; justify-content: space-between; 
-            transition: background 0.2s; border-bottom: 1px solid #eee;
-        }
-        .city-item:hover { background: #eee; }
+        /* Slidery */
+        .slider-wrapper { padding: 10px 0; }
+        input[type=range] { width: 100%; accent-color: #1a1a1a; }
+        .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
+        
+        /* Listy miast */
+        .city-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; border: 1px solid #eee; background: #fff; }
+        .city-item { font-size: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
+        .city-item:hover { background: #f0f0f0; }
         .city-item.active { background: #1a1a1a; color: #fff; }
-        .city-count { font-size: 10px; opacity: 0.6; font-weight: bold; }
+        .city-item.heb { font-family: "SBL Hebrew", serif; flex-direction: row-reverse; text-align: right; font-size: 14px; }
+        .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
+        .active .count-pill { background: #444; color: #fff; }
 
-        /* GŁÓWNA TREŚĆ */
-        #main { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; }
-        .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+        /* Reszta Twoich oryginalnych stylów */
+        #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         .search-wrapper { position: relative; width: 100%; }
-        #search { width: 100%; padding: 15px 60px 15px 15px; border: 2px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; }
+        #search { width: 100%; padding: 15px 60px 15px 15px; border: 2px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
-        #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px; background: #fff; position: relative; scroll-behavior: smooth; }
-
-        /* KARTY REKORDÓW */
-        .item-card { border: 2px solid #1a1a1a; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; transition: 0.2s; }
-        .item-card:hover { background: #fcfcfc; box-shadow: 4px 4px 0px rgba(0,0,0,1); transform: translate(-2px, -2px); }
-        .item-content { padding: 18px; cursor: pointer; }
-        .row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
-        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; }
-        .title-heb { font-size: 19px; text-align: right; font-family: "SBL Hebrew", serif; }
-        .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; font-size: 14px; }
-        .column-he { font-family: "SBL Hebrew", serif; text-align: right; font-size: 16px; }
-        .details-label-wrapper { display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 8px; font-size: 11px; font-weight: bold; color: #999; }
-        .item-details { display: none; padding: 20px; background: #f9f9f9; border-top: 2px solid #1a1a1a; }
-        .details-container { display: flex; gap: 20px; flex-wrap: wrap; }
-        .details-image img { width: 150px; border: 1px solid #1a1a1a; }
-        .detail-box { border-bottom: 1px solid #eee; padding-bottom: 4px; margin-bottom: 10px; }
-        .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; }
-        .link-btn { display: inline-block; background: #1a1a1a; color: #fff; padding: 6px 12px; font-size: 10px; text-decoration: none; margin-top: 5px; }
-
-        .kb-toggle { font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; color: #555; }
+        #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; width: 100%; box-sizing: border-box; background: #fff; position: relative; scroll-behavior: smooth; }
+        .sort-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
+        .sort-container { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; flex: 1; min-width: 180px; }
+        .sort-container.heb { flex-direction: row-reverse; font-family: "SBL Hebrew", serif; font-size: 14px; }
+        select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
+        .kb-toggle { font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px; }
         .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; background: #f0f0f0; padding: 10px; border: 2px solid #1a1a1a; dir: rtl; margin-bottom: 10px; }
-        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; }
-        
-        #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
+        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; }
+        .key:hover { background: #e0e0e0; }
+        .key.backspace { grid-column: span 2; font-size: 12px; font-family: sans-serif; }
+        .item-card { border: 1px solid #eee; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; transition: all 0.2s ease; }
+        .item-card:hover { background: #fcfcfc; border-color: #1a1a1a; }
+        .item-content { padding: 18px; position: relative; cursor: pointer; }
+        .row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; flex: 1; }
+        .title-heb { font-size: 19px; color: #1a1a1a; text-align: right; dir: rtl; flex: 1; font-family: "SBL Hebrew", serif; }
+        .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 20px; }
+        .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .column-he { font-size: 16px; color: #222; text-align: right; dir: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
+        .meta-info { font-size: 13px; color: #666; display: block; line-height: 1.6; }
+        .details-label-wrapper { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 8px; }
+        .details-label { font-size: 11px; color: #999; text-transform: uppercase; font-weight: bold; }
+        .arrow { font-family: "SBL Hebrew", serif; font-size: 13px; }
+        .item-details { display: none; padding: 20px; background: #f9f9f9; border-top: 1px solid #1a1a1a; width: 100%; box-sizing: border-box; }
+        .details-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .details-image { flex: 0 0 150px; max-width: 150px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
+        .details-image img { width: 100%; height: auto; border: 1px solid #1a1a1a; background: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .details-data { flex: 1; min-width: 250px; }
+        .details-header { font-size: 11px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #1a1a1a; display: block; margin-bottom: 10px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .detail-box { border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; }
+        .value { font-size: 14px; word-break: break-word; }
+        .link-btn { display: inline-block; background: #1a1a1a; color: #fff; padding: 6px 12px; font-size: 10px; text-decoration: none; margin-top: 5px; cursor: pointer; border: none; }
+        .link-btn:hover { background: #444; }
+        #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
-    </style>
-</head>
-<body>
+    </style></head><body>
+
     <div id="sidebar">
-        <div>
-            <span class="facet-title">Rok wydania / Year</span>
-            <div class="range-container">
-                <div class="range-labels"><span id="minLabel">1500</span><span id="maxLabel">1939</span></div>
-                <input type="range" id="yearRange" min="1500" max="1939" value="1939" oninput="filterAndSort()">
-                <div style="font-size: 10px; color: #666; text-align: center;">Przesuń, aby ustawić rok maksymalny</div>
+        <div class="facet-section">
+            <span class="facet-title">Rok / Year (1500-1939)</span>
+            <div class="slider-wrapper">
+                <input type="range" id="yearSlider" min="1500" max="1939" value="1939" oninput="updateYearLabel(this.value); filterAndSort();">
+                <div class="slider-val"><span>1500</span><span id="yearVal">1939</span></div>
             </div>
         </div>
 
-        <div>
-            <span class="facet-title">Miasto / City</span>
-            <ul id="cityFacet" class="city-list">
-                </ul>
+        <div class="facet-section">
+            <span class="facet-title heb">שנה (ש"ק - ת"ש)</span>
+            <div class="slider-wrapper">
+                <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
+                <div class="slider-val"><span>ש"ק</span><span id="hebYearVal">ת"ש</span></div>
+            </div>
+        </div>
+
+        <div class="facet-section">
+            <span class="facet-title">Miasto / City (A-Z)</span>
+            <ul id="cityListPL" class="city-list"></ul>
+        </div>
+
+        <div class="facet-section">
+            <span class="facet-title heb">עיר (א-ת)</span>
+            <ul id="cityListHE" class="city-list"></ul>
         </div>
     </div>
 
-    <div id="main">
+    <div id="main-content">
         <div class="controls">
             <div class="search-wrapper">
                 <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
@@ -90,25 +112,49 @@
             </div>
             <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת עברית</span>
             <div id="keyboard" class="keyboard">
+                <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
+                <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
+                <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key backspace" onclick="delChar()">← DEL</div>
+                <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
+                <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
+                <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
+                <div class="key" onclick="addChar('ז')">ז</div><div class="key" onclick="addChar('ס')">ס</div><div class="key" onclick="addChar('ב')">ב</div>
+                <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
+                <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
+            </div>
+            <div class="sort-wrapper">
+                <div class="sort-container">
+                    <span>Sortuj wg / Sort by:</span>
+                    <select id="sortSelectPL" onchange="updateSort('PL')">
+                        <option value="none">Oryginalna kolejność / Default</option>
+                        <option value="title">Tytuł / Title</option>
+                        <option value="author">Autor / Author</option>
+                        <option value="place">Miejsce / Place</option>
+                        <option value="year">Rok / Year</option>
+                    </select>
                 </div>
-            <div style="display:flex; gap:10px;">
-                <select id="sortSelectPL" onchange="updateSort('PL')" style="padding:8px; border:1px solid #1a1a1a; flex:1;">
-                    <option value="none">Sortuj / Sort</option>
-                    <option value="title">Tytuł / Title</option>
-                    <option value="year">Rok / Year</option>
-                </select>
+                <div class="sort-container heb">
+                    <span>:מיין לפי</span>
+                    <select id="sortSelectHE" onchange="updateSort('HE')">
+                        <option value="none">סדר מקורי</option>
+                        <option value="title_he">כותרת</option>
+                        <option value="author_he">מחבר</option>
+                        <option value="place_he">מקום הוצאה</option>
+                        <option value="year_he">שנה</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div id="loader">Wczytywanie / Loading...</div>
+        <button id="backToTop" onclick="scrollToTop()">↑</button>
         <div id="container" onscroll="handleScroll()"></div>
     </div>
-
-    <button id="backToTop" onclick="scrollToTop()">↑</button>
 
     <script>
         var rawRows = [];
         var colLabels = [];
-        var selectedCity = null;
+        var activeCityPL = null;
+        var activeCityHE = null;
         var sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         var url = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json';
 
@@ -120,111 +166,187 @@
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
                 
-                generateCityFacets();
-                filterAndSort();
-                
+                populateFacets();
+                render(rawRows);
                 document.getElementById('loader').style.display = 'none';
-            } catch (e) { console.error(e); }
+            } catch (e) { document.getElementById('loader').innerHTML = "Błąd / שגיאה"; }
         }
 
-        function getVal(r, i) {
-            if (!r || !r.c || !r.c[i]) return "";
-            return r.c[i].f ? r.c[i].f : (r.c[i].v !== null ? String(r.c[i].v) : "");
+        function getVal(cell) {
+            if (!cell) return "";
+            return cell.f ? cell.f : (cell.v !== null && cell.v !== undefined ? String(cell.v) : "");
         }
 
-        function generateCityFacets() {
-            var cityCounts = {};
-            rawRows.forEach(r => {
-                var city = getVal(r, 7).trim(); // Kolumna H (indeks 7)
-                if (city && city !== "---") {
-                    cityCounts[city] = (cityCounts[city] || 0) + 1;
-                }
+        function updateInlineCounter(count) {
+            document.getElementById('inlineCounter').innerText = count;
+        }
+
+        function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
+        
+        function updateHebYearLabel(val) {
+            document.getElementById('hebYearVal').innerText = numberToHebrewYear(val);
+        }
+
+        function populateFacets() {
+            var citiesPL = {};
+            var citiesHE = {};
+
+            rawRows.forEach(function(r) {
+                var cPL = getVal(r.c[7]);
+                var cHE = getVal(r.c[22]) || cPL;
+                if(cPL && cPL !== "---") citiesPL[cPL] = (citiesPL[cPL] || 0) + 1;
+                if(cHE && cHE !== "---") citiesHE[cHE] = (citiesHE[cHE] || 0) + 1;
             });
 
-            var sortedCities = Object.keys(cityCounts).sort();
-            var list = document.getElementById('cityFacet');
-            list.innerHTML = `<li class="city-item active" onclick="selectCity(null, this)">Wszystkie / All</li>`;
+            // Lista PL
+            var sortedPL = Object.keys(citiesPL).sort(function(a,b){return a.localeCompare(b, 'pl')});
+            var listPL = document.getElementById('cityListPL');
+            listPL.innerHTML = '<li class="city-item" onclick="filterCity(null, \'PL\')">Wszystkie / All</li>';
+            sortedPL.forEach(function(city) {
+                listPL.innerHTML += `<li class="city-item" onclick="filterCity('${city}', 'PL')"><span>${city}</span><span class="count-pill">${citiesPL[city]}</span></li>`;
+            });
+
+            // Lista HE
+            var sortedHE = Object.keys(citiesHE).sort(function(a,b){return a.localeCompare(b, 'he')});
+            var listHE = document.getElementById('cityListHE');
+            listHE.innerHTML = '<li class="city-item heb" onclick="filterCity(null, \'HE\')">הכל</li>';
+            sortedHE.forEach(function(city) {
+                listHE.innerHTML += `<li class="city-item heb" onclick="filterCity('${city}', 'HE')"><span>${city}</span><span class="count-pill">${citiesHE[city]}</span></li>`;
+            });
+        }
+
+        function filterCity(city, lang) {
+            if(lang === 'PL') { activeCityPL = city; activeCityHE = null; }
+            else { activeCityHE = city; activeCityPL = null; }
             
-            sortedCities.forEach(city => {
-                var li = document.createElement('li');
-                li.className = 'city-item';
-                li.innerHTML = `<span>${city}</span><span class="city-count">${cityCounts[city]}</span>`;
-                li.onclick = function() { selectCity(city, this); };
-                list.appendChild(li);
-            });
-        }
-
-        function selectCity(city, el) {
-            selectedCity = city;
-            document.querySelectorAll('.city-item').forEach(li => li.classList.remove('active'));
-            el.classList.add('active');
+            document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
             filterAndSort();
         }
 
         function filterAndSort() {
-            var term = document.getElementById('search').value.toLowerCase();
-            var maxYear = parseInt(document.getElementById('yearRange').value);
-            document.getElementById('maxLabel').innerText = maxYear;
+            var term = document.getElementById('search').value.toLowerCase().trim();
+            var maxYear = parseInt(document.getElementById('yearSlider').value);
+            var maxHebYear = parseInt(document.getElementById('hebYearSlider').value);
+            var sPL = document.getElementById('sortSelectPL').value;
+            var sHE = document.getElementById('sortSelectHE').value;
 
-            var filtered = rawRows.filter(r => {
+            var filtered = rawRows.filter(function(r) { 
                 if (!r || !r.c || !r.c[1]) return false;
                 
-                var year = parseInt(getVal(r, 5).replace(/\\D/g, '')) || 0;
-                var city = getVal(r, 7).trim();
-                var textMatch = r.c.some(c => c && String(c.v).toLowerCase().includes(term));
-                
-                var yearMatch = (year === 0 || year <= maxYear);
-                var cityMatch = !selectedCity || city === selectedCity;
+                var rowYear = parseInt(getVal(r.c[5]).replace(/\D/g, '')) || 0;
+                var rowHebYear = hebrewYearToNumber(getVal(r.c[6]));
+                var rowCityPL = getVal(r.c[7]);
+                var rowCityHE = getVal(r.c[22]) || rowCityPL;
 
-                return textMatch && yearMatch && cityMatch;
+                var matchText = r.c.some(function(cell) { return cell && getVal(cell).toLowerCase().indexOf(term) > -1; });
+                var matchYear = rowYear === 0 || rowYear <= maxYear;
+                var matchHebYear = rowHebYear === 999999 || rowHebYear <= maxHebYear;
+                var matchCity = true;
+                if(activeCityPL) matchCity = (rowCityPL === activeCityPL);
+                if(activeCityHE) matchCity = (rowCityHE === activeCityHE);
+
+                return matchText && matchYear && matchHebYear && matchCity;
             });
 
-            document.getElementById('inlineCounter').innerText = filtered.length;
+            updateInlineCounter(filtered.length);
+            
+            var sortVal = sPL !== "none" ? sPL : sHE;
+            if(sortVal !== "none") {
+                filtered.sort(function(a, b) {
+                    if (sortVal === "year_he") return hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6]));
+                    var i = 1; if(sortVal === "author") i = 3; if(sortVal === "place") i = 7; if(sortVal === "year") i = 5;
+                    if(sortVal === "title_he") i = 2; if(sortVal === "author_he") i = 4; if(sortVal === "place_he") i = 22;
+                    var norm = function(cell) { 
+                        var val = getVal(cell);
+                        if (!val || val === "---" || val === "-") return null;
+                        return val.toLowerCase().split("[").join("").split("]").join("").trim();
+                    };
+                    var vA = norm(a.c[i]), vB = norm(b.c[i]);
+                    if (vA === null && vB === null) return 0;
+                    if (vA === null) return 1;
+                    if (vB === null) return -1;
+                    return vA.localeCompare(vB, (sortVal.indexOf("_he") > -1) ? "he" : "pl", { numeric: true, sensitivity: "base" });
+                });
+            }
             render(filtered);
         }
 
         function render(rows) {
             var container = document.getElementById('container');
             container.innerHTML = "";
-            rows.forEach(r => {
-                var card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <div class="item-content" onclick="toggleDetails(this)">
-                        <div class="row-flex">
-                            <span class="title-pl">${getVal(r, 1)}</span>
-                            <span class="title-heb">${getVal(r, 2)}</span>
-                        </div>
+            rows.forEach(function(r) {
+                if(!r || !r.c || !r.c[1]) return;
+                var tPl = getVal(r.c[1]) || "---";
+                var tHe = getVal(r.c[2]);
+                var aPl = getVal(r.c[3]) || "---";
+                var aHe = getVal(r.c[4]);
+                var rok = getVal(r.c[5]) || "-";
+                var rokHe = getVal(r.c[6]);
+                var mie = getVal(r.c[7]) || "-";
+                var mieHe = getVal(r.c[22]) || mie;
+                var pageUrl = (r.c[16] && getVal(r.c[16]).indexOf('http') === 0) ? getVal(r.c[16]) : null;
+                var imgUrl = (r.c[23] && getVal(r.c[23]).indexOf('http') === 0) ? getVal(r.c[23]) : null;
+                var cardWrapper = document.createElement('div');
+                cardWrapper.className = 'item-card';
+                var detailsText = "";
+                for(var i = 0; i <= 22; i++) {
+                    if (!colLabels[i]) continue;
+                    if (i === 19 || i === 20 || i === 21 || i === 22) continue;
+                    var val = getVal(r.c[i]) || "---";
+                    if (i === 16) { detailsText += '<div class="detail-box"><span class="label">Link</span><span class="value"><a href="' + val + '" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a></span></div>'; continue; }
+                    if (i === 8 || colLabels[i].label.toLowerCase().indexOf("link") > -1) continue;
+                    detailsText += '<div class="detail-box"><span class="label">' + colLabels[i].label + '</span><span class="value">' + val + '</span></div>';
+                }
+                var imgHtml = imgUrl ? '<div class="details-image"><img src="' + imgUrl + '" alt="Miniatura">' + (pageUrl ? '<a href="' + pageUrl + '" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a>' : '') + '</div>' : '';
+                cardWrapper.innerHTML = `
+                    <div class="item-content" onclick="
+                        var d = this.nextElementSibling; 
+                        var isOpening = d.style.display !== 'block';
+                        d.style.display = isOpening ? 'block' : 'none';
+                        var arrows = this.querySelectorAll('.arrow');
+                        for(var j=0; j<arrows.length; j++) { arrows[j].innerHTML = isOpening ? '&uarr;' : '&darr;'; }
+                    ">
+                        <div class="row-flex"><span class="title-pl">${tPl}</span><span class="title-heb">${tHe}</span></div>
                         <div class="author-row">
-                            <span>${getVal(r, 3)} | ${getVal(r, 7)} | ${getVal(r, 5)}</span>
-                            <span class="column-he">${getVal(r, 4)} | ${getVal(r, 6)}</span>
+                          <div class="column-pl"><span>${aPl}</span><span class="meta-info">${mie}</span><span class="meta-info">${rok}</span></div>
+                          <div class="column-he"><span>${aHe}</span><span class="meta-info">${mieHe}</span><span class="meta-info">${rokHe}</span></div>
+                        </div>
+                        <div class="details-label-wrapper">
+                            <div class="details-label">SZCZEGÓŁY / DETAILS <span class="arrow">&darr;</span></div>
+                            <div class="details-label heb">פרטים <span class="arrow">&darr;</span></div>
                         </div>
                     </div>
-                    <div class="item-details">
-                        <div class="details-container">
-                            <div class="details-image"><img src="${getVal(r, 23)}"></div>
-                            <div class="details-data">
-                                <div class="detail-box"><span class="label">Sygnatura</span>${getVal(r, 0)}</div>
-                                <div class="detail-box"><span class="label">Uwagi</span>${getVal(r, 15)}</div>
-                                <a href="${getVal(r, 16)}" target="_blank" class="link-btn">ZOBACZ / SEE</a>
-                            </div>
-                        </div>
-                    </div>`;
-                container.appendChild(card);
+                    <div class="item-details"><span class="details-header">SZCZEGÓŁY</span><div class="details-container">${imgHtml}<div class="details-data"><div class="detail-grid">${detailsText}</div></div></div></div>
+                `;
+                container.appendChild(cardWrapper);
             });
+            updateInlineCounter(rows.length);
         }
 
-        function toggleDetails(el) {
-            var details = el.nextElementSibling;
-            details.style.display = details.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // Dodatkowe funkcje obsługi (scroll, keyboard itd.)
-        function scrollToTop() { document.getElementById('container').scrollTo({top: 0, behavior: 'smooth'}); }
-        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
+        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
+        function delChar() { var s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
+        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
         
+        function hebrewYearToNumber(s) { 
+            if (!s || s === "---") return 999999; 
+            var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
+            var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
+            var sum = 0; for (var i=0; i < c.length; i++) { sum += v[c[i]] || 0; } 
+            if (sum > 0 && sum < 1000) sum += 5000; return sum === 0 ? 999999 : sum; 
+        }
+
+        function numberToHebrewYear(num) {
+            if (num > 5000) num -= 5000;
+            var heb = "";
+            var v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+            var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            for(var i=0; i<v.length; i++) { while(num >= v[i]) { heb += l[i]; num -= v[i]; } }
+            return heb;
+        }
+
         init();
-    </script>
-</body>
-</html>
+    </script></body></html>
