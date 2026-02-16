@@ -18,9 +18,17 @@
 
         #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; position: relative; }
 
+        /* HAMBURGER MENU STYLE */
+        #mobile-toggle { 
+            display: none; background: #1a1a1a; color: #fff; border: none; 
+            padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
+            cursor: pointer; z-index: 3500; font-size: 13px;
+        }
+        
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
             padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
+            transition: transform 0.3s ease;
         }
 
         .facet-section { display: flex; flex-direction: column; gap: 10px; }
@@ -77,10 +85,6 @@
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
-        .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
-        .modal-img-col { flex: 0 0 200px; text-align: center; }
-        .modal-img-col img { width: 100%; border: 1px solid #1a1a1a; margin-bottom: 15px; }
-        .modal-data-col { flex: 1; min-width: 300px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
         
@@ -92,6 +96,17 @@
 
         #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
+
+        /* RESPONSIVE MEDIA QUERIES */
+        @media (max-width: 768px) {
+            #mobile-toggle { display: block; }
+            #sidebar { 
+                position: absolute; left: 0; top: 0; bottom: 0; 
+                z-index: 3000; transform: translateX(-100%); 
+                box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+            }
+            #sidebar.open { transform: translateX(0); width: 80%; }
+        }
     </style></head><body>
 
     <header id="main-header">
@@ -102,8 +117,14 @@
         </div>
     </header>
 
+    <button id="mobile-toggle" onclick="toggleSidebar()">☰ Filtry / Filters / מסננים</button>
+
     <div id="app-container">
         <aside id="sidebar">
+            <div class="facet-section" style="border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: -10px;">
+                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
+            </div>
+
             <div class="facet-section">
                 <div class="facet-header"><span class="facet-title">Rok / Year</span></div>
                 <div class="slider-wrapper">
@@ -118,10 +139,6 @@
                     <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
                     <div class="slider-val"><span>ש"ק</span><span id="hebYearVal">ת"ש</span></div>
                 </div>
-            </div>
-
-            <div class="facet-section" style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
-                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
             </div>
 
             <div class="facet-section">
@@ -241,6 +258,7 @@
             } catch (e) { console.error(e); }
         }
 
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
         function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
@@ -291,6 +309,7 @@
                     return getVal(a.c[i]).localeCompare(getVal(b.c[i]), sortVal.includes('_he')?'he':'pl');
                 });
             }
+
             updateFacetsUI(term, maxYear, maxHebYear);
             render(filtered);
         }
