@@ -277,6 +277,13 @@
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
                filtered.sort((a, b) => {
+                    // Sprawdzanie braku autora dla wypchnięcia na koniec
+                    var authorCol = sortVal.includes('_he') ? 4 : 3;
+                    var authA = getVal(a.c[authorCol]), authB = getVal(b.c[authorCol]);
+                    var isEmptyA = !authA || authA === "---", isEmptyB = !authB || authB === "---";
+                    if (isEmptyA && !isEmptyB) return 1;
+                    if (!isEmptyA && isEmptyB) return -1;
+
                     if (sortVal.includes("year")) {
                         var vA, vB;
                         if (sortVal.includes("_he")) {
@@ -347,7 +354,8 @@
 
         function numberToHebrewYear(num) {
             var n = parseInt(num); if (n > 5000) n -= 5000;
-            var heb = "", v = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            var heb = "", v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+            var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
             for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
         }
