@@ -5,8 +5,22 @@
         <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
-        body { display: flex; flex-direction: row; } 
-        
+        body { display: flex; flex-direction: column; } /* Zmieniono na column, aby pomieścić Header */
+
+        /* STYL NAGŁÓWKA */
+        #main-header {
+            flex: 0 0 auto; background: #1a1a1a; color: #fff; padding: 15px 25px;
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000;
+        }
+        .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; }
+        .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+        .header-links a { color: #fff; text-decoration: underline; }
+        .header-links a:hover { color: #ccc; }
+        .header-links .heb-link { font-family: "SBL Hebrew", serif; font-size: 16px; text-transform: none; }
+
+        /* KONTENER DLA SIDEBARA I TREŚCI */
+        #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; }
+
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
             padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
@@ -51,20 +65,10 @@
         .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .column-he { font-size: 16px; color: #222; text-align: right; dir: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
 
-        /* MODAL STYLE */
-        #modalOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000;
-        }
-        #modalWindow {
-            background: #fff; width: 90%; max-width: 800px; max-height: 90%;
-            overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            padding: 30px;
-        }
-        .close-modal {
-            position: absolute; top: 15px; right: 15px; font-size: 30px; 
-            cursor: pointer; font-weight: bold; border: none; background: none; line-height: 1;
-        }
+        /* MODAL */
+        #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
+        #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 30px; }
+        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; font-weight: bold; border: none; background: none; line-height: 1; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
         .modal-img-col img { width: 100%; border: 1px solid #1a1a1a; background: #fff; margin-bottom: 15px; }
@@ -73,7 +77,6 @@
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
         .value { font-size: 15px; line-height: 1.5; }
         .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 5px; }
-        .link-btn:hover { background: #444; }
 
         #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
@@ -81,67 +84,77 @@
         .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; }
     </style></head><body>
 
-    <div id="sidebar">
-        <div class="facet-section">
-            <span class="facet-title">Rok / Year (1500-1939)</span>
-            <div class="slider-wrapper">
-                <input type="range" id="yearSlider" min="1500" max="1939" value="1939" oninput="updateYearLabel(this.value); filterAndSort();">
-                <div class="slider-val"><span>1500</span><span id="yearVal">1939</span></div>
-            </div>
+    <header id="main-header">
+        <div class="header-title">בית עקד ספרים בישיבת חכmi לובלין</div>
+        <div class="header-links">
+            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
+            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About project</a>
+            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank" class="heb-link">אודות הפרויקט</a>
         </div>
-        <div class="facet-section">
-            <span class="facet-title heb">שנה (ש"ק - ת"ש)</span>
-            <div class="slider-wrapper">
-                <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
-                <div class="slider-val"><span id="hebYearVal">ת"ש</span><span>ש"ק</span></div>
-            </div>
-        </div>
-        <div class="facet-section">
-            <span class="facet-title">Miasto / City</span>
-            <ul id="cityListPL" class="city-list"></ul>
-        </div>
-        <div class="facet-section">
-            <span class="facet-title heb">עיר</span>
-            <ul id="cityListHE" class="city-list"></ul>
-        </div>
-    </div>
+    </header>
 
-    <div id="main-content">
-        <div class="controls">
-            <div class="search-wrapper">
-                <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
-                <div id="inlineCounter"></div>
-            </div>
-            <span class="kb-toggle" onclick="toggleKeyboard()" style="font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px;">Klawiatura hebrajska / מקלדת עברית</span>
-            <div id="keyboard" class="keyboard">
-                <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
-                <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
-                <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key" onclick="delChar()">←</div>
-                <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
-                <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
-                <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
-                <div class="key" onclick="addChar('ז')">ז</div><div class="key" onclick="addChar('ס')">ס</div><div class="key" onclick="addChar('ב')">ב</div>
-                <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
-                <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
-            </div>
-            <div class="sort-wrapper">
-                <div class="sort-container"><span>Sortuj wg / Sort by:</span>
-                    <select id="sortSelectPL" onchange="updateSort('PL')">
-                        <option value="none">Default</option><option value="title">Tytuł</option>
-                        <option value="author">Autor</option><option value="year">Rok</option>
-                    </select>
+    <div id="app-container">
+        <div id="sidebar">
+            <div class="facet-section">
+                <span class="facet-title">Rok / Year (1500-1939)</span>
+                <div class="slider-wrapper">
+                    <input type="range" id="yearSlider" min="1500" max="1939" value="1939" oninput="updateYearLabel(this.value); filterAndSort();">
+                    <div class="slider-val"><span>1500</span><span id="yearVal">1939</span></div>
                 </div>
-                <div class="sort-container heb"><span>:מיין לפי</span>
-                    <select id="sortSelectHE" onchange="updateSort('HE')">
-                        <option value="none">סדר מקורי</option><option value="title_he">כותרת</option>
-                        <option value="year_he">שנה</option>
-                    </select>
+            </div>
+            <div class="facet-section">
+                <span class="facet-title heb">שנה (ש"ק - ת"ש)</span>
+                <div class="slider-wrapper">
+                    <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
+                    <div class="slider-val"><span id="hebYearVal">ת"ש</span><span>ש"ק</span></div>
                 </div>
+            </div>
+            <div class="facet-section">
+                <span class="facet-title">Miasto / City</span>
+                <ul id="cityListPL" class="city-list"></ul>
+            </div>
+            <div class="facet-section">
+                <span class="facet-title heb">עיר</span>
+                <ul id="cityListHE" class="city-list"></ul>
             </div>
         </div>
-        <div id="loader">Wczytywanie / Loading...</div>
-        <button id="backToTop" onclick="scrollToTop()">↑</button>
-        <div id="container" onscroll="handleScroll()"></div>
+
+        <div id="main-content">
+            <div class="controls">
+                <div class="search-wrapper">
+                    <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
+                    <div id="inlineCounter"></div>
+                </div>
+                <span class="kb-toggle" onclick="toggleKeyboard()" style="font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px;">Klawiatura hebrajska / מקלדת עברית</span>
+                <div id="keyboard" class="keyboard">
+                    <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
+                    <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
+                    <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key" onclick="delChar()">←</div>
+                    <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
+                    <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
+                    <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
+                    <div class="key" onclick="addChar('ז')">ז</div><div class="key" onclick="addChar('ס')">ס</div><div class="key" onclick="addChar('ב')">ב</div>
+                    <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
+                    <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
+                </div>
+                <div class="sort-wrapper">
+                    <div class="sort-container"><span>Sortuj wg / Sort by:</span>
+                        <select id="sortSelectPL" onchange="updateSort('PL')">
+                            <option value="none">Default</option><option value="title">Tytuł</option>
+                            <option value="author">Autor</option><option value="year">Rok</option>
+                        </select>
+                    </div>
+                    <div class="sort-container heb"><span>:מיין לפי</span>
+                        <select id="sortSelectHE" onchange="updateSort('HE')">
+                            <option value="none">סדר מקורי</option><option value="title_he">כותרת</option>
+                            <option value="year_he">שנה</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="loader">Wczytywanie / Loading...</div>
+            <div id="container" onscroll="handleScroll()"></div>
+        </div>
     </div>
 
     <div id="modalOverlay" onclick="closeModal(event)">
@@ -291,7 +304,7 @@
         }
 
         window.onkeydown = function(e) { if(e.key === "Escape") document.getElementById('modalOverlay').style.display = 'none'; };
-        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
         function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
