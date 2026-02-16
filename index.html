@@ -198,20 +198,26 @@
                 if(cHE && cHE !== "---") citiesHE[cHE] = (citiesHE[cHE] || 0) + 1;
             });
 
-            // Lista PL
             var sortedPL = Object.keys(citiesPL).sort(function(a,b){return a.localeCompare(b, 'pl')});
             var listPL = document.getElementById('cityListPL');
             listPL.innerHTML = '<li class="city-item" onclick="filterCity(null, \'PL\')">Wszystkie / All</li>';
             sortedPL.forEach(function(city) {
-                listPL.innerHTML += `<li class="city-item" onclick="filterCity('${city}', 'PL')"><span>${city}</span><span class="count-pill">${citiesPL[city]}</span></li>`;
+                var li = document.createElement('li');
+                li.className = 'city-item';
+                li.onclick = function() { filterCity(city, 'PL'); };
+                li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesPL[city]}</span>`;
+                listPL.appendChild(li);
             });
 
-            // Lista HE
             var sortedHE = Object.keys(citiesHE).sort(function(a,b){return a.localeCompare(b, 'he')});
             var listHE = document.getElementById('cityListHE');
             listHE.innerHTML = '<li class="city-item heb" onclick="filterCity(null, \'HE\')">הכל</li>';
             sortedHE.forEach(function(city) {
-                listHE.innerHTML += `<li class="city-item heb" onclick="filterCity('${city}', 'HE')"><span>${city}</span><span class="count-pill">${citiesHE[city]}</span></li>`;
+                var li = document.createElement('li');
+                li.className = 'city-item heb';
+                li.onclick = function() { filterCity(city, 'HE'); };
+                li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesHE[city]}</span>`;
+                listHE.appendChild(li);
             });
         }
 
@@ -234,14 +240,20 @@
             var filtered = rawRows.filter(function(r) { 
                 if (!r || !r.c || !r.c[1]) return false;
                 
-                var rowYear = parseInt(getVal(r.c[5]).replace(/\D/g, '')) || 0;
-                var rowHebYear = hebrewYearToNumber(getVal(r.c[6]));
+                var yearRaw = getVal(r.c[5]);
+                var hebYearRaw = getVal(r.c[6]);
+                
+                // Ignoruj książki bez daty w filtrach suwaków
+                if (yearRaw === "---" || yearRaw === "" || hebYearRaw === "---" || hebYearRaw === "") return false;
+
+                var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
+                var rowHebYear = hebrewYearToNumber(hebYearRaw);
                 var rowCityPL = getVal(r.c[7]);
                 var rowCityHE = getVal(r.c[22]) || rowCityPL;
 
                 var matchText = r.c.some(function(cell) { return cell && getVal(cell).toLowerCase().indexOf(term) > -1; });
-                var matchYear = rowYear === 0 || rowYear <= maxYear;
-                var matchHebYear = rowHebYear === 999999 || rowHebYear <= maxHebYear;
+                var matchYear = rowYear <= maxYear;
+                var matchHebYear = rowHebYear <= maxHebYear;
                 var matchCity = true;
                 if(activeCityPL) matchCity = (rowCityPL === activeCityPL);
                 if(activeCityHE) matchCity = (rowCityHE === activeCityHE);
@@ -340,11 +352,12 @@
         }
 
         function numberToHebrewYear(num) {
-            if (num > 5000) num -= 5000;
+            var n = num;
+            if (n > 5000) n -= 5000;
             var heb = "";
             var v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
             var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
-            for(var i=0; i<v.length; i++) { while(num >= v[i]) { heb += l[i]; num -= v[i]; } }
+            for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
         }
 
