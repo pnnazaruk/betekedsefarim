@@ -43,6 +43,8 @@
 
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
+        
+        /* Styl wyszukiwarki zgodny z pierwowzorem */
         .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 15px 60px 15px 15px; border: 2px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -84,7 +86,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובליン</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -138,17 +140,18 @@
                 <div class="sort-wrapper">
                     <div class="sort-container"><span>Sortuj wg / Sort by:</span>
                         <select id="sortSelectPL" onchange="updateSort('PL')">
-                            <option value="none">Default</option>
-                            <option value="title">Tytuł (A-Z)</option>
-                            <option value="author">Autor (A-Z)</option>
-                            <option value="year_asc">Rok (Rosnąco)</option>
-                            <option value="year_desc">Rok (Malejąco)</option>
+                            <option value="none">Oryginalna kolejność / Default order</option>
+                            <option value="title">Tytuł (A-Z) / Title (A-Z)</option>
+                            <option value="author">Autor (A-Z) / Author (A-Z)</option>
+                            <option value="year_asc">Rok (Rosnąco) / Year (Ascending)</option>
+                            <option value="year_desc">Rok (Malejąco) / Year (Descending)</option>
                         </select>
                     </div>
                     <div class="sort-container heb"><span>:מיין לפי</span>
                         <select id="sortSelectHE" onchange="updateSort('HE')">
                             <option value="none">סדר מקורי</option>
                             <option value="title_he">כותרת</option>
+                            <option value="author_he">מחבר</option>
                             <option value="year_asc_he">שנה (מהישן לחדש)</option>
                             <option value="year_desc_he">שנה (מהחדש לישן)</option>
                         </select>
@@ -269,13 +272,12 @@
                 if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                return matchText && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
+                return matchText && matchYear && matchHebYear && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
                filtered.sort((a, b) => {
-                    // Logika sortowania chronologicznego
                     if (sortVal.includes("year")) {
                         var vA, vB;
                         if (sortVal.includes("_he")) {
@@ -287,9 +289,7 @@
                         }
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    
-                    // Sortowanie alfabetyczne
-                    var i = (sortVal==='title'||sortVal==='title_he')?1:(sortVal==='author')?3:1;
+                    var i = (sortVal==='title'||sortVal==='title_he')?1:(sortVal==='author')?3:(sortVal==='author_he')?4:1;
                     return getVal(a.c[i]).localeCompare(getVal(b.c[i]), (sortVal.includes('_he')?'he':'pl'), {numeric:true});
                 });
             }
@@ -337,20 +337,18 @@
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
             var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
-            if (sum > 0 && sum < 1000) sum += 5000; return sum; 
+            return (sum > 0 && sum < 1000) ? sum + 5000 : sum || 999999; 
         }
 
         function numberToHebrewYear(num) {
             var n = parseInt(num); if (n > 5000) n -= 5000;
-            var heb = "";
-            var v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-            var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            var heb = "", v = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
             for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
         }
 
         window.onkeydown = function(e) { if(e.key === "Escape") document.getElementById('modalOverlay').style.display = 'none'; };
-        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
         function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
