@@ -10,32 +10,31 @@
         #main-header {
             flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
             display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid #1a1a1a; z-index: 4000;
+            border-bottom: 2px solid #1a1a1a;
         }
         .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
         .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
         .header-links a { color: #1a1a1a; text-decoration: underline; }
+        .header-links a:hover { color: #555; }
 
-        #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; position: relative; }
+        #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; }
 
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
             padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
         }
-
         .facet-section { display: flex; flex-direction: column; gap: 10px; }
+        
         .facet-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         .facet-header.heb { flex-direction: row-reverse; }
-        
-        .facet-title { font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .facet-title.heb { font-family: "SBL Hebrew", serif; font-size: 14px; text-align: right; }
-        
+        .facet-title { font-size: 11px; font-weight: bold; text-transform: uppercase; border-bottom: none; padding-bottom: 0; }
+        .facet-title.heb { font-family: "SBL Hebrew", serif; text-align: right; font-size: 14px; text-transform: none; }
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
         
         .facet-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; border: 1px solid #eee; background: #fff; display: flex; flex-direction: column; }
         .facet-item { font-size: 12px; padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .facet-item:hover { background: #f5f5f5; }
-        .facet-item.active { background: #1a1a1a !important; color: #fff !important; }
+        .facet-item:hover { background: #f0f0f0; }
+        .facet-item.active { background: #1a1a1a; color: #fff; }
         .facet-item.heb { direction: rtl; text-align: right; font-family: "SBL Hebrew", serif; font-size: 14px; }
         
         .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
@@ -45,28 +44,44 @@
         .slider-wrapper.heb { direction: rtl; }
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
-
+        
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+        .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         
         .search-wrapper { position: relative; width: 100%; }
-        #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; }
-        #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; }
+        #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
+        #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
+        
+        .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; padding: 10px 0; border-top: 0; dir: rtl; margin-bottom: 10px; }
+        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; transition: background 0.2s ease; }
 
-        #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; box-sizing: border-box; background: #fff; }
-        .item-card { border: 1px solid #eee; margin-bottom: 15px; padding: 18px; cursor: pointer; transition: all 0.2s ease; }
+        .sort-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
+        .sort-container { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; flex: 1; min-width: 180px; }
+        .sort-container.heb { flex-direction: row-reverse; font-family: "SBL Hebrew", serif; font-size: 14px; }
+        select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
+
+        #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; box-sizing: border-box; background: #fff; scroll-behavior: smooth; }
+        
+        .item-card { border: 1px solid #eee; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; transition: all 0.2s ease; cursor: pointer; }
         .item-card:hover { border-color: #1a1a1a; background: #fcfcfc; }
-        .row-flex { display: flex; justify-content: space-between; gap: 15px; }
-        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; }
-        .title-heb { font-size: 19px; direction: rtl; font-family: "SBL Hebrew", serif; }
-        .author-row { border-top: 1px solid #eee; margin-top: 8px; padding-top: 10px; display: flex; justify-content: space-between; font-size: 14px; }
+        .item-content { padding: 18px; }
+        .row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; flex: 1; }
+        .title-heb { font-size: 19px; color: #1a1a1a; text-align: right; direction: rtl; flex: 1; font-family: "SBL Hebrew", serif; }
+        .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 20px; }
+        .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .column-he { font-size: 16px; color: #222; text-align: right; direction: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
 
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
-        #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
+        #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; padding: 30px; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
+        .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
+        .modal-img-col { flex: 0 0 200px; text-align: center; }
+        .modal-img-col img { width: 100%; border: 1px solid #1a1a1a; margin-bottom: 15px; }
+        .modal-data-col { flex: 1; min-width: 300px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
-        .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; }
-        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; }
+        .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
+        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s ease; }
     </style></head><body>
 
     <header id="main-header">
@@ -96,34 +111,20 @@
             </div>
 
             <div class="facet-section">
-                <div class="facet-header">
-                    <span class="facet-title">Autor / Author</span>
-                    <span class="clear-btn" onclick="clearFacet('author')">Wyczyść</span>
-                </div>
+                <div class="facet-header"><span class="facet-title">Autor / Author</span><span class="clear-btn" onclick="clearFacet('author')">Wyczyść</span></div>
                 <ul id="authorListPL" class="facet-list"></ul>
             </div>
-
             <div class="facet-section">
-                <div class="facet-header">
-                    <span class="facet-title">Miasto / City</span>
-                    <span class="clear-btn" onclick="clearFacet('city')">Wyczyść</span>
-                </div>
+                <div class="facet-header"><span class="facet-title">Miasto / City</span><span class="clear-btn" onclick="clearFacet('city')">Wyczyść</span></div>
                 <ul id="cityListPL" class="facet-list"></ul>
             </div>
 
             <div class="facet-section">
-                <div class="facet-header heb">
-                    <span class="facet-title heb">מחבר</span>
-                    <span class="clear-btn" onclick="clearFacet('author')">נקה</span>
-                </div>
+                <div class="facet-header heb"><span class="facet-title heb">מחבר</span><span class="clear-btn" onclick="clearFacet('author')">נקה</span></div>
                 <ul id="authorListHE" class="facet-list"></ul>
             </div>
-
             <div class="facet-section">
-                <div class="facet-header heb">
-                    <span class="facet-title heb">עיר</span>
-                    <span class="clear-btn" onclick="clearFacet('city')">נקה</span>
-                </div>
+                <div class="facet-header heb"><span class="facet-title heb">עיר</span><span class="clear-btn" onclick="clearFacet('city')">נקה</span></div>
                 <ul id="cityListHE" class="facet-list"></ul>
             </div>
             
@@ -138,15 +139,38 @@
                     <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                     <div id="inlineCounter"></div>
                 </div>
+                <span class="kb-toggle" onclick="toggleKeyboard()" style="font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px;">Klawiatura hebrajska / מקלדת עברית</span>
+                <div id="keyboard" class="keyboard">
+                    <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
+                    <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
+                    <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key" onclick="delChar()">←</div>
+                    <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
+                    <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
+                    <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
+                    <div class="key" onclick="addChar('ז')">ז</div><div class="key" onclick="addChar('ס')">ס</div><div class="key" onclick="addChar('ב')">ב</div>
+                    <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
+                    <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
+                </div>
                 <div class="sort-wrapper">
-                    <select id="sortSelectPL" onchange="filterAndSort()">
-                        <option value="none">Default order</option>
-                        <option value="title">Tytuł (A-Z)</option>
-                        <option value="year_asc">Rok ↑</option>
-                        <option value="year_desc">Rok ↓</option>
-                    </select>
+                    <div class="sort-container"><span>Sortuj wg / Sort by:</span>
+                        <select id="sortSelectPL" onchange="updateSort('PL')">
+                            <option value="none">Default order</option>
+                            <option value="title">Tytuł (A-Z)</option>
+                            <option value="year_asc">Rok (Rosnąco)</option>
+                            <option value="year_desc">Rok (Malejąco)</option>
+                        </select>
+                    </div>
+                    <div class="sort-container heb"><span>:מיין לפי</span>
+                        <select id="sortSelectHE" onchange="updateSort('HE')">
+                            <option value="none">סדר מקורי</option>
+                            <option value="title_he">כותרת</option>
+                            <option value="year_asc_he">שנה (מהישן לחדש)</option>
+                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
+            <div id="loader">Wczytywanie / Loading...</div>
             <div id="container"></div>
         </main>
     </div>
@@ -161,11 +185,10 @@
     <script>
         let rawRows = [];
         let colLabels = [];
-        let activeFilters = { city: new Set(), author: new Set() }; // Przechowujemy nazwy PL jako klucze
+        let activeFilters = { city: new Set(), author: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
-        // Funkcje pomocnicze dla lat
         function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
             if (!s || s === "---") return 999999; 
@@ -190,6 +213,7 @@
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
                 filterAndSort();
+                document.getElementById('loader').style.display = 'none';
             } catch (e) { console.error(e); }
         }
 
@@ -197,6 +221,9 @@
         function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
         function updateHebYearLabel(val) { document.getElementById('hebYearVal').innerText = numberToHebrewYear(val); }
+        function toggleKeyboard() { let k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
+        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
+        function delChar() { let s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
 
         function clearFacet(type) {
             if (type === 'all') { activeFilters.city.clear(); activeFilters.author.clear(); }
@@ -214,34 +241,37 @@
             const term = document.getElementById('search').value.toLowerCase().trim();
             const maxYear = parseInt(document.getElementById('yearSlider').value);
             const maxHebYear = parseInt(document.getElementById('hebYearSlider').value);
-            const sortBy = document.getElementById('sortSelectPL').value;
-            
+            const sPL = document.getElementById('sortSelectPL').value;
+            const sHE = document.getElementById('sortSelectHE').value;
+
             const filtered = rawRows.filter(r => {
-                const city = getVal(r.c[7]), auth = getVal(r.c[3]);
+                const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]);
                 const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
                 const matchSearch = r.c.some(c => getVal(c).toLowerCase().includes(term));
                 const matchYear = (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear);
-                const matchCity = activeFilters.city.size === 0 || (isUnknown(city) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(city.trim()));
-                const matchAuth = activeFilters.author.size === 0 || (isUnknown(auth) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(auth.trim()));
+                const matchCity = activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()));
+                const matchAuth = activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()));
                 return matchSearch && matchYear && matchCity && matchAuth;
             });
 
-            if(sortBy !== "none") {
+            const sortVal = sPL !== "none" ? sPL : sHE;
+            if(sortVal !== "none") {
                 filtered.sort((a, b) => {
-                    if (sortBy.includes("year")) {
+                    if (sortVal.includes("year")) {
                         let vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
-                        return sortBy.includes("asc") ? vA - vB : vB - vA;
+                        if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
+                        if (vA === 0 || vA === 999999) return 1; if (vB === 0 || vB === 999999) return -1;
+                        return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    return getVal(a.c[1]).localeCompare(getVal(b.c[1]), 'pl');
+                    let i = (sortVal==='title'||sortVal==='title_he') ? (sortVal.includes('_he')?2:1) : 1;
+                    return getVal(a.c[i]).localeCompare(getVal(b.c[i]), sortVal.includes('_he')?'he':'pl');
                 });
             }
-
             updateFacetsUI(term, maxYear, maxHebYear);
             render(filtered);
         }
 
         function updateFacetsUI(term, maxYear, maxHebYear) {
-            // Mapy przechowujące liczniki i mapowanie PL -> HE
             const counts = { city: {}, author: {} };
             const plToHe = { city: {}, author: {} };
 
@@ -249,24 +279,20 @@
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]);
                 const cityHE = getVal(r.c[22]) || cityPL, authHE = getVal(r.c[4]) || authPL;
                 const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
-                
-                const searchMatch = r.c.some(c => getVal(c).toLowerCase().includes(term)) && 
-                                  (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear);
-
-                if (!searchMatch) return;
+                if (!(r.c.some(c => getVal(c).toLowerCase().includes(term)) && (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear))) return;
 
                 const passCity = activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()));
                 const passAuth = activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()));
 
                 if (passCity) {
-                    let key = isUnknown(cityPL) ? '_UNK_' : cityPL.trim();
-                    counts.city[key] = (counts.city[key] || 0) + 1;
-                    plToHe.city[key] = isUnknown(cityPL) ? 'לא ידוע' : cityHE.trim();
+                    let k = isUnknown(cityPL) ? '_UNK_' : cityPL.trim();
+                    counts.city[k] = (counts.city[k] || 0) + 1;
+                    plToHe.city[k] = isUnknown(cityPL) ? 'לא ידוע' : cityHE.trim();
                 }
                 if (passAuth) {
-                    let key = isUnknown(authPL) ? '_UNK_' : authPL.trim();
-                    counts.author[key] = (counts.author[key] || 0) + 1;
-                    plToHe.author[key] = isUnknown(authPL) ? 'לא ידוע' : authHE.trim();
+                    let k = isUnknown(authPL) ? '_UNK_' : authPL.trim();
+                    counts.author[k] = (counts.author[k] || 0) + 1;
+                    plToHe.author[k] = isUnknown(authPL) ? 'לא ידוע' : authHE.trim();
                 }
             });
 
@@ -280,24 +306,19 @@
             const list = document.getElementById(id);
             const activeSet = activeFilters[type];
             let html = `<li class="facet-item ${isHeb?'heb':''} ${activeSet.size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
-            
             const sortedKeys = Object.keys(counts).filter(k => k !== '_UNK_').sort((a,b) => {
-                let textA = isHeb ? heMap[a] : a;
-                let textB = isHeb ? heMap[b] : b;
-                if (!isHeb && type === 'author') {
-                    if (a.startsWith('[') && !b.startsWith('[')) return 1;
-                    if (!a.startsWith('[') && b.startsWith('[')) return -1;
-                }
-                return textA.localeCompare(textB, isHeb ? 'he' : 'pl');
+                let valA = isHeb ? heMap[a] : a;
+                let valB = isHeb ? heMap[b] : b;
+                let aBr = valA.startsWith('['), bBr = valB.startsWith('[');
+                if (aBr && !bBr) return 1; if (!aBr && bBr) return -1;
+                return valA.localeCompare(valB, isHeb ? 'he' : 'pl');
             });
-
-            sortedKeys.forEach(key => {
-                const label = isHeb ? heMap[key] : key;
-                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(key)?'active':''}" onclick="toggleFilter('${key}', '${type}')">
-                    <span>${label}</span><span class="count-pill">${counts[key]}</span>
+            sortedKeys.forEach(k => {
+                const label = isHeb ? heMap[k] : k;
+                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')">
+                    <span>${label}</span><span class="count-pill">${counts[k]}</span>
                 </li>`;
             });
-
             if (counts['_UNK_']) {
                 html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')">
                     <span>${unknownLabel}</span><span class="count-pill">${counts['_UNK_']}</span>
@@ -310,10 +331,12 @@
             const container = document.getElementById('container');
             container.innerHTML = rows.map(r => `
                 <div class="item-card" onclick="openModal('${r.c[0].v}')">
-                    <div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
-                    <div class="author-row">
-                        <div><span>${getVal(r.c[3])}</span><br><small>${getVal(r.c[7])}, ${getVal(r.c[5])}</small></div>
-                        <div style="text-align:right"><span>${getVal(r.c[4])}</span><br><small>${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</small></div>
+                    <div class="item-content">
+                        <div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
+                        <div class="author-row">
+                            <div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
+                            <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -322,6 +345,7 @@
 
         function openModal(rowIndex) {
             const r = rawRows.find(row => row.c[0].v == rowIndex);
+            if(!r) return;
             let detailsHtml = "";
             for(let i=0; i<=22; i++) {
                 if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue;
@@ -335,5 +359,6 @@
         }
 
         function closeModal(e) { if(e.target.id === 'modalOverlay') e.target.style.display = 'none'; }
+        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
         init();
     </script></body></html>
