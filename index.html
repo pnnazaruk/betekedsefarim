@@ -83,7 +83,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכmi לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -277,7 +277,6 @@
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
                filtered.sort((a, b) => {
-                    // Sprawdzanie braku autora dla wypchnięcia na koniec
                     var authorCol = sortVal.includes('_he') ? 4 : 3;
                     var authA = getVal(a.c[authorCol]), authB = getVal(b.c[authorCol]);
                     var isEmptyA = !authA || authA === "---", isEmptyB = !authB || authB === "---";
@@ -295,12 +294,16 @@
                         }
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
+                    
                     var i = 1;
                     if (sortVal === 'title' || sortVal === 'title_he') i = (sortVal.includes('_he')) ? 2 : 1;
                     if (sortVal === 'author' || sortVal === 'author_he') i = (sortVal.includes('_he')) ? 4 : 3;
                     
-                    var valA = getVal(a.c[i]).toLowerCase();
-                    var valB = getVal(b.c[i]).toLowerCase();
+                    // NAPRAWA LOGIKI: Ignorowanie nawiasów i znaków specjalnych
+                    var normalize = (s) => getVal(s).toLowerCase().replace(/[\[\]\(\)\{\}"'.,\-–—]/g, "").trim();
+                    var valA = normalize(a.c[i]);
+                    var valB = normalize(b.c[i]);
+                    
                     return valA.localeCompare(valB, (sortVal.includes('_he') ? 'he' : 'pl'), {numeric: true});
                 });
             }
