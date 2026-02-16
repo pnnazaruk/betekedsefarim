@@ -87,7 +87,6 @@
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
         
-        /* POPRAWIONE WYŚWIETLANIE OBRAZKA - MINIATURA */
         .modal-img-col img { 
             width: 100%; 
             max-height: 300px; 
@@ -105,9 +104,6 @@
             text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; 
         }
         .link-btn:hover { background: #555; }
-
-        #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
-        #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
 
         @media (max-width: 768px) {
             #mobile-toggle { display: block; }
@@ -218,7 +214,7 @@
                     </div>
                 </div>
             </div>
-            <div id="loader">Wczytywanie / Loading...</div>
+            <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
             <div id="container"></div>
         </main>
     </div>
@@ -355,18 +351,21 @@
             const list = document.getElementById(id);
             const activeSet = activeFilters[type];
             let html = `<li class="facet-item ${isHeb?'heb':''} ${activeSet.size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
+            
             const sortedKeys = Object.keys(counts).filter(k => k !== '_UNK_').sort((a,b) => {
                 let valA = isHeb ? heMap[a] : a; let valB = isHeb ? heMap[b] : b;
                 let aBr = valA.startsWith('['), bBr = valB.startsWith('[');
                 if (aBr && !bBr) return 1; if (!aBr && bBr) return -1;
                 return valA.localeCompare(valB, isHeb ? 'he' : 'pl');
             });
+
             sortedKeys.forEach(k => {
                 const label = isHeb ? heMap[k] : k;
-                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${key}', '${type}')">
+                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')">
                     <span>${label}</span><span class="count-pill">${counts[k]}</span>
                 </li>`;
             });
+
             if (counts['_UNK_']) {
                 html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')">
                     <span>${unknownLabel}</span><span class="count-pill">${counts['_UNK_']}</span>
