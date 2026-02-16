@@ -31,19 +31,12 @@
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
         #hebYearSlider { direction: rtl; } 
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
-
-        /* STYL OSI CZASU */
-        .timeline-container { height: 60px; display: flex; align-items: flex-end; gap: 1px; border-bottom: 1px solid #ccc; padding-bottom: 2px; margin-top: 5px; }
-        .timeline-bar { flex: 1; background: #ddd; cursor: pointer; transition: background 0.2s; position: relative; min-width: 2px; }
-        .timeline-bar:hover { background: #1a1a1a; }
-        .timeline-bar:hover::after { content: attr(data-label); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 2px 5px; font-size: 9px; border-radius: 3px; white-space: nowrap; z-index: 10; }
-        .timeline-bar.active { background: #888; }
         
-        .city-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; border: 1px solid #eee; background: #fff; }
-        .city-item { font-size: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .city-item:hover { background: #f0f0f0; }
-        .city-item.active { background: #1a1a1a; color: #fff; }
-        .city-item.heb { font-family: "SBL Hebrew", serif; flex-direction: row-reverse; text-align: right; font-size: 14px; }
+        .facet-list { list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; border: 1px solid #eee; background: #fff; }
+        .facet-item { font-size: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .facet-item:hover { background: #f0f0f0; }
+        .facet-item.active { background: #1a1a1a; color: #fff; }
+        .facet-item.heb { font-family: "SBL Hebrew", serif; flex-direction: row-reverse; text-align: right; font-size: 14px; }
         .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
         .active .count-pill { background: #444; color: #fff; }
 
@@ -51,7 +44,10 @@
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         
         .search-wrapper { position: relative; width: 100%; }
-        #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
+        #search { 
+            width: 100%; padding: 10px 60px 10px 15px; border: 2px solid #1a1a1a; 
+            border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
+        }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
         
         .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; padding: 10px 0; border-top: 0; dir: rtl; margin-bottom: 10px; }
@@ -85,14 +81,22 @@
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
         .value { font-size: 15px; line-height: 1.5; }
-        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 5px; }
+        
+        /* POPRAWIONY PRZYCISK Z EFEKTEM HOVER */
+        .link-btn { 
+            display: inline-block; background: #1a1a1a; color: #fff !important; 
+            padding: 10px 20px; font-size: 12px; text-decoration: none; 
+            text-transform: uppercase; font-weight: bold; margin-top: 5px;
+            transition: background 0.3s ease;
+        }
+        .link-btn:hover { background: #555; }
 
         #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
+        <div class="header-title" dir="rtl">בית עקד ספרim בישיבת חכמי לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -106,7 +110,6 @@
                 <div class="slider-wrapper">
                     <input type="range" id="yearSlider" min="1500" max="1939" value="1939" oninput="updateYearLabel(this.value); filterAndSort();">
                     <div class="slider-val"><span>1500</span><span id="yearVal">1939</span></div>
-                    <div id="timelinePL" class="timeline-container"></div>
                 </div>
             </div>
             <div class="facet-section">
@@ -116,13 +119,23 @@
                     <div class="slider-val"><span id="hebYearVal">ת"ש</span><span>ש"ק</span></div>
                 </div>
             </div>
+            
+            <div class="facet-section">
+                <span class="facet-title">Autor / Author</span>
+                <ul id="authorListPL" class="facet-list"></ul>
+            </div>
+            <div class="facet-section">
+                <span class="facet-title heb">מחבר</span>
+                <ul id="authorListHE" class="facet-list"></ul>
+            </div>
+
             <div class="facet-section">
                 <span class="facet-title">Miasto / City</span>
-                <ul id="cityListPL" class="city-list"></ul>
+                <ul id="cityListPL" class="facet-list"></ul>
             </div>
             <div class="facet-section">
                 <span class="facet-title heb">עיר</span>
-                <ul id="cityListHE" class="city-list"></ul>
+                <ul id="cityListHE" class="facet-list"></ul>
             </div>
         </div>
 
@@ -181,6 +194,7 @@
         var rawRows = [];
         var colLabels = [];
         var activeFacetCity = null; 
+        var activeFacetAuthor = null;
         var sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         var url = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json';
 
@@ -198,112 +212,68 @@
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
                 populateFacets();
-                renderTimeline(); // Generuj oś czasu
                 render(rawRows);
                 document.getElementById('loader').style.display = 'none';
             } catch (e) { document.getElementById('loader').innerHTML = "Błąd / שגיאה"; }
         }
 
         function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
-        function isUnknownCity(val) { var v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
+        function isUnknown(val) { var v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
         function updateHebYearLabel(val) { 
             var label = document.getElementById('hebYearVal');
             if(label) label.innerText = numberToHebrewYear(val); 
         }
 
-        // GENEROWANIE OSI CZASU
-        function renderTimeline() {
-            var yearCounts = {};
-            var minYear = 1500, maxYear = 1939;
-            
-            rawRows.forEach(r => {
-                var y = extractYear(getVal(r.c[5]));
-                if (y >= minYear && y <= maxYear) {
-                    yearCounts[y] = (yearCounts[y] || 0) + 1;
-                }
-            });
-
-            var maxCount = Math.max(...Object.values(yearCounts));
-            var timeline = document.getElementById('timelinePL');
-            timeline.innerHTML = '';
-
-            for (let year = minYear; year <= maxYear; year += 2) { // Krok co 2 lata dla lepszej czytelności
-                var count = 0;
-                // Sumuj lata w małych zakresach
-                if(yearCounts[year]) count += yearCounts[year];
-                if(yearCounts[year+1]) count += yearCounts[year+1];
-
-                var bar = document.createElement('div');
-                bar.className = 'timeline-bar';
-                var height = (count / maxCount) * 100;
-                bar.style.height = Math.max(height, 2) + '%';
-                bar.setAttribute('data-label', `${year}-${year+1}: ${count} poz.`);
-                
-                bar.onclick = function() {
-                    var slider = document.getElementById('yearSlider');
-                    slider.value = year + 1;
-                    updateYearLabel(year + 1);
-                    filterAndSort();
-                };
-                timeline.appendChild(bar);
-            }
-        }
-
         function populateFacets() {
-            var citiesPL = {}, citiesHE = {}, unknownCount = 0;
+            var citiesPL = {}, citiesHE = {}, authorsPL = {}, authorsHE = {};
+            var unknownCityCount = 0, unknownAuthorCount = 0;
+
             rawRows.forEach(r => {
-                var cPL = getVal(r.c[7]);
-                if (isUnknownCity(cPL)) unknownCount++;
+                var cPL = getVal(r.c[7]), aPL = getVal(r.c[3]);
+                var cHE = getVal(r.c[22]) || cPL, aHE = getVal(r.c[4]) || aPL;
+                
+                if (isUnknown(cPL)) unknownCityCount++;
                 else { 
                     citiesPL[cPL.trim()] = (citiesPL[cPL.trim()] || 0) + 1; 
-                    var cHE = getVal(r.c[22]) || cPL;
                     citiesHE[cHE.trim()] = (citiesHE[cHE.trim()] || 0) + 1;
                 }
-            });
-            var listPL = document.getElementById('cityListPL');
-            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null, event)">All</li>';
-            Object.keys(citiesPL).sort((a,b)=>a.localeCompare(b,'pl')).forEach(function(city) {
-                var li = document.createElement('li');
-                li.className = 'city-item';
-                li.onclick = function(e) { filterCity(city, e); };
-                li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesPL[city]}</span>`;
-                listPL.appendChild(li);
-            });
-            if (unknownCount > 0) {
-                var liU = document.createElement('li');
-                liU.className = 'city-item';
-                liU.onclick = function(e) { filterCity("_UNKNOWN_ID_", e); };
-                liU.innerHTML = `<span>Nieznane / Unknown</span><span class="count-pill">${unknownCount}</span>`;
-                listPL.appendChild(liU);
-            }
 
-            var listHE = document.getElementById('cityListHE');
-            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null, event)">הכל</li>';
-            Object.keys(citiesHE).sort((a,b)=>a.localeCompare(b,'he')).forEach(function(city) {
-                var li = document.createElement('li');
-                li.className = 'city-item heb';
-                li.onclick = function(e) { filterCity(city, e); };
-                li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesHE[city]}</span>`;
-                listHE.appendChild(li);
+                if (isUnknown(aPL)) unknownAuthorCount++;
+                else {
+                    authorsPL[aPL.trim()] = (authorsPL[aPL.trim()] || 0) + 1;
+                    authorsHE[aHE.trim()] = (authorsHE[aHE.trim()] || 0) + 1;
+                }
             });
+
+            renderFacetList('cityListPL', citiesPL, unknownCityCount, 'city', false);
+            renderFacetList('cityListHE', citiesHE, unknownCityCount, 'city', true);
+            renderFacetList('authorListPL', authorsPL, unknownAuthorCount, 'author', false);
+            renderFacetList('authorListHE', authorsHE, unknownAuthorCount, 'author', true);
+        }
+
+        function renderFacetList(id, data, unknownCount, type, isHeb) {
+            var list = document.getElementById(id);
+            list.innerHTML = `<li class="facet-item ${isHeb?'heb':''} active" onclick="filterFacet(null, '${type}', event)">${isHeb?'הכל':'All'}</li>`;
+            
+            Object.keys(data).sort((a,b)=>a.localeCompare(b, isHeb?'he':'pl')).forEach(key => {
+                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('${key}', '${type}', event)"><span>${key}</span><span class="count-pill">${data[key]}</span></li>`;
+            });
+
             if (unknownCount > 0) {
-                var liHU = document.createElement('li');
-                liHU.className = 'city-item heb';
-                liHU.onclick = function(e) { filterCity("_UNKNOWN_ID_", e); };
-                liHU.innerHTML = `<span>לא ידוע</span><span class="count-pill">${unknownCount}</span>`;
-                listHE.appendChild(liHU);
+                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${isHeb?'לא ידוע':'Unknown'}</span><span class="count-pill">${unknownCount}</span></li>`;
             }
         }
 
-        function filterCity(city, event) {
-            activeFacetCity = city;
-            document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
-            if (city === null) {
-                document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
-            } else if (event) {
-                event.currentTarget.classList.add('active');
+        function filterFacet(val, type, event) {
+            if (type === 'city') {
+                activeFacetCity = val;
+                document.querySelectorAll('#cityListPL .facet-item, #cityListHE .facet-item').forEach(el => el.classList.remove('active'));
+            } else {
+                activeFacetAuthor = val;
+                document.querySelectorAll('#authorListPL .facet-item, #authorListHE .facet-item').forEach(el => el.classList.remove('active'));
             }
+            event.currentTarget.classList.add('active');
             filterAndSort();
         }
 
@@ -316,17 +286,19 @@
 
             var filtered = rawRows.filter(function(r) { 
                 if (!r || !r.c || !r.c[1]) return false;
-                var cityPL = getVal(r.c[7]), cityHE = getVal(r.c[22]) || cityPL;
+                var cityPL = getVal(r.c[7]), authorPL = getVal(r.c[3]);
                 var yearRaw = getVal(r.c[5]), hebYearRaw = getVal(r.c[6]);
                 var matchText = r.c.some(cell => getVal(cell).toLowerCase().indexOf(term) > -1);
-                var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknownCity(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity.trim() || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity.trim());
                 
-                if (activeFacetCity === "_UNKNOWN_ID_") return matchText && matchCity;
+                var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknown(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity);
+                var matchAuthor = (activeFacetAuthor === "_UNKNOWN_ID_") ? isUnknown(authorPL) : (activeFacetAuthor === null || authorPL.trim() === activeFacetAuthor || (getVal(r.c[4]) || authorPL).trim() === activeFacetAuthor);
+
                 var rowYear = extractYear(yearRaw);
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
                 var matchYear = (rowYear === 0) || (rowYear <= maxYear);
                 var matchHebYear = (rowHebYear === 999999) || (rowHebYear <= maxHebYear);
-                return matchText && matchCity && matchYear && matchHebYear;
+
+                return matchText && matchCity && matchAuthor && matchYear && matchHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
@@ -334,9 +306,11 @@
                filtered.sort((a, b) => {
                     var authorCol = sortVal.includes('_he') ? 4 : 3;
                     var authA = getVal(a.c[authorCol]), authB = getVal(b.c[authorCol]);
-                    var isEmptyA = !authA || authA === "---", isEmptyB = !authB || authB === "---";
-                    if (isEmptyA && !isEmptyB) return 1;
-                    if (!isEmptyA && isEmptyB) return -1;
+                    var isEmptyA = isUnknown(authA), isEmptyB = isUnknown(authB);
+                    if ((sortVal === 'author' || sortVal === 'author_he')) {
+                        if (isEmptyA && !isEmptyB) return 1;
+                        if (!isEmptyA && isEmptyB) return -1;
+                    }
                     if (sortVal.includes("year")) {
                         var vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
                         if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
@@ -361,14 +335,14 @@
                 if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue;
                 var val = getVal(r.c[i]);
                 if (i === 16 && val.startsWith('http')) {
-                    detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">ZOBACZ / SEE</a></div>`;
+                    detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a></div>`;
                 } else {
                     detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span class="value">${val || "---"}</span></div>`;
                 }
             }
             var img = getVal(r.c[23]), link = getVal(r.c[16]);
             document.getElementById('modalContent').innerHTML = `
-                <div class="modal-img-col"><img src="${img}">${link ? `<a href="${link}" target="_blank" class="link-btn">ZOBACZ / SEE</a>` : ''}</div>
+                <div class="modal-img-col"><img src="${img}">${link ? `<a href="${link}" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a>` : ''}</div>
                 <div class="modal-data-col">${detailsHtml}</div>
             `;
             document.getElementById('modalOverlay').style.display = 'flex';
@@ -394,14 +368,16 @@
             if (!s || s === "---") return 999999; 
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
-            var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
-            if (sum > 0 && sum < 1000) sum += 5000; return sum || 999999; 
+            var sum = 0;
+            var cleanC = c.match(/[\u0590-\u05FF]/g);
+            if (cleanC) { for (var i=0; i < cleanC.length; i++) sum += v[cleanC[i]] || 0; }
+            if (sum > 0 && sum < 1000) sum += 5000; 
+            return sum || 999999; 
         }
 
         function numberToHebrewYear(num) {
             var n = parseInt(num); if (n > 5000) n -= 5000;
-            var heb = "", v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-            var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            var heb = "", v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
             for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
         }
