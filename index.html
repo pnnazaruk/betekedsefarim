@@ -7,6 +7,7 @@
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
 
+        /* BIAŁY NAGŁÓWEK - UKŁAD ODWRÓCONY */
         #main-header {
             flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
             display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; 
@@ -44,12 +45,20 @@
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         
         .search-wrapper { position: relative; width: 100%; }
-        #search { width: 100%; padding: 15px 60px 15px 15px; border: 2px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
+        
+        /* ZMIENIONA RAMKA WYSZUKIWARKI (ZMNIEJSZONA DO 1PX) */
+        #search { 
+            width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; 
+            border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
+        }
+        
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
         
         .sort-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
         .sort-container { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; flex: 1; min-width: 180px; }
         .sort-container.heb { flex-direction: row-reverse; font-family: "SBL Hebrew", serif; font-size: 14px; }
+        
+        /* Ramka sortowania (referencyjna) */
         select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
 
         #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; width: 100%; box-sizing: border-box; background: #fff; position: relative; scroll-behavior: smooth; }
@@ -64,6 +73,7 @@
         .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .column-he { font-size: 16px; color: #222; text-align: right; dir: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
 
+        /* MODAL */
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 30px; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; font-weight: bold; border: none; background: none; line-height: 1; }
@@ -83,7 +93,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכmi לובלין</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -299,7 +309,6 @@
                     if (sortVal === 'title' || sortVal === 'title_he') i = (sortVal.includes('_he')) ? 2 : 1;
                     if (sortVal === 'author' || sortVal === 'author_he') i = (sortVal.includes('_he')) ? 4 : 3;
                     
-                    // NAPRAWA LOGIKI: Ignorowanie nawiasów i znaków specjalnych
                     var normalize = (s) => getVal(s).toLowerCase().replace(/[\[\]\(\)\{\}"'.,\-–—]/g, "").trim();
                     var valA = normalize(a.c[i]);
                     var valB = normalize(b.c[i]);
@@ -357,7 +366,8 @@
 
         function numberToHebrewYear(num) {
             var n = parseInt(num); if (n > 5000) n -= 5000;
-            var heb = "", v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+            var heb = "";
+            var v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
             var l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
             for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
