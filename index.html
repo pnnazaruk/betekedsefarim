@@ -7,7 +7,6 @@
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
 
-        /* BIAŁY NAGŁÓWEK - UKŁAD ODWRÓCONY */
         #main-header {
             flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
             display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; 
@@ -51,7 +50,6 @@
         }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
         
-        /* MODYFIKACJA KLAWIATURY */
         .keyboard { 
             display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; 
             padding: 10px 0; border-top: 0; dir: rtl; margin-bottom: 10px; 
@@ -97,7 +95,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
+        <div class="header-title" dir="rtl">בית עkd ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -281,11 +279,15 @@
                 var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknownCity(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity.trim() || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity.trim());
                 
                 if (activeFacetCity === "_UNKNOWN_ID_") return matchText && matchCity;
-                if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
-                
+
+                // POPRAWKA: Rekordy bez daty (---) nie są odrzucane, chyba że użytkownik drastycznie przesunie suwak
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                return matchText && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
+                
+                var matchYear = (rowYear === 0) || (rowYear <= maxYear);
+                var matchHebYear = (rowHebYear === 999999) || (rowHebYear <= maxHebYear);
+
+                return matchText && matchCity && matchYear && matchHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
@@ -306,11 +308,12 @@
                             vA = parseInt(getVal(a.c[5]).replace(/\D/g,'')) || 0;
                             vB = parseInt(getVal(b.c[5]).replace(/\D/g,'')) || 0;
                         }
+                        if (vA === 0 || vA === 999999) return 1;
+                        if (vB === 0 || vB === 999999) return -1;
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
                     
-                    var i = 1;
-                    if (sortVal === 'title' || sortVal === 'title_he') i = (sortVal.includes('_he')) ? 2 : 1;
+                    var i = (sortVal.includes('_he')) ? 2 : 1;
                     if (sortVal === 'author' || sortVal === 'author_he') i = (sortVal.includes('_he')) ? 4 : 3;
                     
                     var normalize = (s) => getVal(s).toLowerCase().replace(/[\[\]\(\)\{\}"'.,\-–—]/g, "").trim();
@@ -365,7 +368,7 @@
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
             var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
-            if (sum > 0 && sum < 1000) sum += 5000; return sum; 
+            if (sum > 0 && sum < 1000) sum += 5000; return sum || 999999; 
         }
 
         function numberToHebrewYear(num) {
