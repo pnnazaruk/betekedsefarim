@@ -84,7 +84,6 @@
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
         
-        /* HOOVER DLA PRZYCISKÓW */
         .link-btn { 
             display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; 
             text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; 
@@ -146,7 +145,7 @@
             </div>
             
             <div class="facet-section" style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
-                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Reset all / נקה הכל</span>
+                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
             </div>
         </aside>
 
@@ -171,10 +170,10 @@
                 <div class="sort-wrapper">
                     <div class="sort-container"><span>Sortuj wg / Sort by:</span>
                         <select id="sortSelectPL" onchange="updateSort('PL')">
-                            <option value="none">Default order</option>
-                            <option value="title">Tytuł (A-Z)</option>
-                            <option value="year_asc">Rok ↑</option>
-                            <option value="year_desc">Rok ↓</option>
+                            <option value="none">Oryginalna kolejność / Default order</option>
+                            <option value="title">Tytuł (A-Z) / Title (A-Z)</option>
+                            <option value="year_asc">Rok (Rosnąco) / Year (Ascending)</option>
+                            <option value="year_desc">Rok (Malejąco) / Year (Descending)</option>
                         </select>
                     </div>
                     <div class="sort-container heb"><span>:מיין לפי</span>
@@ -187,6 +186,7 @@
                     </div>
                 </div>
             </div>
+            <div id="loader">Wczytywanie / Loading...</div>
             <div id="container"></div>
         </main>
     </div>
@@ -208,7 +208,6 @@
         function extractYear(s) { 
             if (!s || s === "---") return 0; 
             let match = String(s).match(/\d{4}/); 
-            // Jeśli brak 4-cyfrowej daty (np. rzymskie lub słowo), zwróć 0 (wypchnięcie na koniec)
             return match ? parseInt(match[0]) : 0; 
         }
 
@@ -283,7 +282,6 @@
                     if (sortVal.includes("year")) {
                         let vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
                         if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
-                        // POZYCJE BEZ DATY (0 lub 999999) NA KONIEC
                         if (vA === 0 || vA === 999999) return 1; if (vB === 0 || vB === 999999) return -1;
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
@@ -376,7 +374,6 @@
             for(let i=0; i<=22; i++) {
                 if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue;
                 let val = getVal(r.c[i]);
-                // DODANIE PRZYCISKU W SEKCJI LINK
                 if (i === 16 && val.startsWith('http')) {
                     detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">ZOBACZ / SEE</a></div>`;
                 } else {
