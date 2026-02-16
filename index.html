@@ -5,20 +5,18 @@
         <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
-        body { display: flex; flex-direction: column; } /* Zmieniono na column, aby pomieścić Header */
+        body { display: flex; flex-direction: column; }
 
-        /* STYL NAGŁÓWKA */
+        /* NOWY NAGŁÓWEK - UKŁAD ODWRÓCONY */
         #main-header {
             flex: 0 0 auto; background: #1a1a1a; color: #fff; padding: 15px 25px;
-            display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000;
+            display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; border-bottom: 2px solid #000;
         }
-        .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; }
+        .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
         .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
         .header-links a { color: #fff; text-decoration: underline; }
         .header-links a:hover { color: #ccc; }
-        .header-links .heb-link { font-family: "SBL Hebrew", serif; font-size: 16px; text-transform: none; }
 
-        /* KONTENER DLA SIDEBARA I TREŚCI */
         #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; }
 
         #sidebar { 
@@ -85,11 +83,10 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title">בית עקד ספרים בישיבת חכmi לובלין</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
-            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About project</a>
-            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank" class="heb-link">אודות הפרויקט</a>
+            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
         </div>
     </header>
 
@@ -187,7 +184,10 @@
         function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
         function isUnknownCity(val) { var v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
-        function updateHebYearLabel(val) { var lbl = document.getElementById('hebYearVal'); if(lbl) lbl.innerText = numberToHebrewYear(val); }
+        function updateHebYearLabel(val) { 
+            var label = document.getElementById('hebYearVal');
+            if(label) label.innerText = numberToHebrewYear(val); 
+        }
 
         function populateFacets() {
             var citiesPL = {}, citiesHE = {}, unknownCount = 0;
@@ -202,24 +202,47 @@
             });
             var listPL = document.getElementById('cityListPL');
             listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null, event)">All</li>';
-            Object.keys(citiesPL).sort((a,b)=>a.localeCompare(b,'pl')).forEach(c => {
-                listPL.innerHTML += `<li class="city-item" onclick="filterCity('${c}', event)"><span>${c}</span><span class="count-pill">${citiesPL[c]}</span></li>`;
+            Object.keys(citiesPL).sort((a,b)=>a.localeCompare(b,'pl')).forEach(function(city) {
+                var li = document.createElement('li');
+                li.className = 'city-item';
+                li.onclick = function(e) { filterCity(city, e); };
+                li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesPL[city]}</span>`;
+                listPL.appendChild(li);
             });
-            if(unknownCount > 0) listPL.innerHTML += `<li class="city-item" onclick="filterCity('_UNKNOWN_ID_', event)"><span>Unknown</span><span class="count-pill">${unknownCount}</span></li>`;
+            if (unknownCount > 0) {
+                var liU = document.createElement('li');
+                liU.className = 'city-item';
+                liU.onclick = function(e) { filterCity("_UNKNOWN_ID_", e); };
+                liU.innerHTML = `<span>Nieznane / Unknown</span><span class="count-pill">${unknownCount}</span>`;
+                listPL.appendChild(liU);
+            }
 
             var listHE = document.getElementById('cityListHE');
             listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null, event)">הכל</li>';
-            Object.keys(citiesHE).sort((a,b)=>a.localeCompare(b,'he')).forEach(c => {
-                listHE.innerHTML += `<li class="city-item heb" onclick="filterCity('${c}', event)"><span>${c}</span><span class="count-pill">${citiesHE[c]}</span></li>`;
+            Object.keys(citiesHE).sort((a,b)=>a.localeCompare(b,'he')).forEach(function(city) {
+                var li = document.createElement('li');
+                li.className = 'city-item heb';
+                li.onclick = function(e) { filterCity(city, e); };
+                li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesHE[city]}</span>`;
+                listHE.appendChild(li);
             });
-            if(unknownCount > 0) listHE.innerHTML += `<li class="city-item heb" onclick="filterCity('_UNKNOWN_ID_', event)"><span>לא ידוע</span><span class="count-pill">${unknownCount}</span></li>`;
+            if (unknownCount > 0) {
+                var liHU = document.createElement('li');
+                liHU.className = 'city-item heb';
+                liHU.onclick = function(e) { filterCity("_UNKNOWN_ID_", e); };
+                liHU.innerHTML = `<span>לא ידוע</span><span class="count-pill">${unknownCount}</span>`;
+                listHE.appendChild(liHU);
+            }
         }
 
-        function filterCity(city, e) {
+        function filterCity(city, event) {
             activeFacetCity = city;
             document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
-            if (city === null) document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
-            else if(e) e.currentTarget.classList.add('active');
+            if (city === null) {
+                document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
+            } else if (event) {
+                event.currentTarget.classList.add('active');
+            }
             filterAndSort();
         }
 
@@ -230,24 +253,27 @@
             var sPL = document.getElementById('sortSelectPL').value;
             var sHE = document.getElementById('sortSelectHE').value;
 
-            var filtered = rawRows.filter(r => {
+            var filtered = rawRows.filter(function(r) { 
                 if (!r || !r.c || !r.c[1]) return false;
                 var cityPL = getVal(r.c[7]), cityHE = getVal(r.c[22]) || cityPL;
                 var yearRaw = getVal(r.c[5]), hebYearRaw = getVal(r.c[6]);
                 var matchText = r.c.some(cell => getVal(cell).toLowerCase().indexOf(term) > -1);
-                var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknownCity(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity);
+                var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknownCity(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity.trim() || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity.trim());
                 if (activeFacetCity === "_UNKNOWN_ID_") return matchText && matchCity;
                 if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
-                return matchText && matchCity && (parseInt(yearRaw.replace(/\D/g,'')) || 0) <= maxYear && hebrewYearToNumber(hebYearRaw) <= maxHebYear;
+                var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
+                var rowHebYear = hebrewYearToNumber(hebYearRaw);
+                return matchText && matchYear && matchHebYear && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
-                filtered.sort((a, b) => {
-                    if (sortVal === "year_he") return hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6]));
-                    var i = (sortVal==='title')?1:(sortVal==='author')?3:(sortVal==='place')?7:(sortVal==='year')?5:1;
-                    return getVal(a.c[i]).localeCompare(getVal(b.c[i]), (sortVal.includes('_he')?'he':'pl'), {numeric:true});
-                });
+               if(sortVal === 'title') filtered.sort((a,b) => getVal(a.c[1]).localeCompare(getVal(b.c[1]), 'pl'));
+               if(sortVal === 'author') filtered.sort((a,b) => getVal(a.c[3]).localeCompare(getVal(b.c[3]), 'pl'));
+               if(sortVal === 'place') filtered.sort((a,b) => getVal(a.c[7]).localeCompare(getVal(b.c[7]), 'pl'));
+               if(sortVal === 'year') filtered.sort((a,b) => (parseInt(getVal(a.c[5]).replace(/\D/g,'')) || 0) - (parseInt(getVal(b.c[5]).replace(/\D/g,'')) || 0));
+               if(sortVal === 'title_he') filtered.sort((a,b) => getVal(a.c[2]).localeCompare(getVal(b.c[2]), 'he'));
+               if(sortVal === 'year_he') filtered.sort((a,b) => hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6])));
             }
             render(filtered);
         }
@@ -291,9 +317,9 @@
         function hebrewYearToNumber(s) { 
             if (!s || s === "---") return 999999; 
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
-            var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
+            var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'λ':30,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
             var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
-            return (sum > 0 && sum < 1000) ? sum + 5000 : sum || 999999; 
+            if (sum > 0 && sum < 1000) sum += 5000; return sum; 
         }
 
         function numberToHebrewYear(num) {
@@ -304,12 +330,11 @@
         }
 
         window.onkeydown = function(e) { if(e.key === "Escape") document.getElementById('modalOverlay').style.display = 'none'; };
-        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
         function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
         function delChar() { var s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
-        function updateSort() { filterAndSort(); }
-
+        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
         init();
     </script></body></html>
