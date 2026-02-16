@@ -26,7 +26,6 @@
         }
         .facet-section { display: flex; flex-direction: column; gap: 10px; }
         
-        /* Styl dla nagłówków z przyciskiem czyszczenia */
         .facet-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         .facet-title { font-size: 11px; font-weight: bold; text-transform: uppercase; border-bottom: none; padding-bottom: 0; }
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
@@ -35,6 +34,7 @@
         .facet-title.heb { font-family: "SBL Hebrew", serif; text-align: right; font-size: 14px; text-transform: none; }
         
         .slider-wrapper { padding: 10px 0; }
+        .slider-wrapper.heb { direction: rtl; }
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
         #hebYearSlider { direction: rtl; } 
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
@@ -81,7 +81,7 @@
 
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 30px; }
-        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; line-height: 1; }
+        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
         .modal-img-col img { width: 100%; border: 1px solid #1a1a1a; background: #fff; margin-bottom: 15px; }
@@ -117,6 +117,14 @@
                 <div class="slider-wrapper">
                     <input type="range" id="yearSlider" min="1500" max="1939" value="1939" oninput="updateYearLabel(this.value); filterAndSort();">
                     <div class="slider-val"><span>1500</span><span id="yearVal">1939</span></div>
+                </div>
+            </div>
+
+            <div class="facet-section">
+                <span class="facet-title heb">שנה (ש"ק - ת"ש)</span>
+                <div class="slider-wrapper heb">
+                    <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
+                    <div class="slider-val"><span>ש"ק</span><span id="hebYearVal">ת"ש</span></div>
                 </div>
             </div>
             
@@ -217,6 +225,24 @@
             return match ? parseInt(match[0]) : 0;
         }
 
+        function hebrewYearToNumber(s) { 
+            if (!s || s === "---") return 999999; 
+            var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
+            var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
+            var sum = 0;
+            var cleanC = c.match(/[\u0590-\u05FF]/g);
+            if (cleanC) { for (var i=0; i < cleanC.length; i++) sum += v[cleanC[i]] || 0; }
+            if (sum > 0 && sum < 1000) sum += 5000; 
+            return sum || 999999; 
+        }
+
+        function numberToHebrewYear(num) {
+            var n = parseInt(num); if (n > 5000) n -= 5000;
+            var heb = "", v = [400, 300, 200, 100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
+            return heb;
+        }
+
         async function init() {
             try {
                 var r = await fetch(url);
@@ -224,14 +250,16 @@
                 var json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
-                filterAndSort(); // Inicjalne renderowanie i liczniki
+                filterAndSort();
                 document.getElementById('loader').style.display = 'none';
-            } catch (e) { document.getElementById('loader').innerHTML = "Błąd / שגיאה"; }
+            } catch (e) { document.getElementById('loader').innerHTML = "Error loading data."; }
         }
 
         function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
         function isUnknown(val) { var v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
+        function updateHebYearLabel(val) { document.getElementById('hebYearVal').innerText = numberToHebrewYear(val); }
+
         function toggleKeyboard() { let k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
         function delChar() { var s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
@@ -254,16 +282,18 @@
         function filterAndSort() {
             var term = document.getElementById('search').value.toLowerCase().trim();
             var maxYear = parseInt(document.getElementById('yearSlider').value);
+            var maxHebYear = parseInt(document.getElementById('hebYearSlider').value);
             var sPL = document.getElementById('sortSelectPL').value;
             var sHE = document.getElementById('sortSelectHE').value;
 
-            // 1. GŁÓWNE FILTROWANIE DLA WIDOKU
             var filtered = rawRows.filter(function(r) { 
                 if (!r || !r.c || !r.c[1]) return false;
-                var cityPL = getVal(r.c[7]), authorPL = getVal(r.c[3]), yearRaw = getVal(r.c[5]);
+                var cityPL = getVal(r.c[7]), authorPL = getVal(r.c[3]), yearRaw = getVal(r.c[5]), hebYearRaw = getVal(r.c[6]);
                 var matchSearch = r.c.some(cell => getVal(cell).toLowerCase().indexOf(term) > -1);
                 var rowYear = extractYear(yearRaw);
-                var matchYear = (rowYear === 0) || (rowYear <= maxYear);
+                var rowHebYear = hebrewYearToNumber(hebYearRaw);
+                
+                var matchYear = (rowYear === 0 || rowYear <= maxYear) && (rowHebYear === 999999 || rowHebYear <= maxHebYear);
 
                 var matchCity = activeFacetCities.size === 0 || 
                                 (isUnknown(cityPL) ? activeFacetCities.has('_UNKNOWN_ID_') : activeFacetCities.has(cityPL.trim()));
@@ -274,7 +304,6 @@
                 return matchSearch && matchYear && matchCity && matchAuthor;
             });
 
-            // 2. SORTOWANIE
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
                filtered.sort((a, b) => {
@@ -289,29 +318,28 @@
                 });
             }
 
-            // 3. AKTUALIZACJA LICZNIKÓW I DYNAMICZNYCH LIST (LIVE UPDATES)
-            updateFacetsUI(term, maxYear);
+            updateFacetsUI(term, maxYear, maxHebYear);
             render(filtered);
         }
 
-        function updateFacetsUI(term, maxYear) {
+        function updateFacetsUI(term, maxYear, maxHebYear) {
             var cityCounts = {}, authorCounts = {};
             var unkCity = 0, unkAuth = 0;
 
             rawRows.forEach(r => {
-                var c = getVal(r.c[7]), a = getVal(r.c[3]), year = extractYear(getVal(r.c[5]));
+                var c = getVal(r.c[7]), a = getVal(r.c[3]), y = getVal(r.c[5]), hy = getVal(r.c[6]);
                 var matchSearch = r.c.some(cell => getVal(cell).toLowerCase().indexOf(term) > -1);
-                var matchYear = (year === 0 || year <= maxYear);
+                var rowYear = extractYear(y);
+                var rowHebYear = hebrewYearToNumber(hy);
+                var matchYear = (rowYear === 0 || rowYear <= maxYear) && (rowHebYear === 999999 || rowHebYear <= maxHebYear);
 
                 if (!matchSearch || !matchYear) return;
 
-                // Logika krzyżowa: Licz miasta przy uwzględnieniu aktywnych autorów
                 if (activeFacetAuthors.size === 0 || (isUnknown(a) ? activeFacetAuthors.has('_UNKNOWN_ID_') : activeFacetAuthors.has(a.trim()))) {
                     if (isUnknown(c)) unkCity++;
                     else cityCounts[c.trim()] = (cityCounts[c.trim()] || 0) + 1;
                 }
 
-                // Logika krzyżowa: Licz autorów przy uwzględnieniu aktywnych miast
                 if (activeFacetCities.size === 0 || (isUnknown(c) ? activeFacetCities.has('_UNKNOWN_ID_') : activeFacetCities.has(c.trim()))) {
                     if (isUnknown(a)) unkAuth++;
                     else authorCounts[a.trim()] = (authorCounts[a.trim()] || 0) + 1;
@@ -383,5 +411,6 @@
 
         function closeModal(e) { if(e.target.id === 'modalOverlay') e.target.style.display = 'none'; }
         function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
+        function handleScroll() {}
         init();
     </script></body></html>
