@@ -4,17 +4,23 @@
         <title> Library of Yeshivas Chachmei Lublin </title>
         <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <style>
-        /* Styl pozostaje nienaruszony */
+        /* PRZYWRÓCONE PEŁNE STYLE */
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: row; } 
-        #sidebar { width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; }
+        
+        #sidebar { 
+            width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
+            padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
+        }
         .facet-section { display: flex; flex-direction: column; gap: 10px; }
         .facet-title { font-size: 11px; font-weight: bold; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
         .facet-title.heb { font-family: "SBL Hebrew", serif; text-align: right; font-size: 14px; text-transform: none; }
+        
         .slider-wrapper { padding: 10px 0; }
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
-        #hebYearSlider { direction: rtl; }
+        #hebYearSlider { direction: rtl; } 
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
+        
         .city-list { list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto; border: 1px solid #eee; background: #fff; }
         .city-item { font-size: 12px; padding: 5px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
         .city-item:hover { background: #f0f0f0; }
@@ -22,12 +28,14 @@
         .city-item.heb { font-family: "SBL Hebrew", serif; flex-direction: row-reverse; text-align: right; font-size: 14px; }
         .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
         .active .count-pill { background: #444; color: #fff; }
+
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 15px 60px 15px 15px; border: 2px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
         #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; width: 100%; box-sizing: border-box; background: #fff; position: relative; scroll-behavior: smooth; }
+        
         .item-card { border: 1px solid #eee; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; transition: all 0.2s ease; }
         .item-card:hover { background: #fcfcfc; border-color: #1a1a1a; }
         .item-content { padding: 18px; position: relative; cursor: pointer; }
@@ -43,6 +51,9 @@
         .details-container { display: flex; gap: 20px; flex-wrap: wrap; }
         .details-image { flex: 0 0 150px; max-width: 150px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
         .details-image img { width: 100%; height: auto; border: 1px solid #1a1a1a; background: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+        .details-data { flex: 1; min-width: 250px; }
+        .details-header { font-size: 11px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #1a1a1a; display: block; margin-bottom: 10px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
         .detail-box { border-bottom: 1px solid #eee; padding-bottom: 4px; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; }
         .value { font-size: 14px; word-break: break-word; }
@@ -66,7 +77,7 @@
         <div class="facet-section">
             <span class="facet-title heb">שנה (ש"ק - ת"ש)</span>
             <div class="slider-wrapper">
-                <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" dir="rtl" oninput="updateHebYearLabel(this.value); filterAndSort();">
+                <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
                 <div class="slider-val"><span id="hebYearVal">ת"ש</span><span>ש"ק</span></div>
             </div>
         </div>
@@ -166,11 +177,14 @@
             rawRows.forEach(function(r) {
                 var rawCityPL = getVal(r.c[7]);
                 var rawCityHE = getVal(r.c[22]) || rawCityPL;
+                
                 if (isUnknownCity(rawCityPL)) {
                     unknownCount++;
                 } else {
-                    citiesPL[rawCityPL.trim()] = (citiesPL[rawCityPL.trim()] || 0) + 1;
-                    citiesHE[rawCityHE.trim()] = (citiesHE[rawCityHE.trim()] || 0) + 1;
+                    var cPL = rawCityPL.trim();
+                    var cHE = rawCityHE.trim();
+                    citiesPL[cPL] = (citiesPL[cPL] || 0) + 1;
+                    citiesHE[cHE] = (citiesHE[cHE] || 0) + 1;
                 }
             });
 
@@ -214,7 +228,7 @@
             document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
             if (city === null) {
                 document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
-            } else if (event && event.currentTarget) {
+            } else if (event) {
                 event.currentTarget.classList.add('active');
             }
             filterAndSort();
@@ -243,10 +257,9 @@
                     matchCity = isUnknownCity(cityPL);
                     return matchText && matchCity; 
                 } else if (activeFacetCity !== null) {
-                    matchCity = (cityPL.trim() === activeFacetCity.trim() || cityHE.trim() === activeFacetCity.trim());
+                    matchCity = (cityPL.trim() === activeFacetCity.trim() || (getVal(r.c[22]) || rowCityPL).trim() === activeFacetCity.trim());
                 }
 
-                // Normalne filtrowanie z suwakami
                 if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
@@ -270,28 +283,55 @@
             var container = document.getElementById('container');
             container.innerHTML = "";
             rows.forEach(function(r) {
-                var card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <div class="item-content" onclick="var d=this.nextElementSibling; d.style.display=d.style.display==='block'?'none':'block';">
-                        <div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
+                if(!r || !r.c || !r.c[1]) return;
+                var tPl = getVal(r.c[1]) || "---";
+                var tHe = getVal(r.c[2]);
+                var aPl = getVal(r.c[3]) || "---";
+                var aHe = getVal(r.c[4]);
+                var rok = getVal(r.c[5]) || "-";
+                var rokHe = getVal(r.c[6]);
+                var mie = getVal(r.c[7]) || "-";
+                var mieHe = getVal(r.c[22]) || mie;
+                var pageUrl = (r.c[16] && getVal(r.c[16]).indexOf('http') === 0) ? getVal(r.c[16]) : null;
+                var imgUrl = (r.c[23] && getVal(r.c[23]).indexOf('http') === 0) ? getVal(r.c[23]) : null;
+                
+                var cardWrapper = document.createElement('div');
+                cardWrapper.className = 'item-card';
+                
+                // PRZYWRÓCONE GENEROWANIE WSZYSTKICH DANYCH SZCZEGÓŁOWYCH
+                var detailsText = "";
+                for(var i = 0; i <= 22; i++) {
+                    if (!colLabels[i]) continue;
+                    if (i === 19 || i === 20 || i === 21 || i === 22) continue;
+                    var val = getVal(r.c[i]) || "---";
+                    if (i === 16) { detailsText += '<div class="detail-box"><span class="label">Link</span><span class="value"><a href="' + val + '" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a></span></div>'; continue; }
+                    if (i === 8 || colLabels[i].label.toLowerCase().indexOf("link") > -1) continue;
+                    detailsText += '<div class="detail-box"><span class="label">' + colLabels[i].label + '</span><span class="value">' + val + '</span></div>';
+                }
+                
+                var imgHtml = imgUrl ? '<div class="details-image"><img src="' + imgUrl + '" alt="Miniatura">' + (pageUrl ? '<a href="' + pageUrl + '" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a>' : '') + '</div>' : '';
+                
+                cardWrapper.innerHTML = `
+                    <div class="item-content" onclick="
+                        var d = this.nextElementSibling; 
+                        var isOpening = d.style.display !== 'block';
+                        d.style.display = isOpening ? 'block' : 'none';
+                        var arrows = this.querySelectorAll('.arrow');
+                        for(var j=0; j<arrows.length; j++) { arrows[j].innerHTML = isOpening ? '&uarr;' : '&darr;'; }
+                    ">
+                        <div class="row-flex"><span class="title-pl">${tPl}</span><span class="title-heb">${tHe}</span></div>
                         <div class="author-row">
-                          <div class="column-pl"><span>${getVal(r.c[3])}</span><span class="meta-info">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
-                          <div class="column-he"><span>${getVal(r.c[4])}</span><span class="meta-info">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
+                          <div class="column-pl"><span>${aPl}</span><span class="meta-info">${mie}</span><span class="meta-info">${rok}</span></div>
+                          <div class="column-he"><span>${aHe}</span><span class="meta-info">${mieHe}</span><span class="meta-info">${rokHe}</span></div>
                         </div>
-                        <div class="details-label-wrapper"><span>SZCZEGÓŁY / DETAILS</span><span class="arrow">&darr;</span></div>
+                        <div class="details-label-wrapper">
+                            <div class="details-label">SZCZEGÓŁY / DETAILS <span class="arrow">&darr;</span></div>
+                            <div class="details-label heb">פרטים <span class="arrow">&darr;</span></div>
+                        </div>
                     </div>
-                    <div class="item-details">
-                        <div class="details-container">
-                            <div class="details-image"><img src="${getVal(r.c[23])}"></div>
-                            <div class="details-data">
-                                <div class="detail-box"><span class="label">Sygnatura</span><span class="value">${getVal(r.c[0])}</span></div>
-                                <div class="detail-box"><span class="label">Uwagi</span><span class="value">${getVal(r.c[15])}</span></div>
-                                <a href="${getVal(r.c[16])}" target="_blank" class="link-btn">ZOBACZ / SEE</a>
-                            </div>
-                        </div>
-                    </div>`;
-                container.appendChild(card);
+                    <div class="item-details"><span class="details-header">SZCZEGÓŁY</span><div class="details-container">${imgHtml}<div class="details-data"><div class="detail-grid">${detailsText}</div></div></div></div>
+                `;
+                container.appendChild(cardWrapper);
             });
             updateInlineCounter(rows.length);
         }
