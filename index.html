@@ -104,10 +104,6 @@
 
     <div id="app-container">
         <aside id="sidebar">
-            <div class="facet-section" style="border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: -10px;">
-                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
-            </div>
-
             <div class="facet-section">
                 <div class="facet-header"><span class="facet-title">Rok / Year</span></div>
                 <div class="slider-wrapper">
@@ -122,6 +118,10 @@
                     <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
                     <div class="slider-val"><span>ש"ק</span><span id="hebYearVal">ת"ש</span></div>
                 </div>
+            </div>
+
+            <div class="facet-section" style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
+                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
             </div>
 
             <div class="facet-section">
@@ -189,7 +189,7 @@
                             <option value="none">סדר מקורי</option>
                             <option value="title_he">כותרת</option>
                             <option value="year_asc_he">שנה (מהישן לחדש)</option>
-                            <option value="year_desc_he">שנה (מהחדش לישן)</option>
+                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
                         </select>
                     </div>
                 </div>
