@@ -18,7 +18,6 @@
 
         #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; position: relative; }
 
-        /* HAMBURGER MENU STYLE */
         #mobile-toggle { 
             display: none; background: #1a1a1a; color: #fff; border: none; 
             padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
@@ -57,7 +56,7 @@
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         
         .search-wrapper { position: relative; width: 100%; }
-        #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; }
+        #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
 
         .kb-toggle { font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; }
@@ -85,6 +84,19 @@
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
+        .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
+        .modal-img-col { flex: 0 0 200px; text-align: center; }
+        
+        /* POPRAWIONE WYŚWIETLANIE OBRAZKA - MINIATURA */
+        .modal-img-col img { 
+            width: 100%; 
+            max-height: 300px; 
+            object-fit: contain; 
+            border: 1px solid #1a1a1a; 
+            margin-bottom: 15px; 
+        }
+
+        .modal-data-col { flex: 1; min-width: 300px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
         
@@ -97,14 +109,9 @@
         #backToTop { position: fixed; bottom: 20px; right: 20px; background: #1a1a1a; color: #fff; width: 40px; height: 40px; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 2000; font-size: 20px; }
         #loader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-style: italic; }
 
-        /* RESPONSIVE MEDIA QUERIES */
         @media (max-width: 768px) {
             #mobile-toggle { display: block; }
-            #sidebar { 
-                position: absolute; left: 0; top: 0; bottom: 0; 
-                z-index: 3000; transform: translateX(-100%); 
-                box-shadow: 5px 0 15px rgba(0,0,0,0.2);
-            }
+            #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
             #sidebar.open { transform: translateX(0); width: 80%; }
         }
     </style></head><body>
@@ -309,7 +316,6 @@
                     return getVal(a.c[i]).localeCompare(getVal(b.c[i]), sortVal.includes('_he')?'he':'pl');
                 });
             }
-
             updateFacetsUI(term, maxYear, maxHebYear);
             render(filtered);
         }
@@ -357,7 +363,7 @@
             });
             sortedKeys.forEach(k => {
                 const label = isHeb ? heMap[k] : k;
-                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')">
+                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${key}', '${type}')">
                     <span>${label}</span><span class="count-pill">${counts[k]}</span>
                 </li>`;
             });
@@ -374,7 +380,10 @@
             container.innerHTML = rows.map(r => `
                 <div class="item-card" onclick="openModal('${r.c[0].v}')">
                     <div class="item-content">
-                        <div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
+                        <div class="row-flex">
+                            <span class="title-pl">${getVal(r.c[1])}</span>
+                            <span class="title-heb">${getVal(r.c[2])}</span>
+                        </div>
                         <div class="author-row">
                             <div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
                             <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
