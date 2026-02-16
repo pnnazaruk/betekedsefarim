@@ -7,6 +7,7 @@
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
 
+        /* BIAŁY NAGŁÓWEK - UKŁAD ODWRÓCONY */
         #main-header {
             flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
             display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; 
@@ -45,7 +46,7 @@
         
         .search-wrapper { position: relative; width: 100%; }
         #search { 
-            width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; 
+            width: 100%; padding: 10px 60px 10px 15px; border: 2px solid #1a1a1a; 
             border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
         }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -161,7 +162,6 @@
                         <select id="sortSelectPL" onchange="updateSort('PL')">
                             <option value="none">Oryginalna kolejność / Default order</option>
                             <option value="title">Tytuł (A-Z) / Title (A-Z)</option>
-                            <option value="author">Autor (A-Z) / Author (A-Z)</option>
                             <option value="year_asc">Rok (Rosnąco) / Year (Ascending)</option>
                             <option value="year_desc">Rok (Malejąco) / Year (Descending)</option>
                         </select>
@@ -170,7 +170,6 @@
                         <select id="sortSelectHE" onchange="updateSort('HE')">
                             <option value="none">סדר מקורי</option>
                             <option value="title_he">כותרת</option>
-                            <option value="author_he">מחבר</option>
                             <option value="year_asc_he">שנה (מהישן לחדש)</option>
                             <option value="year_desc_he">שנה (מהחדש לישן)</option>
                         </select>
@@ -245,18 +244,17 @@
                 }
             });
 
-            renderFacetList('cityListPL', citiesPL, unknownCityCount, 'city', false);
-            renderFacetList('cityListHE', citiesHE, unknownCityCount, 'city', true);
-            renderFacetList('authorListPL', authorsPL, unknownAuthorCount, 'author', false);
-            renderFacetList('authorListHE', authorsHE, unknownAuthorCount, 'author', true);
+            renderFacetList('cityListPL', citiesPL, unknownCityCount, 'city', false, 'Wszystko/ All', 'Nieznane/ Unknown');
+            renderFacetList('cityListHE', citiesHE, unknownCityCount, 'city', true, 'הכל', 'לא ידוע');
+            renderFacetList('authorListPL', authorsPL, unknownAuthorCount, 'author', false, 'Wszystko/ All', 'Nieznany/ Unknown');
+            renderFacetList('authorListHE', authorsHE, unknownAuthorCount, 'author', true, 'הכל', 'לא ידוע');
         }
 
-        function renderFacetList(id, data, unknownCount, type, isHeb) {
+        function renderFacetList(id, data, unknownCount, type, isHeb, allLabel, unknownLabel) {
             var list = document.getElementById(id);
-            list.innerHTML = `<li class="facet-item ${isHeb?'heb':''} active" onclick="filterFacet(null, '${type}', event)">${isHeb?'הכל':'All'}</li>`;
+            list.innerHTML = `<li class="facet-item ${isHeb?'heb':''} active" onclick="filterFacet(null, '${type}', event)">${allLabel}</li>`;
             
             Object.keys(data).sort((a,b) => {
-                // Logika: nazwisko w [ ] na koniec listy
                 var aBr = a.trim().startsWith('[');
                 var bBr = b.trim().startsWith('[');
                 if (aBr && !bBr) return 1;
@@ -267,7 +265,7 @@
             });
 
             if (unknownCount > 0) {
-                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${isHeb?'לא ידוע':'Nieznany'}</span><span class="count-pill">${unknownCount}</span></li>`;
+                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${unknownLabel}</span><span class="count-pill">${unknownCount}</span></li>`;
             }
         }
 
@@ -310,13 +308,6 @@
             var sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
                filtered.sort((a, b) => {
-                    var authorCol = sortVal.includes('_he') ? 4 : 3;
-                    var authA = getVal(a.c[authorCol]), authB = getVal(b.c[authorCol]);
-                    var isEmptyA = isUnknown(authA), isEmptyB = isUnknown(authB);
-                    if ((sortVal === 'author' || sortVal === 'author_he')) {
-                        if (isEmptyA && !isEmptyB) return 1;
-                        if (!isEmptyA && isEmptyB) return -1;
-                    }
                     if (sortVal.includes("year")) {
                         var vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
                         if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
@@ -324,8 +315,7 @@
                         if (vB === 0 || vB === 999999) return -1;
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    var i = (sortVal.includes('_he')) ? 2 : 1;
-                    if (sortVal === 'author' || sortVal === 'author_he') i = (sortVal.includes('_he')) ? 4 : 3;
+                    var i = (sortVal==='title' || sortVal==='title_he') ? (sortVal.includes('_he')?2:1) : 1;
                     var normalize = (s) => getVal(s).toLowerCase().replace(/[\[\]\(\)\{\}"'.,\-–—]/g, "").trim();
                     return normalize(a.c[i]).localeCompare(normalize(b.c[i]), (sortVal.includes('_he') ? 'he' : 'pl'), {numeric: true});
                 });
