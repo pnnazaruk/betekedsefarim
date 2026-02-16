@@ -124,10 +124,6 @@
 
     <div id="app-container">
         <aside id="sidebar">
-            <div class="facet-section" style="border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: -10px;">
-                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
-            </div>
-
             <div class="facet-section">
                 <div class="facet-header"><span class="facet-title">Rok / Year</span></div>
                 <div class="slider-wrapper">
@@ -142,6 +138,10 @@
                     <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
                     <div class="slider-val"><span>ש"ק</span><span id="hebYearVal">ת"ש</span></div>
                 </div>
+            </div>
+
+            <div class="facet-section" style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
+                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
             </div>
 
             <div class="facet-section">
@@ -214,7 +214,7 @@
                     </div>
                 </div>
             </div>
-            <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
+            <div id="loader">Wczytywanie / Loading...</div>
             <div id="container"></div>
         </main>
     </div>
@@ -351,21 +351,18 @@
             const list = document.getElementById(id);
             const activeSet = activeFilters[type];
             let html = `<li class="facet-item ${isHeb?'heb':''} ${activeSet.size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
-            
             const sortedKeys = Object.keys(counts).filter(k => k !== '_UNK_').sort((a,b) => {
                 let valA = isHeb ? heMap[a] : a; let valB = isHeb ? heMap[b] : b;
                 let aBr = valA.startsWith('['), bBr = valB.startsWith('[');
                 if (aBr && !bBr) return 1; if (!aBr && bBr) return -1;
                 return valA.localeCompare(valB, isHeb ? 'he' : 'pl');
             });
-
             sortedKeys.forEach(k => {
                 const label = isHeb ? heMap[k] : k;
                 html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')">
                     <span>${label}</span><span class="count-pill">${counts[k]}</span>
                 </li>`;
             });
-
             if (counts['_UNK_']) {
                 html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')">
                     <span>${unknownLabel}</span><span class="count-pill">${counts['_UNK_']}</span>
@@ -394,7 +391,7 @@
         }
 
         function openModal(rowIndex) {
-            const r = rawRows.find(row => row.c[0].v == rowIndex);
+            const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
             if(!r) return;
             let detailsHtml = "";
             let link = getVal(r.c[16]);
