@@ -104,6 +104,10 @@
 
     <div id="app-container">
         <aside id="sidebar">
+            <div class="facet-section" style="border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: -10px;">
+                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
+            </div>
+
             <div class="facet-section">
                 <div class="facet-header"><span class="facet-title">Rok / Year</span></div>
                 <div class="slider-wrapper">
@@ -127,6 +131,7 @@
                 </div>
                 <ul id="authorListPL" class="facet-list"></ul>
             </div>
+
             <div class="facet-section">
                 <div class="facet-header">
                     <span class="facet-title">Miasto / City</span>
@@ -136,16 +141,19 @@
             </div>
 
             <div class="facet-section">
-                <div class="facet-header heb"><span class="facet-title heb">מחבר</span><span class="clear-btn" onclick="clearFacet('author')">נקה</span></div>
+                <div class="facet-header heb">
+                    <span class="facet-title heb">מחבר</span>
+                    <span class="clear-btn" onclick="clearFacet('author')">נקה</span>
+                </div>
                 <ul id="authorListHE" class="facet-list"></ul>
             </div>
+
             <div class="facet-section">
-                <div class="facet-header heb"><span class="facet-title heb">עיר</span><span class="clear-btn" onclick="clearFacet('city')">נקה</span></div>
+                <div class="facet-header heb">
+                    <span class="facet-title heb">עיר</span>
+                    <span class="clear-btn" onclick="clearFacet('city')">נקה</span>
+                </div>
                 <ul id="cityListHE" class="facet-list"></ul>
-            </div>
-            
-            <div class="facet-section" style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
-                <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
             </div>
         </aside>
 
@@ -181,7 +189,7 @@
                             <option value="none">סדר מקורי</option>
                             <option value="title_he">כותרת</option>
                             <option value="year_asc_he">שנה (מהישן לחדש)</option>
-                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
+                            <option value="year_desc_he">שנה (מהחדش לישן)</option>
                         </select>
                     </div>
                 </div>
@@ -205,12 +213,7 @@
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
-        function extractYear(s) { 
-            if (!s || s === "---") return 0; 
-            let match = String(s).match(/\d{4}/); 
-            return match ? parseInt(match[0]) : 0; 
-        }
-
+        function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
             if (!s || s === "---") return 999999; 
             let c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
@@ -219,7 +222,6 @@
             if (cleanC) { for (let i=0; i < cleanC.length; i++) sum += v[cleanC[i]] || 0; }
             if (sum > 0 && sum < 1000) sum += 5000; return sum || 999999; 
         }
-
         function numberToHebrewYear(num) {
             let n = parseInt(num); if (n > 5000) n -= 5000;
             let heb = "", v = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
@@ -289,7 +291,6 @@
                     return getVal(a.c[i]).localeCompare(getVal(b.c[i]), sortVal.includes('_he')?'he':'pl');
                 });
             }
-
             updateFacetsUI(term, maxYear, maxHebYear);
             render(filtered);
         }
