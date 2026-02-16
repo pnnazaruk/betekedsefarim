@@ -7,7 +7,6 @@
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
 
-        /* BIAŁY NAGŁÓWEK - UKŁAD ODWRÓCONY */
         #main-header {
             flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
             display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; 
@@ -44,7 +43,6 @@
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         
-        /* Styl wyszukiwarki zgodny z pierwowzorem */
         .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 15px 60px 15px 15px; border: 2px solid #1a1a1a; border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -66,7 +64,6 @@
         .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .column-he { font-size: 16px; color: #222; text-align: right; dir: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
 
-        /* MODAL */
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 30px; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; font-weight: bold; border: none; background: none; line-height: 1; }
@@ -86,7 +83,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובליン</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -268,11 +265,13 @@
                 var yearRaw = getVal(r.c[5]), hebYearRaw = getVal(r.c[6]);
                 var matchText = r.c.some(cell => getVal(cell).toLowerCase().indexOf(term) > -1);
                 var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknownCity(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity.trim() || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity.trim());
+                
                 if (activeFacetCity === "_UNKNOWN_ID_") return matchText && matchCity;
                 if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
+                
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                return matchText && matchYear && matchHebYear && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
+                return matchText && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
@@ -289,8 +288,13 @@
                         }
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    var i = (sortVal==='title'||sortVal==='title_he')?1:(sortVal==='author')?3:(sortVal==='author_he')?4:1;
-                    return getVal(a.c[i]).localeCompare(getVal(b.c[i]), (sortVal.includes('_he')?'he':'pl'), {numeric:true});
+                    var i = 1;
+                    if (sortVal === 'title' || sortVal === 'title_he') i = (sortVal.includes('_he')) ? 2 : 1;
+                    if (sortVal === 'author' || sortVal === 'author_he') i = (sortVal.includes('_he')) ? 4 : 3;
+                    
+                    var valA = getVal(a.c[i]).toLowerCase();
+                    var valB = getVal(b.c[i]).toLowerCase();
+                    return valA.localeCompare(valB, (sortVal.includes('_he') ? 'he' : 'pl'), {numeric: true});
                 });
             }
             render(filtered);
@@ -323,6 +327,7 @@
             var container = document.getElementById('container');
             container.innerHTML = "";
             rows.forEach(r => {
+                if(!r.c[0]) return;
                 var card = document.createElement('div');
                 card.className = 'item-card';
                 card.onclick = () => openModal(r.c[0].v);
@@ -337,7 +342,7 @@
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
             var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
-            return (sum > 0 && sum < 1000) ? sum + 5000 : sum || 999999; 
+            if (sum > 0 && sum < 1000) sum += 5000; return sum; 
         }
 
         function numberToHebrewYear(num) {
