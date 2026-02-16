@@ -20,7 +20,6 @@
         /* Slidery */
         .slider-wrapper { padding: 10px 0; }
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
-        /* Poprawka: logika RTL dla hebrajskiego suwaka */
         #hebYearSlider { direction: rtl; }
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
         
@@ -112,7 +111,7 @@
                 <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                 <div id="inlineCounter"></div>
             </div>
-            <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת עברית</span>
+            <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת wibracyjna</span>
             <div id="keyboard" class="keyboard">
                 <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
                 <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
@@ -155,8 +154,7 @@
     <script>
         var rawRows = [];
         var colLabels = [];
-        var activeCityPL = null;
-        var activeCityHE = null;
+        var activeFacetCity = null; 
         var sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         var url = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json';
 
@@ -167,7 +165,6 @@
                 var json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
-                
                 populateFacets();
                 render(rawRows);
                 document.getElementById('loader').style.display = 'none';
@@ -180,8 +177,8 @@
         }
 
         function isUnknownCity(val) {
-            var v = val.trim();
-            return !v || v === "---" || v === "-";
+            var v = val ? val.trim() : "";
+            return !v || v === "---" || v === "-" || v === "---";
         }
 
         function updateInlineCounter(count) {
@@ -189,10 +186,7 @@
         }
 
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
-        
-        function updateHebYearLabel(val) {
-            document.getElementById('hebYearVal').innerText = numberToHebrewYear(val);
-        }
+        function updateHebYearLabel(val) { document.getElementById('hebYearVal').innerText = numberToHebrewYear(val); }
 
         function populateFacets() {
             var citiesPL = {};
@@ -214,46 +208,49 @@
             });
 
             var listPL = document.getElementById('cityListPL');
-            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null, \'PL\')">Wszystkie / All</li>';
+            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null)">Wszystkie / All</li>';
             Object.keys(citiesPL).sort(function(a,b){return a.localeCompare(b, 'pl')}).forEach(function(city) {
                 var li = document.createElement('li');
                 li.className = 'city-item';
-                li.onclick = function() { filterCity(city, 'PL'); };
+                li.onclick = function() { filterCity(city); };
                 li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesPL[city]}</span>`;
                 listPL.appendChild(li);
             });
             if (unknownCount > 0) {
                 var liU = document.createElement('li');
                 liU.className = 'city-item';
-                liU.onclick = function() { filterCity("_UNKNOWN_ID_", 'PL'); };
+                liU.onclick = function() { filterCity("_UNKNOWN_ID_"); };
                 liU.innerHTML = `<span>Nieznane / Unknown</span><span class="count-pill">${unknownCount}</span>`;
                 listPL.appendChild(liU);
             }
 
             var listHE = document.getElementById('cityListHE');
-            listHE.innerHTML = '<li class="city-item heb" onclick="filterCity(null, \'HE\')">הכל</li>';
+            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null)">הכל</li>';
             Object.keys(citiesHE).sort(function(a,b){return a.localeCompare(b, 'he')}).forEach(function(city) {
                 var li = document.createElement('li');
                 li.className = 'city-item heb';
-                li.onclick = function() { filterCity(city, 'HE'); };
+                li.onclick = function() { filterCity(city); };
                 li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesHE[city]}</span>`;
                 listHE.appendChild(li);
             });
             if (unknownCount > 0) {
                 var liHU = document.createElement('li');
                 liHU.className = 'city-item heb';
-                liHU.onclick = function() { filterCity("_UNKNOWN_ID_", 'HE'); };
+                liHU.onclick = function() { filterCity("_UNKNOWN_ID_"); };
                 liHU.innerHTML = `<span>לא ידוע</span><span class="count-pill">${unknownCount}</span>`;
                 listHE.appendChild(liHU);
             }
         }
 
-        function filterCity(city, lang) {
-            if(lang === 'PL') { activeCityPL = city; activeCityHE = null; }
-            else { activeCityHE = city; activeCityPL = null; }
-            
+        function filterCity(city) {
+            activeFacetCity = city;
             document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if (city === null) {
+                document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
+            } else {
+                // Ta linia podświetla tylko kliknięty element
+                event.currentTarget.classList.add('active');
+            }
             filterAndSort();
         }
 
@@ -269,49 +266,37 @@
                 
                 var yearRaw = getVal(r.c[5]);
                 var hebYearRaw = getVal(r.c[6]);
+                
                 if (yearRaw === "---" || yearRaw === "" || hebYearRaw === "---" || hebYearRaw === "") return false;
 
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                var rowCityPL = getVal(r.c[7]);
-                var rowCityHE = getVal(r.c[22]) || rowCityPL;
+                var rowCityPL = getVal(r.c[7]).trim();
+                var rowCityHE = (getVal(r.c[22]) || rowCityPL).trim();
 
                 var matchText = r.c.some(function(cell) { return cell && getVal(cell).toLowerCase().indexOf(term) > -1; });
                 var matchYear = rowYear <= maxYear;
                 var matchHebYear = rowHebYear <= maxHebYear;
                 
                 var matchCity = true;
-                if (activeCityPL === "_UNKNOWN_ID_" || activeCityHE === "_UNKNOWN_ID_") {
+                if (activeFacetCity === "_UNKNOWN_ID_") {
+                    // Kluczowa naprawa: sprawdzenie funkcją isUnknownCity podczas filtrowania
                     matchCity = isUnknownCity(rowCityPL);
-                } else if (activeCityPL) {
-                    matchCity = (rowCityPL.trim() === activeCityPL);
-                } else if (activeCityHE) {
-                    matchCity = ((getVal(r.c[22]) || rowCityPL).trim() === activeCityHE);
+                } else if (activeFacetCity !== null) {
+                    matchCity = (rowCityPL === activeFacetCity || rowCityHE === activeFacetCity);
                 }
 
                 return matchText && matchYear && matchHebYear && matchCity;
             });
 
-            updateInlineCounter(filtered.length);
-            
-            var sortVal = sPL !== "none" ? sPL : sHE;
-            if(sortVal !== "none") {
-                filtered.sort(function(a, b) {
-                    if (sortVal === "year_he") return hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6]));
-                    var i = 1; if(sortVal === "author") i = 3; if(sortVal === "place") i = 7; if(sortVal === "year") i = 5;
-                    if(sortVal === "title_he") i = 2; if(sortVal === "author_he") i = 4; if(sortVal === "place_he") i = 22;
-                    var norm = function(cell) { 
-                        var val = getVal(cell);
-                        if (!val || val === "---" || val === "-") return null;
-                        return val.toLowerCase().split("[").join("").split("]").join("").trim();
-                    };
-                    var vA = norm(a.c[i]), vB = norm(b.c[i]);
-                    if (vA === null && vB === null) return 0;
-                    if (vA === null) return 1;
-                    if (vB === null) return -1;
-                    return vA.localeCompare(vB, (sortVal.indexOf("_he") > -1) ? "he" : "pl", { numeric: true, sensitivity: "base" });
-                });
+            if(sortVal !== "none") { // Zmienna sortVal pobierana z aktualnych selectów
+               var sortVal = sPL !== "none" ? sPL : sHE;
+               if(sortVal === 'title') filtered.sort((a,b) => getVal(a.c[1]).localeCompare(getVal(b.c[1]), 'pl'));
+               if(sortVal === 'year') filtered.sort((a,b) => parseInt(getVal(a.c[5]).replace(/\D/g,'')) - parseInt(getVal(b.c[5]).replace(/\D/g,'')));
+               if(sortVal === 'title_he') filtered.sort((a,b) => getVal(a.c[2]).localeCompare(getVal(b.c[2]), 'he'));
+               if(sortVal === 'year_he') filtered.sort((a,b) => hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6])));
             }
+
             render(filtered);
         }
 
