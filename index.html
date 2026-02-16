@@ -45,8 +45,6 @@
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; z-index: 1000; }
         
         .search-wrapper { position: relative; width: 100%; }
-        
-        /* ZAKTUALIZOWANY STYL WYSZUKIWARKI (CIEŃSZA RAMKA 1PX) */
         #search { 
             width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; 
             border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
@@ -77,7 +75,7 @@
 
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 3000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; position: relative; border: 2px solid #1a1a1a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 30px; }
-        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; font-weight: bold; border: none; background: none; line-height: 1; }
+        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; line-height: 1; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
         .modal-img-col img { width: 100%; border: 1px solid #1a1a1a; background: #fff; margin-bottom: 15px; }
@@ -194,8 +192,10 @@
     <script>
         var rawRows = [];
         var colLabels = [];
-        var activeFacetCity = null; 
-        var activeFacetAuthor = null;
+        // Multiselect state
+        var activeFacetCities = new Set();
+        var activeFacetAuthors = new Set();
+        
         var sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         var url = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json';
 
@@ -255,7 +255,10 @@
 
         function renderFacetList(id, data, unknownCount, type, isHeb, allLabel, unknownLabel) {
             var list = document.getElementById(id);
-            list.innerHTML = `<li class="facet-item ${isHeb?'heb':''} active" onclick="filterFacet(null, '${type}', event)">${allLabel}</li>`;
+            var activeSet = type === 'city' ? activeFacetCities : activeFacetAuthors;
+            
+            var allActive = activeSet.size === 0 ? 'active' : '';
+            list.innerHTML = `<li class="facet-item ${isHeb?'heb':''} ${allActive}" onclick="filterFacet(null, '${type}', event)">${allLabel}</li>`;
             
             Object.keys(data).sort((a,b) => {
                 var aBr = a.trim().startsWith('[');
@@ -264,24 +267,59 @@
                 if (!aBr && bBr) return -1;
                 return a.localeCompare(b, isHeb ? 'he' : 'pl');
             }).forEach(key => {
-                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('${key}', '${type}', event)"><span>${key}</span><span class="count-pill">${data[key]}</span></li>`;
+                var isActive = activeSet.has(key) ? 'active' : '';
+                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''} ${isActive}" onclick="filterFacet('${key}', '${type}', event)"><span>${key}</span><span class="count-pill">${data[key]}</span></li>`;
             });
 
             if (unknownCount > 0) {
-                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${unknownLabel}</span><span class="count-pill">${unknownCount}</span></li>`;
+                var isUnkActive = activeSet.has('_UNKNOWN_ID_') ? 'active' : '';
+                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''} ${isUnkActive}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${unknownLabel}</span><span class="count-pill">${unknownCount}</span></li>`;
             }
         }
 
         function filterFacet(val, type, event) {
-            if (type === 'city') {
-                activeFacetCity = val;
-                document.querySelectorAll('#cityListPL .facet-item, #cityListHE .facet-item').forEach(el => el.classList.remove('active'));
+            var activeSet = type === 'city' ? activeFacetCities : activeFacetAuthors;
+            
+            if (val === null) {
+                activeSet.clear();
             } else {
-                activeFacetAuthor = val;
-                document.querySelectorAll('#authorListPL .facet-item, #authorListHE .facet-item').forEach(el => el.classList.remove('active'));
+                if (activeSet.has(val)) activeSet.delete(val);
+                else activeSet.add(val);
             }
-            event.currentTarget.classList.add('active');
+            
+            // Re-render facet UI state
+            var containerId = type === 'city' ? 'cityList' : 'authorList';
+            document.querySelectorAll(`[id^="${containerId}"] .facet-item`).forEach(el => {
+                var label = el.querySelector('span') ? el.querySelector('span').innerText : el.innerText;
+                // Basic sync: if "All" clicked, reset others. If others clicked, reset "All".
+                el.classList.remove('active');
+            });
+            
             filterAndSort();
+            // Re-populate counts is complex, let's just refresh the active classes for now
+            refreshFacetUIState();
+        }
+
+        function refreshFacetUIState() {
+            ['cityListPL', 'cityListHE', 'authorListPL', 'authorListHE'].forEach(id => {
+                var type = id.includes('city') ? 'city' : 'author';
+                var activeSet = type === 'city' ? activeFacetCities : activeFacetAuthors;
+                var items = document.querySelectorAll(`#${id} .facet-item`);
+                
+                items.forEach((item, idx) => {
+                    if (idx === 0) { // "All" item
+                        activeSet.size === 0 ? item.classList.add('active') : item.classList.remove('active');
+                        return;
+                    }
+                    var val = item.querySelector('span').innerText;
+                    // Handle translated "Unknown" label mapping back to ID
+                    if (val.includes('Nieznan') || val.includes('לא ידוע')) {
+                        activeSet.has('_UNKNOWN_ID_') ? item.classList.add('active') : item.classList.remove('active');
+                    } else {
+                        activeSet.has(val) ? item.classList.add('active') : item.classList.remove('active');
+                    }
+                });
+            });
         }
 
         function filterAndSort() {
@@ -297,8 +335,12 @@
                 var yearRaw = getVal(r.c[5]), hebYearRaw = getVal(r.c[6]);
                 var matchText = r.c.some(cell => getVal(cell).toLowerCase().indexOf(term) > -1);
                 
-                var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknown(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity);
-                var matchAuthor = (activeFacetAuthor === "_UNKNOWN_ID_") ? isUnknown(authorPL) : (activeFacetAuthor === null || authorPL.trim() === activeFacetAuthor || (getVal(r.c[4]) || authorPL).trim() === activeFacetAuthor);
+                // MULTISELECT LOGIC
+                var matchCity = activeFacetCities.size === 0 || 
+                                (isUnknown(cityPL) ? activeFacetCities.has('_UNKNOWN_ID_') : activeFacetCities.has(cityPL.trim()) || activeFacetCities.has((getVal(r.c[22]) || cityPL).trim()));
+                
+                var matchAuthor = activeFacetAuthors.size === 0 || 
+                                  (isUnknown(authorPL) ? activeFacetAuthors.has('_UNKNOWN_ID_') : activeFacetAuthors.has(authorPL.trim()) || activeFacetAuthors.has((getVal(r.c[4]) || authorPL).trim()));
 
                 var rowYear = extractYear(yearRaw);
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
@@ -382,7 +424,7 @@
         }
 
         window.onkeydown = function(e) { if(e.key === "Escape") document.getElementById('modalOverlay').style.display = 'none'; };
-        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
         function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
