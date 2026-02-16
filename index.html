@@ -45,7 +45,7 @@
         
         .search-wrapper { position: relative; width: 100%; }
         #search { 
-            width: 100%; padding: 10px 60px 10px 15px; border: 2px solid #1a1a1a; 
+            width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; 
             border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
         }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -82,7 +82,6 @@
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
         .value { font-size: 15px; line-height: 1.5; }
         
-        /* POPRAWIONY PRZYCISK Z EFEKTEM HOVER */
         .link-btn { 
             display: inline-block; background: #1a1a1a; color: #fff !important; 
             padding: 10px 20px; font-size: 12px; text-decoration: none; 
@@ -96,7 +95,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרim בישיבת חכמי לובלין</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
@@ -256,12 +255,19 @@
             var list = document.getElementById(id);
             list.innerHTML = `<li class="facet-item ${isHeb?'heb':''} active" onclick="filterFacet(null, '${type}', event)">${isHeb?'הכל':'All'}</li>`;
             
-            Object.keys(data).sort((a,b)=>a.localeCompare(b, isHeb?'he':'pl')).forEach(key => {
+            Object.keys(data).sort((a,b) => {
+                // Logika: nazwisko w [ ] na koniec listy
+                var aBr = a.trim().startsWith('[');
+                var bBr = b.trim().startsWith('[');
+                if (aBr && !bBr) return 1;
+                if (!aBr && bBr) return -1;
+                return a.localeCompare(b, isHeb ? 'he' : 'pl');
+            }).forEach(key => {
                 list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('${key}', '${type}', event)"><span>${key}</span><span class="count-pill">${data[key]}</span></li>`;
             });
 
             if (unknownCount > 0) {
-                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${isHeb?'לא ידוע':'Unknown'}</span><span class="count-pill">${unknownCount}</span></li>`;
+                list.innerHTML += `<li class="facet-item ${isHeb?'heb':''}" onclick="filterFacet('_UNKNOWN_ID_', '${type}', event)"><span>${isHeb?'לא ידוע':'Nieznany'}</span><span class="count-pill">${unknownCount}</span></li>`;
             }
         }
 
@@ -342,7 +348,7 @@
             }
             var img = getVal(r.c[23]), link = getVal(r.c[16]);
             document.getElementById('modalContent').innerHTML = `
-                <div class="modal-img-col"><img src="${img}">${link ? `<a href="${link}" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a>` : ''}</div>
+                <div class="modal-img-col"><img src="${img}">${link ? `<a href="${link}" target="_blank" class="link-btn">ZOBACZ / SEE</a>` : ''}</div>
                 <div class="modal-data-col">${detailsHtml}</div>
             `;
             document.getElementById('modalOverlay').style.display = 'flex';
@@ -383,7 +389,7 @@
         }
 
         window.onkeydown = function(e) { if(e.key === "Escape") document.getElementById('modalOverlay').style.display = 'none'; };
-        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
         function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
