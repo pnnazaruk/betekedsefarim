@@ -46,12 +46,11 @@
         
         .search-wrapper { position: relative; width: 100%; }
         #search { 
-            width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; 
+            width: 100%; padding: 10px 60px 10px 15px; border: 2px solid #1a1a1a; 
             border-radius: 0; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; 
         }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
         
-        /* MODYFIKACJA KLAWIATURY */
         .keyboard { 
             display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; 
             padding: 10px 0; border-top: 0; dir: rtl; margin-bottom: 10px; 
@@ -188,6 +187,13 @@
         var sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         var url = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json';
 
+        // Pomocnicza funkcja do wyciągania liczby z tekstu daty
+        function extractYear(s) {
+            if (!s || s === "---") return 0;
+            var match = String(s).match(/\d{4}/);
+            return match ? parseInt(match[0]) : 0;
+        }
+
         async function init() {
             try {
                 var r = await fetch(url);
@@ -281,11 +287,15 @@
                 var matchCity = (activeFacetCity === "_UNKNOWN_ID_") ? isUnknownCity(cityPL) : (activeFacetCity === null || cityPL.trim() === activeFacetCity.trim() || (getVal(r.c[22]) || cityPL).trim() === activeFacetCity.trim());
                 
                 if (activeFacetCity === "_UNKNOWN_ID_") return matchText && matchCity;
-                if (!yearRaw || yearRaw === "---" || !hebYearRaw || hebYearRaw === "---") return false;
-                
-                var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
+
+                // Poprawiona logika suwaków: Przepuszczaj rekordy bez daty (0) lub pasujące liczbowo
+                var rowYear = extractYear(yearRaw);
                 var rowHebYear = hebrewYearToNumber(hebYearRaw);
-                return matchText && matchCity && rowYear <= maxYear && rowHebYear <= maxHebYear;
+                
+                var matchYear = (rowYear === 0) || (rowYear <= maxYear);
+                var matchHebYear = (rowHebYear === 999999) || (rowHebYear <= maxHebYear);
+
+                return matchText && matchCity && matchYear && matchHebYear;
             });
 
             var sortVal = sPL !== "none" ? sPL : sHE;
@@ -294,8 +304,12 @@
                     var authorCol = sortVal.includes('_he') ? 4 : 3;
                     var authA = getVal(a.c[authorCol]), authB = getVal(b.c[authorCol]);
                     var isEmptyA = !authA || authA === "---", isEmptyB = !authB || authB === "---";
-                    if (isEmptyA && !isEmptyB) return 1;
-                    if (!isEmptyA && isEmptyB) return -1;
+                    
+                    // Jeśli sortujemy po autorze, wypchnij pustych na koniec
+                    if ((sortVal === 'author' || sortVal === 'author_he')) {
+                        if (isEmptyA && !isEmptyB) return 1;
+                        if (!isEmptyA && isEmptyB) return -1;
+                    }
 
                     if (sortVal.includes("year")) {
                         var vA, vB;
@@ -303,14 +317,17 @@
                             vA = hebrewYearToNumber(getVal(a.c[6]));
                             vB = hebrewYearToNumber(getVal(b.c[6]));
                         } else {
-                            vA = parseInt(getVal(a.c[5]).replace(/\D/g,'')) || 0;
-                            vB = parseInt(getVal(b.c[5]).replace(/\D/g,'')) || 0;
+                            vA = extractYear(getVal(a.c[5]));
+                            vB = extractYear(getVal(b.c[5]));
                         }
+                        // Rekordy bez daty (0 / 999999) zawsze na koniec
+                        if ((vA === 0 || vA === 999999) && (vB !== 0 && vB !== 999999)) return 1;
+                        if ((vB === 0 || vB === 999999) && (vA !== 0 && vA !== 999999)) return -1;
+                        
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
                     
-                    var i = 1;
-                    if (sortVal === 'title' || sortVal === 'title_he') i = (sortVal.includes('_he')) ? 2 : 1;
+                    var i = (sortVal.includes('_he')) ? 2 : 1;
                     if (sortVal === 'author' || sortVal === 'author_he') i = (sortVal.includes('_he')) ? 4 : 3;
                     
                     var normalize = (s) => getVal(s).toLowerCase().replace(/[\[\]\(\)\{\}"'.,\-–—]/g, "").trim();
@@ -364,8 +381,14 @@
             if (!s || s === "---") return 999999; 
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
-            var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
-            if (sum > 0 && sum < 1000) sum += 5000; return sum; 
+            var sum = 0;
+            // Wyciągnij tylko hebrajskie znaki, by uniknąć błędów przy datach mieszanych
+            var cleanC = c.match(/[\u0590-\u05FF]/g);
+            if (cleanC) {
+                for (var i=0; i < cleanC.length; i++) sum += v[cleanC[i]] || 0; 
+            }
+            if (sum > 0 && sum < 1000) sum += 5000; 
+            return sum || 999999; 
         }
 
         function numberToHebrewYear(num) {
@@ -377,7 +400,7 @@
         }
 
         window.onkeydown = function(e) { if(e.key === "Escape") document.getElementById('modalOverlay').style.display = 'none'; };
-        function handleScroll() { var c = document.getElementById('container'); document.getElementById('backToTop').style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
         function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
         function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
