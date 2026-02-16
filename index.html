@@ -6,7 +6,7 @@
     <style>
         /* Twoje oryginalne style */
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
-        body { display: flex; flex-direction: row; } /* Zmieniono na rzędy dla paska bocznego */
+        body { display: flex; flex-direction: row; } /* Zmieniono na row dla paska bocznego */
         
         /* Styl Paska Bocznego */
         #sidebar { 
@@ -111,11 +111,11 @@
                 <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                 <div id="inlineCounter"></div>
             </div>
-            <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת עברית</span>
+            <span class="kb-toggle" onclick="toggleKeyboard()" style="font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px;">Klawiatura hebrajska / מקלדת עברית</span>
             <div id="keyboard" class="keyboard">
                 <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
                 <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
-                <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key backspace" onclick="delChar()">← DEL</div>
+                <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key" onclick="delChar()">← DEL</div>
                 <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
                 <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
                 <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
@@ -123,27 +123,17 @@
                 <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
                 <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
             </div>
-            <div class="sort-wrapper">
-                <div class="sort-container">
-                    <span>Sortuj wg / Sort by:</span>
-                    <select id="sortSelectPL" onchange="updateSort('PL')">
-                        <option value="none">Oryginalna kolejność / Default</option>
-                        <option value="title">Tytuł / Title</option>
-                        <option value="author">Autor / Author</option>
-                        <option value="place">Miejsce / Place</option>
-                        <option value="year">Rok / Year</option>
-                    </select>
-                </div>
-                <div class="sort-container heb">
-                    <span>:מיין לפי</span>
-                    <select id="sortSelectHE" onchange="updateSort('HE')">
-                        <option value="none">סדר מקורי</option>
-                        <option value="title_he">כותרת</option>
-                        <option value="author_he">מחבר</option>
-                        <option value="place_he">מקום הוצאה</option>
-                        <option value="year_he">שנה</option>
-                    </select>
-                </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <select id="sortSelectPL" onchange="filterAndSort()" style="padding: 8px; border: 1px solid #1a1a1a; flex: 1;">
+                    <option value="none">Oryginalna kolejność / Default</option>
+                    <option value="title">Tytuł / Title</option>
+                    <option value="year">Rok / Year</option>
+                </select>
+                <select id="sortSelectHE" onchange="filterAndSort()" style="padding: 8px; border: 1px solid #1a1a1a; flex: 1; font-family: 'SBL Hebrew', serif;">
+                    <option value="none">סדר מקורי</option>
+                    <option value="title_he">כותרת</option>
+                    <option value="year_he">שנה</option>
+                </select>
             </div>
         </div>
         <div id="loader">Wczytywanie / Loading...</div>
@@ -154,8 +144,7 @@
     <script>
         var rawRows = [];
         var colLabels = [];
-        var activeCityPL = null;
-        var activeCityHE = null;
+        var activeFacetCity = null; // Jedna zmienna dla obu list
         var sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         var url = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/gviz/tq?tqx=out:json';
 
@@ -166,7 +155,6 @@
                 var json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
-                
                 populateFacets();
                 render(rawRows);
                 document.getElementById('loader').style.display = 'none';
@@ -179,8 +167,8 @@
         }
 
         function isUnknownCity(val) {
-            var v = val.trim();
-            return !v || v === "---" || v === "-";
+            var v = val ? val.trim() : "";
+            return !v || v === "---" || v === "-" || v === "---";
         }
 
         function updateInlineCounter(count) {
@@ -188,10 +176,7 @@
         }
 
         function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
-        
-        function updateHebYearLabel(val) {
-            document.getElementById('hebYearVal').innerText = numberToHebrewYear(val);
-        }
+        function updateHebYearLabel(val) { document.getElementById('hebYearVal').innerText = numberToHebrewYear(val); }
 
         function populateFacets() {
             var citiesPL = {};
@@ -212,47 +197,52 @@
                 }
             });
 
+            // Lista PL
             var listPL = document.getElementById('cityListPL');
-            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null, \'PL\')">Wszystkie / All</li>';
+            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null)">Wszystkie / All</li>';
             Object.keys(citiesPL).sort((a,b) => a.localeCompare(b, 'pl')).forEach(city => {
                 var li = document.createElement('li');
                 li.className = 'city-item';
-                li.onclick = function() { filterCity(city, 'PL'); };
+                li.onclick = function() { filterCity(city); };
                 li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesPL[city]}</span>`;
                 listPL.appendChild(li);
             });
             if (unknownCount > 0) {
                 var liU = document.createElement('li');
                 liU.className = 'city-item';
-                liU.onclick = function() { filterCity("_UNKNOWN_ID_", 'PL'); };
+                liU.onclick = function() { filterCity("_UNKNOWN_ID_"); };
                 liU.innerHTML = `<span>Nieznane / Unknown</span><span class="count-pill">${unknownCount}</span>`;
                 listPL.appendChild(liU);
             }
 
+            // Lista HE
             var listHE = document.getElementById('cityListHE');
-            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null, \'HE\')">הכל</li>';
+            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null)">הכל</li>';
             Object.keys(citiesHE).sort((a,b) => a.localeCompare(b, 'he')).forEach(city => {
                 var li = document.createElement('li');
                 li.className = 'city-item heb';
-                li.onclick = function() { filterCity(city, 'HE'); };
+                li.onclick = function() { filterCity(city); };
                 li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesHE[city]}</span>`;
                 listHE.appendChild(li);
             });
             if (unknownCount > 0) {
                 var liHU = document.createElement('li');
                 liHU.className = 'city-item heb';
-                liHU.onclick = function() { filterCity("_UNKNOWN_ID_", 'HE'); };
+                liHU.onclick = function() { filterCity("_UNKNOWN_ID_"); };
                 liHU.innerHTML = `<span>לא ידוע</span><span class="count-pill">${unknownCount}</span>`;
                 listHE.appendChild(liHU);
             }
         }
 
-        function filterCity(city, lang) {
-            if(lang === 'PL') { activeCityPL = city; activeCityHE = null; }
-            else { activeCityHE = city; activeCityPL = null; }
-            
+        function filterCity(city) {
+            activeFacetCity = city;
             document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            // Podświetl oba jeśli to ta sama wartość (np. All lub Unknown)
+            if (city === null) {
+                document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
+            } else {
+                event.currentTarget.classList.add('active');
+            }
             filterAndSort();
         }
 
@@ -260,19 +250,18 @@
             var term = document.getElementById('search').value.toLowerCase().trim();
             var maxYear = parseInt(document.getElementById('yearSlider').value);
             var maxHebYear = parseInt(document.getElementById('hebYearSlider').value);
-            var sPL = document.getElementById('sortSelectPL').value;
-            var sHE = document.getElementById('sortSelectHE').value;
+            var sortPL = document.getElementById('sortSelectPL').value;
+            var sortHE = document.getElementById('sortSelectHE').value;
 
             var filtered = rawRows.filter(function(r) { 
                 if (!r || !r.c || !r.c[1]) return false;
                 
-                var yearRaw = getVal(r.c[5]);
-                var hebYearRaw = getVal(r.c[6]);
-                
-                if (yearRaw === "---" || yearRaw === "" || hebYearRaw === "---" || hebYearRaw === "") return false;
+                var yRaw = getVal(r.c[5]);
+                var hyRaw = getVal(r.c[6]);
+                if (yRaw === "---" || yRaw === "" || hyRaw === "---" || hyRaw === "") return false;
 
-                var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
-                var rowHebYear = hebrewYearToNumber(hebYearRaw);
+                var rowYear = parseInt(yRaw.replace(/\D/g, '')) || 0;
+                var rowHebYear = hebrewYearToNumber(hyRaw);
                 var rowCityPL = getVal(r.c[7]).trim();
                 var rowCityHE = (getVal(r.c[22]) || rowCityPL).trim();
 
@@ -281,37 +270,24 @@
                 var matchHebYear = rowHebYear <= maxHebYear;
                 
                 var matchCity = true;
-                if (activeCityPL === "_UNKNOWN_ID_" || activeCityHE === "_UNKNOWN_ID_") {
+                if (activeFacetCity === "_UNKNOWN_ID_") {
                     matchCity = isUnknownCity(rowCityPL);
-                } else if (activeCityPL) {
-                    matchCity = (rowCityPL === activeCityPL);
-                } else if (activeCityHE) {
-                    matchCity = (rowCityHE === activeCityHE);
+                } else if (activeFacetCity !== null) {
+                    // Sprawdza czy wybrana nazwa pasuje do PL lub HE (dla wygody klikania w obie listy)
+                    matchCity = (rowCityPL === activeFacetCity || rowCityHE === activeFacetCity);
                 }
 
                 return matchText && matchYear && matchHebYear && matchCity;
             });
 
-            updateInlineCounter(filtered.length);
-            
-            var sortVal = sPL !== "none" ? sPL : sHE;
-            if(sortVal !== "none") {
-                filtered.sort(function(a, b) {
-                    if (sortVal === "year_he") return hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6]));
-                    var i = 1; if(sortVal === "author") i = 3; if(sortVal === "place") i = 7; if(sortVal === "year") i = 5;
-                    if(sortVal === "title_he") i = 2; if(sortVal === "author_he") i = 4; if(sortVal === "place_he") i = 22;
-                    var norm = function(cell) { 
-                        var val = getVal(cell);
-                        if (!val || val === "---" || val === "-") return null;
-                        return val.toLowerCase().split("[").join("").split("]").join("").trim();
-                    };
-                    var vA = norm(a.c[i]), vB = norm(b.c[i]);
-                    if (vA === null && vB === null) return 0;
-                    if (vA === null) return 1;
-                    if (vB === null) return -1;
-                    return vA.localeCompare(vB, (sortVal.indexOf("_he") > -1) ? "he" : "pl", { numeric: true, sensitivity: "base" });
-                });
+            if(sortPL !== "none") {
+                if(sortPL === 'title') filtered.sort((a,b) => getVal(a.c[1]).localeCompare(getVal(b.c[1]), 'pl'));
+                if(sortPL === 'year') filtered.sort((a,b) => parseInt(getVal(a.c[5]).replace(/\D/g,'')) - parseInt(getVal(b.c[5]).replace(/\D/g,'')));
+            } else if(sortHE !== "none") {
+                if(sortHE === 'title_he') filtered.sort((a,b) => getVal(a.c[2]).localeCompare(getVal(b.c[2]), 'he'));
+                if(sortHE === 'year_he') filtered.sort((a,b) => hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6])));
             }
+
             render(filtered);
         }
 
@@ -319,66 +295,38 @@
             var container = document.getElementById('container');
             container.innerHTML = "";
             rows.forEach(function(r) {
-                if(!r || !r.c || !r.c[1]) return;
-                var tPl = getVal(r.c[1]) || "---";
-                var tHe = getVal(r.c[2]);
-                var aPl = getVal(r.c[3]) || "---";
-                var aHe = getVal(r.c[4]);
-                var rok = getVal(r.c[5]) || "-";
-                var rokHe = getVal(r.c[6]);
-                var mie = getVal(r.c[7]) || "-";
-                var mieHe = getVal(r.c[22]) || mie;
-                var pageUrl = (r.c[16] && getVal(r.c[16]).indexOf('http') === 0) ? getVal(r.c[16]) : null;
-                var imgUrl = (r.c[23] && getVal(r.c[23]).indexOf('http') === 0) ? getVal(r.c[23]) : null;
-                var cardWrapper = document.createElement('div');
-                cardWrapper.className = 'item-card';
-                var detailsText = "";
-                for(var i = 0; i <= 22; i++) {
-                    if (!colLabels[i]) continue;
-                    if (i === 19 || i === 20 || i === 21 || i === 22) continue;
-                    var val = getVal(r.c[i]) || "---";
-                    if (i === 16) { detailsText += '<div class="detail-box"><span class="label">Link</span><span class="value"><a href="' + val + '" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a></span></div>'; continue; }
-                    if (i === 8 || colLabels[i].label.toLowerCase().indexOf("link") > -1) continue;
-                    detailsText += '<div class="detail-box"><span class="label">' + colLabels[i].label + '</span><span class="value">' + val + '</span></div>';
-                }
-                var imgHtml = imgUrl ? '<div class="details-image"><img src="' + imgUrl + '" alt="Miniatura">' + (pageUrl ? '<a href="' + pageUrl + '" target="_blank" class="link-btn" onclick="event.stopPropagation()">ZOBACZ / SEE</a>' : '') + '</div>' : '';
-                cardWrapper.innerHTML = `
-                    <div class="item-content" onclick="
-                        var d = this.nextElementSibling; 
-                        var isOpening = d.style.display !== 'block';
-                        d.style.display = isOpening ? 'block' : 'none';
-                        var arrows = this.querySelectorAll('.arrow');
-                        for(var j=0; j<arrows.length; j++) { arrows[j].innerHTML = isOpening ? '&uarr;' : '&darr;'; }
-                    ">
-                        <div class="row-flex"><span class="title-pl">${tPl}</span><span class="title-heb">${tHe}</span></div>
+                var img = getVal(r.c[23]);
+                var card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-content" onclick="var d=this.nextElementSibling; d.style.display=d.style.display==='block'?'none':'block';">
+                        <div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
                         <div class="author-row">
-                          <div class="column-pl"><span>${aPl}</span><span class="meta-info">${mie}</span><span class="meta-info">${rok}</span></div>
-                          <div class="column-he"><span>${aHe}</span><span class="meta-info">${mieHe}</span><span class="meta-info">${rokHe}</span></div>
+                          <div class="column-pl"><span>${getVal(r.c[3])}</span><span class="meta-info">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
+                          <div class="column-he"><span>${getVal(r.c[4])}</span><span class="meta-info">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
                         </div>
-                        <div class="details-label-wrapper">
-                            <div class="details-label">SZCZEGÓŁY / DETAILS <span class="arrow">&darr;</span></div>
-                            <div class="details-label heb">פרטים <span class="arrow">&darr;</span></div>
-                        </div>
+                        <div class="details-label-wrapper"><span>SZCZEGÓŁY / DETAILS</span><span class="arrow">&darr;</span></div>
                     </div>
-                    <div class="item-details"><span class="details-header">SZCZEGÓŁY</span><div class="details-container">${imgHtml}<div class="details-data"><div class="detail-grid">${detailsText}</div></div></div></div>
-                `;
-                container.appendChild(cardWrapper);
+                    <div class="item-details">
+                        <div class="details-container">
+                            <div class="details-image"><img src="${img}"></div>
+                            <div class="details-data">
+                                <div class="detail-box"><span class="label">Sygnatura</span><span class="value">${getVal(r.c[0])}</span></div>
+                                <div class="detail-box"><span class="label">Uwagi</span><span class="value">${getVal(r.c[15])}</span></div>
+                                <a href="${getVal(r.c[16])}" target="_blank" class="link-btn">ZOBACZ / SEE</a>
+                            </div>
+                        </div>
+                    </div>`;
+                container.appendChild(card);
             });
             updateInlineCounter(rows.length);
         }
 
-        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
-        function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
-        function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
-        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
-        function delChar() { var s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
-        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
-        
         function hebrewYearToNumber(s) { 
             if (!s || s === "---") return 999999; 
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
-            var sum = 0; for (var i=0; i < c.length; i++) { sum += v[c[i]] || 0; } 
+            var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
             if (sum > 0 && sum < 1000) sum += 5000; return sum === 0 ? 999999 : sum; 
         }
 
@@ -391,6 +339,13 @@
             for(var i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
             return heb;
         }
+
+        function handleScroll() { var c = document.getElementById('container'); var b = document.getElementById('backToTop'); b.style.display = c.scrollTop > 300 ? "flex" : "none"; }
+        function scrollToTop() { document.getElementById('container').scrollTo({ top: 0, behavior: 'smooth' }); }
+        function toggleKeyboard() { var k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
+        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
+        function delChar() { var s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
+        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
 
         init();
     </script></body></html>
