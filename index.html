@@ -111,11 +111,11 @@
                 <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                 <div id="inlineCounter"></div>
             </div>
-            <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת wibracyjna</span>
+            <span class="kb-toggle" onclick="toggleKeyboard()" style="font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px;">Klawiatura hebrajska / מקלדת עברית</span>
             <div id="keyboard" class="keyboard">
                 <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
                 <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
-                <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key backspace" onclick="delChar()">← DEL</div>
+                <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key" onclick="delChar()">← DEL</div>
                 <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
                 <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
                 <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
@@ -123,27 +123,19 @@
                 <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
                 <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
             </div>
-            <div class="sort-wrapper">
-                <div class="sort-container">
-                    <span>Sortuj wg / Sort by:</span>
-                    <select id="sortSelectPL" onchange="updateSort('PL')">
-                        <option value="none">Oryginalna kolejność / Default</option>
-                        <option value="title">Tytuł / Title</option>
-                        <option value="author">Autor / Author</option>
-                        <option value="place">Miejsce / Place</option>
-                        <option value="year">Rok / Year</option>
-                    </select>
-                </div>
-                <div class="sort-container heb">
-                    <span>:מיין לפי</span>
-                    <select id="sortSelectHE" onchange="updateSort('HE')">
-                        <option value="none">סדר מקורי</option>
-                        <option value="title_he">כותרת</option>
-                        <option value="author_he">מחבר</option>
-                        <option value="place_he">מקום הוצאה</option>
-                        <option value="year_he">שנה</option>
-                    </select>
-                </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <select id="sortSelectPL" onchange="updateSort('PL')" style="padding: 8px; border: 1px solid #1a1a1a; flex: 1;">
+                    <option value="none">Oryginalna kolejność / Default</option>
+                    <option value="title">Tytuł / Title</option>
+                    <option value="author">Autor / Author</option>
+                    <option value="place">Miejsce / Place</option>
+                    <option value="year">Rok / Year</option>
+                </select>
+                <select id="sortSelectHE" onchange="updateSort('HE')" style="padding: 8px; border: 1px solid #1a1a1a; flex: 1; font-family: 'SBL Hebrew', serif;">
+                    <option value="none">סדר מקורי</option>
+                    <option value="title_he">כותרת</option>
+                    <option value="year_he">שנה</option>
+                </select>
             </div>
         </div>
         <div id="loader">Wczytywanie / Loading...</div>
@@ -178,7 +170,7 @@
 
         function isUnknownCity(val) {
             var v = val ? val.trim() : "";
-            return !v || v === "---" || v === "-" || v === "---";
+            return !v || v === "---" || v === "-";
         }
 
         function updateInlineCounter(count) {
@@ -208,47 +200,46 @@
             });
 
             var listPL = document.getElementById('cityListPL');
-            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null)">Wszystkie / All</li>';
+            listPL.innerHTML = '<li class="city-item active" onclick="filterCity(null, event)">Wszystkie / All</li>';
             Object.keys(citiesPL).sort(function(a,b){return a.localeCompare(b, 'pl')}).forEach(function(city) {
                 var li = document.createElement('li');
                 li.className = 'city-item';
-                li.onclick = function() { filterCity(city); };
+                li.onclick = function(e) { filterCity(city, e); };
                 li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesPL[city]}</span>`;
                 listPL.appendChild(li);
             });
             if (unknownCount > 0) {
                 var liU = document.createElement('li');
                 liU.className = 'city-item';
-                liU.onclick = function() { filterCity("_UNKNOWN_ID_"); };
+                liU.onclick = function(e) { filterCity("_UNKNOWN_ID_", e); };
                 liU.innerHTML = `<span>Nieznane / Unknown</span><span class="count-pill">${unknownCount}</span>`;
                 listPL.appendChild(liU);
             }
 
             var listHE = document.getElementById('cityListHE');
-            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null)">הכל</li>';
+            listHE.innerHTML = '<li class="city-item heb active" onclick="filterCity(null, event)">הכל</li>';
             Object.keys(citiesHE).sort(function(a,b){return a.localeCompare(b, 'he')}).forEach(function(city) {
                 var li = document.createElement('li');
                 li.className = 'city-item heb';
-                li.onclick = function() { filterCity(city); };
+                li.onclick = function(e) { filterCity(city, e); };
                 li.innerHTML = `<span>${city}</span><span class="count-pill">${citiesHE[city]}</span>`;
                 listHE.appendChild(li);
             });
             if (unknownCount > 0) {
                 var liHU = document.createElement('li');
                 liHU.className = 'city-item heb';
-                liHU.onclick = function() { filterCity("_UNKNOWN_ID_"); };
+                liHU.onclick = function(e) { filterCity("_UNKNOWN_ID_", e); };
                 liHU.innerHTML = `<span>לא ידוע</span><span class="count-pill">${unknownCount}</span>`;
                 listHE.appendChild(liHU);
             }
         }
 
-        function filterCity(city) {
+        function filterCity(city, event) {
             activeFacetCity = city;
             document.querySelectorAll('.city-item').forEach(el => el.classList.remove('active'));
             if (city === null) {
                 document.querySelectorAll('.city-item:first-child').forEach(el => el.classList.add('active'));
             } else {
-                // Ta linia podświetla tylko kliknięty element
                 event.currentTarget.classList.add('active');
             }
             filterAndSort();
@@ -266,7 +257,6 @@
                 
                 var yearRaw = getVal(r.c[5]);
                 var hebYearRaw = getVal(r.c[6]);
-                
                 if (yearRaw === "---" || yearRaw === "" || hebYearRaw === "---" || hebYearRaw === "") return false;
 
                 var rowYear = parseInt(yearRaw.replace(/\D/g, '')) || 0;
@@ -280,7 +270,6 @@
                 
                 var matchCity = true;
                 if (activeFacetCity === "_UNKNOWN_ID_") {
-                    // Kluczowa naprawa: sprawdzenie funkcją isUnknownCity podczas filtrowania
                     matchCity = isUnknownCity(rowCityPL);
                 } else if (activeFacetCity !== null) {
                     matchCity = (rowCityPL === activeFacetCity || rowCityHE === activeFacetCity);
@@ -289,10 +278,12 @@
                 return matchText && matchYear && matchHebYear && matchCity;
             });
 
-            if(sortVal !== "none") { // Zmienna sortVal pobierana z aktualnych selectów
-               var sortVal = sPL !== "none" ? sPL : sHE;
+            var sortVal = sPL !== "none" ? sPL : sHE;
+            if(sortVal !== "none") {
                if(sortVal === 'title') filtered.sort((a,b) => getVal(a.c[1]).localeCompare(getVal(b.c[1]), 'pl'));
-               if(sortVal === 'year') filtered.sort((a,b) => parseInt(getVal(a.c[5]).replace(/\D/g,'')) - parseInt(getVal(b.c[5]).replace(/\D/g,'')));
+               if(sortVal === 'author') filtered.sort((a,b) => getVal(a.c[3]).localeCompare(getVal(b.c[3]), 'pl'));
+               if(sortVal === 'place') filtered.sort((a,b) => getVal(a.c[7]).localeCompare(getVal(b.c[7]), 'pl'));
+               if(sortVal === 'year') filtered.sort((a,b) => (parseInt(getVal(a.c[5]).replace(/\D/g,'')) || 0) - (parseInt(getVal(b.c[5]).replace(/\D/g,'')) || 0));
                if(sortVal === 'title_he') filtered.sort((a,b) => getVal(a.c[2]).localeCompare(getVal(b.c[2]), 'he'));
                if(sortVal === 'year_he') filtered.sort((a,b) => hebrewYearToNumber(getVal(a.c[6])) - hebrewYearToNumber(getVal(b.c[6])));
             }
@@ -363,7 +354,7 @@
             if (!s || s === "---") return 999999; 
             var c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             var v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
-            var sum = 0; for (var i=0; i < c.length; i++) { sum += v[c[i]] || 0; } 
+            var sum = 0; for (var i=0; i < c.length; i++) sum += v[c[i]] || 0; 
             if (sum > 0 && sum < 1000) sum += 5000; return sum === 0 ? 999999 : sum; 
         }
 
