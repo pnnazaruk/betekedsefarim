@@ -3,6 +3,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> Library of Yeshivas Chachmei Lublin </title>
     <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
@@ -94,10 +95,23 @@
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
-        .modal-img-col img { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #1a1a1a; margin-bottom: 15px; }
+        
+        .modal-img-col img { 
+            width: 100%; 
+            max-height: 300px; 
+            object-fit: contain; 
+            border: 1px solid #1a1a1a; 
+            margin-bottom: 15px; 
+        }
+
+        .modal-data-col { flex: 1; min-width: 300px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
-        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; }
+        
+        .link-btn { 
+            display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; 
+            text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; 
+        }
         .link-btn:hover { background: #555; }
 
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
@@ -164,7 +178,7 @@
                     <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                     <div id="inlineCounter"></div>
                 </div>
-                <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת עברית</span>
+                <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת עבריat</span>
                 <div id="keyboard" class="keyboard">
                     <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
                     <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
@@ -213,6 +227,7 @@
         let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+        let fuse; // Zmienna Fuse.js
 
         function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
@@ -237,6 +252,21 @@
                 let json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
+                
+                // Przygotowanie danych dla Fuse.js
+                const fuseData = rawRows.map(row => {
+                    return {
+                        original: row,
+                        searchable: row.c.map(cell => getVal(cell)).join(' ')
+                    };
+                });
+                
+                fuse = new Fuse(fuseData, {
+                    keys: ['searchable'],
+                    threshold: 0.3, // 0.0 - idealne dopasowanie, 1.0 - wszystko pasuje
+                    ignoreLocation: true
+                });
+
                 filterAndSort();
                 document.getElementById('loader').style.display = 'none';
             } catch (e) { console.error(e); }
@@ -287,16 +317,22 @@
             const sPL = document.getElementById('sortSelectPL').value;
             const sHE = document.getElementById('sortSelectHE').value;
 
-            const filtered = rawRows.filter(r => {
+            let searchFiltered;
+            if (term && fuse) {
+                searchFiltered = fuse.search(term).map(result => result.item.original);
+            } else {
+                searchFiltered = rawRows;
+            }
+
+            const filtered = searchFiltered.filter(r => {
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
                 const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
-                const matchSearch = r.c.some(c => getVal(c).toLowerCase().includes(term));
                 const matchYear = (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear);
                 const matchCity = activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()));
                 const matchAuth = activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()));
                 const matchPrn = activeFilters.printer.size === 0 || (isUnknown(prnPL) ? activeFilters.printer.has('_UNK_') : activeFilters.printer.has(prnPL.trim()));
                 const matchLoc = activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim()));
-                return matchSearch && matchYear && matchCity && matchAuth && matchPrn && matchLoc;
+                return matchYear && matchCity && matchAuth && matchPrn && matchLoc;
             });
 
             const sortVal = sPL !== "none" ? sPL : sHE;
@@ -308,7 +344,6 @@
                         if (vA === 0 || vA === 999999) return 1; if (vB === 0 || vB === 999999) return -1;
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    // POPRAWIONA LOGIKA: IGNOROWANIE NAWIASÓW KWADRATOWYCH DLA PL I HE
                     let i = (sortVal==='title'||sortVal==='title_he') ? (sortVal.includes('_he')?2:1) : 1;
                     const norm = (s) => getVal(s).replace(/[\[\]]/g, "").toLowerCase().trim();
                     return norm(a.c[i]).localeCompare(norm(b.c[i]), sortVal.includes('_he')?'he':'pl');
@@ -321,20 +356,31 @@
         function updateFacetsUI(term, maxYear, maxHebYear) {
             const counts = { city: {}, author: {}, printer: {}, loc: {} };
             const plToHe = { city: {}, author: {} };
-            rawRows.forEach(r => {
+
+            let searchFiltered;
+            if (term && fuse) {
+                searchFiltered = fuse.search(term).map(result => result.item.original);
+            } else {
+                searchFiltered = rawRows;
+            }
+
+            searchFiltered.forEach(r => {
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
                 const cityHE = getVal(r.c[22]) || cityPL, authHE = getVal(r.c[4]) || authPL;
                 const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
-                if (!(r.c.some(c => getVal(c).toLowerCase().includes(term)) && (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear))) return;
+                if (!((year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear))) return;
+
                 const passCity = (activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()))) && (activeFilters.printer.size === 0 || (isUnknown(prnPL) ? activeFilters.printer.has('_UNK_') : activeFilters.printer.has(prnPL.trim()))) && (activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim())));
                 const passAuth = (activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()))) && (activeFilters.printer.size === 0 || (isUnknown(prnPL) ? activeFilters.printer.has('_UNK_') : activeFilters.printer.has(prnPL.trim()))) && (activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim())));
                 const passPrn = (activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()))) && (activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()))) && (activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim())));
                 const passLoc = (activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()))) && (activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()))) && (activeFilters.printer.size === 0 || (isUnknown(prnPL) ? activeFilters.printer.has('_UNK_') : activeFilters.printer.has(prnPL.trim())));
+
                 if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
                 if (passAuth) { let k = isUnknown(authPL)?'_UNK_':authPL.trim(); counts.author[k] = (counts.author[k]||0)+1; plToHe.author[k] = isUnknown(authPL)?'לא ידוע':authHE.trim(); }
                 if (passPrn) { let k = isUnknown(prnPL)?'_UNK_':prnPL.trim(); counts.printer[k] = (counts.printer[k]||0)+1; }
                 if (passLoc) { let k = isUnknown(locPL)?'_UNK_':locPL.trim(); counts.loc[k] = (counts.loc[k]||0)+1; }
             });
+
             renderFacetList('authorListPL', counts.author, 'author', false, 'Wszystko/ All', 'Nieznany/ Unknown', null);
             renderFacetList('cityListPL', counts.city, 'city', false, 'Wszystko/ All', 'Nieznane/ Unknown', null);
             renderFacetList('printerListPL', counts.printer, 'printer', false, 'Wszystko/ All', 'Nieznany/ Unknown', null);
