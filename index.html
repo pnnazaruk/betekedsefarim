@@ -65,7 +65,6 @@
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         
-        .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
 
@@ -95,25 +94,11 @@
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
-        
-        .modal-img-col img { 
-            width: 100%; 
-            max-height: 300px; 
-            object-fit: contain; 
-            border: 1px solid #1a1a1a; 
-            margin-bottom: 15px; 
-        }
-
-        .modal-data-col { flex: 1; min-width: 300px; }
+        .modal-img-col img { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #1a1a1a; margin-bottom: 15px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
-        
-        .link-btn { 
-            display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; 
-            text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; 
-        }
+        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; }
         .link-btn:hover { background: #555; }
-
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
 
         @media (max-width: 768px) {
@@ -178,7 +163,7 @@
                     <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                     <div id="inlineCounter"></div>
                 </div>
-                <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקלדת עבריat</span>
+                <span class="kb-toggle" onclick="toggleKeyboard()">Klawiatura hebrajska / מקlדת עברית</span>
                 <div id="keyboard" class="keyboard">
                     <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
                     <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
@@ -216,7 +201,7 @@
 
     <div id="modalOverlay" onclick="closeModal(event)">
         <div id="modalWindow">
-            <button class="close-modal" onclick="document.getElementById('modalOverlay').style.display='none'">&times;</button>
+            <button class="close-modal" onclick="closeModalManual()">&times;</button>
             <div id="modalContent" class="modal-body"></div>
         </div>
     </div>
@@ -227,7 +212,8 @@
         let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
-        let fuse; // Zmienna Fuse.js
+        let fuse;
+        let isInitialLoad = true;
 
         function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
@@ -253,22 +239,24 @@
                 rawRows = json.table.rows;
                 colLabels = json.table.cols;
                 
-                // Przygotowanie danych dla Fuse.js
-                const fuseData = rawRows.map(row => {
-                    return {
-                        original: row,
-                        searchable: row.c.map(cell => getVal(cell)).join(' ')
-                    };
-                });
+                const fuseData = rawRows.map(row => ({
+                    original: row,
+                    searchable: row.c.map(cell => getVal(cell)).join(' ')
+                }));
                 
-                fuse = new Fuse(fuseData, {
-                    keys: ['searchable'],
-                    threshold: 0.3, // 0.0 - idealne dopasowanie, 1.0 - wszystko pasuje
-                    ignoreLocation: true
-                });
+                fuse = new Fuse(fuseData, { keys: ['searchable'], threshold: 0.3, ignoreLocation: true });
 
+                // Deep Linking: Load from URL
+                applyURLState();
+                
                 filterAndSort();
                 document.getElementById('loader').style.display = 'none';
+
+                // Monitor browser back/forward buttons
+                window.addEventListener('popstate', () => {
+                    applyURLState();
+                    filterAndSort(false);
+                });
             } catch (e) { console.error(e); }
         }
 
@@ -299,8 +287,8 @@
                 document.getElementById('yearSlider').value = 1939;
                 document.getElementById('hebYearSlider').value = 5700;
                 updateYearLabel(1939); updateHebYearLabel(5700);
-            }
-            else activeFilters[type].clear();
+                document.getElementById('search').value = "";
+            } else activeFilters[type].clear();
             filterAndSort();
         }
 
@@ -310,19 +298,14 @@
             filterAndSort();
         }
 
-        function filterAndSort() {
+        function filterAndSort(updateURL = true) {
             const term = document.getElementById('search').value.toLowerCase().trim();
             const maxYear = parseInt(document.getElementById('yearSlider').value);
             const maxHebYear = parseInt(document.getElementById('hebYearSlider').value);
             const sPL = document.getElementById('sortSelectPL').value;
             const sHE = document.getElementById('sortSelectHE').value;
 
-            let searchFiltered;
-            if (term && fuse) {
-                searchFiltered = fuse.search(term).map(result => result.item.original);
-            } else {
-                searchFiltered = rawRows;
-            }
+            let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
 
             const filtered = searchFiltered.filter(r => {
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
@@ -349,20 +332,23 @@
                     return norm(a.c[i]).localeCompare(norm(b.c[i]), sortVal.includes('_he')?'he':'pl');
                 });
             }
+
             updateFacetsUI(term, maxYear, maxHebYear);
             render(filtered);
+            if (updateURL) syncStateToURL();
+
+            // Deep link handling for initial load ID
+            if (isInitialLoad) {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('id')) openModal(urlParams.get('id'));
+                isInitialLoad = false;
+            }
         }
 
         function updateFacetsUI(term, maxYear, maxHebYear) {
             const counts = { city: {}, author: {}, printer: {}, loc: {} };
             const plToHe = { city: {}, author: {} };
-
-            let searchFiltered;
-            if (term && fuse) {
-                searchFiltered = fuse.search(term).map(result => result.item.original);
-            } else {
-                searchFiltered = rawRows;
-            }
+            let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
 
             searchFiltered.forEach(r => {
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
@@ -440,9 +426,57 @@
             }
             document.getElementById('modalContent').innerHTML = `<div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">ZOBACZ / SEE</a>` : ''}</div><div class="modal-data-col">${detailsHtml}</div>`;
             document.getElementById('modalOverlay').style.display = 'flex';
+            
+            // Add ID to URL without adding history entry if not already there
+            const url = new URL(window.location);
+            url.searchParams.set('id', rowIndex);
+            window.history.replaceState({}, '', url);
         }
 
-        function closeModal(e) { if(e.target.id === 'modalOverlay') e.target.style.display = 'none'; }
-        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
+        function closeModalManual() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            const url = new URL(window.location);
+            url.searchParams.delete('id');
+            window.history.replaceState({}, '', url);
+        }
+
+        function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalManual(); }
+
+        // DEEP LINKING LOGIC
+        function syncStateToURL() {
+            const url = new URL(window.location);
+            const search = document.getElementById('search').value;
+            const year = document.getElementById('yearSlider').value;
+            const hebYear = document.getElementById('hebYearSlider').value;
+
+            if (search) url.searchParams.set('q', search); else url.searchParams.delete('q');
+            if (year != 1939) url.searchParams.set('y', year); else url.searchParams.delete('y');
+            if (hebYear != 5700) url.searchParams.set('hy', hebYear); else url.searchParams.delete('hy');
+
+            Object.keys(activeFilters).forEach(key => {
+                if (activeFilters[key].size > 0) url.searchParams.set(key, Array.from(activeFilters[key]).join('|'));
+                else url.searchParams.delete(key);
+            });
+
+            window.history.replaceState({}, '', url);
+        }
+
+        function applyURLState() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('q')) document.getElementById('search').value = params.get('q');
+            if (params.has('y')) {
+                document.getElementById('yearSlider').value = params.get('y');
+                updateYearLabel(params.get('y'));
+            }
+            if (params.has('hy')) {
+                document.getElementById('hebYearSlider').value = params.get('hy');
+                updateHebYearLabel(params.get('hy'));
+            }
+            Object.keys(activeFilters).forEach(key => {
+                activeFilters[key].clear();
+                if (params.has(key)) params.get(key).split('|').forEach(val => activeFilters[key].add(val));
+            });
+        }
+
         init();
     </script></body></html>
