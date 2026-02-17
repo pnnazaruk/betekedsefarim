@@ -18,14 +18,14 @@
             border-bottom: 2px solid #1a1a1a; z-index: 4000;
         }
         .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
-        .header-links { display: flex; gap: 15px; align-items: center; font-size: 12px; text-transform: uppercase; font-weight: bold; }
-        
-        /* POPRAWKA 1: JEDNAKOWA WYSOKOŚĆ PRZYCISKÓW W NAGŁÓWKU */
+        .header-links { display: flex; gap: 15px; align-items: center; }
+
+        /* UJEDNOLICONY WYGLĄD PRZYCISKÓW NAWIGACJI */
         .nav-btn, .about-btn { 
             background: none; border: 1px solid #1a1a1a; padding: 8px 15px; cursor: pointer; 
             font-size: 11px; font-weight: bold; text-transform: uppercase; transition: all 0.2s; 
             display: inline-flex; align-items: center; justify-content: center; height: 35px; box-sizing: border-box;
-            color: #1a1a1a; text-decoration: none;
+            color: #1a1a1a; text-decoration: none; font-family: "Segoe UI", sans-serif;
         }
         .nav-btn:hover, .about-btn:hover { background: #f0f0f0; }
         .nav-btn.active { background: #1a1a1a; color: #fff; }
@@ -68,7 +68,6 @@
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         
-        /* POPRAWKA 3: LICZNIK W PRAWIDŁOWYM MIEJSCU */
         .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -83,6 +82,7 @@
         .sort-container.heb { flex-direction: row-reverse; font-family: "SBL Hebrew", serif; font-size: 14px; }
         select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
 
+        /* DASHBOARD */
         #dashboard-view { display: none; flex: 1; overflow-y: auto; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; }
         .chart-container { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
         .bottom-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
@@ -106,12 +106,9 @@
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
         .modal-img-col img { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #1a1a1a; margin-bottom: 15px; }
-        
-        /* POPRAWKA 2: PRZYCISK SZCZEGÓŁY Z EFEKTEM HOVER */
-        .link-btn { 
-            display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; 
-            text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; border: none; cursor: pointer;
-        }
+        .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
+        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; border: none; cursor: pointer; }
         .link-btn:hover { background: #555; }
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
 
@@ -240,6 +237,26 @@
         let isInitialLoad = true;
         let mapInitialized = false;
 
+        // FUNKCJA TŁUMACZĄCA DMS NA DECIMAL (DLA MAPY)
+        function parseDMS(dmsStr) {
+            if (!dmsStr) return null;
+            const clean = dmsStr.replace(/[^\d.NSEW°′″\s]/g, '').trim();
+            const parts = clean.split(/\s+/);
+            if (parts.length < 2) return null;
+            function convert(part) {
+                const match = part.match(/(\d+)°(\d+)?′?(\d+)?″?([NSEW])/);
+                if (!match) return parseFloat(part);
+                const d = parseInt(match[1]) || 0;
+                const m = parseInt(match[2]) || 0;
+                const s = parseInt(match[3]) || 0;
+                const h = match[4];
+                let deg = d + m/60 + s/3600;
+                if (h === 'S' || h === 'W') deg = -deg;
+                return deg;
+            }
+            return [convert(parts[0]), convert(parts[1])];
+        }
+
         async function init() {
             try {
                 let r = await fetch(url);
@@ -259,19 +276,17 @@
         function switchView(view) {
             const cat = document.getElementById('container');
             const das = document.getElementById('dashboard-view');
-            const btnC = document.getElementById('btn-catalog');
-            const btnS = document.getElementById('btn-stats');
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${view}`).classList.add('active');
+
             if(view === 'stats') {
                 cat.style.display = 'none'; das.style.display = 'flex';
-                btnC.classList.add('active'); btnS.classList.add('active'); // CSS pokaże tylko jeden z nich
                 if(!mapInitialized) { initMap(); mapInitialized = true; }
                 setTimeout(() => { updateDashboard(); map.invalidateSize(); }, 100);
             } else {
                 cat.style.display = 'block'; das.style.display = 'none';
-                btnC.classList.add('active'); btnS.classList.remove('active');
             }
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${view}`).classList.add('active');
         }
 
         function initMap() {
@@ -312,21 +327,19 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            // POPRAWKA 4: POBIERANIE DANYCH MAPY Z KOLUMN H (7) i J (9)
             map.eachLayer(l => { if(l instanceof L.Marker) map.removeLayer(l); });
             const cityData = {};
             currentData.forEach(r => {
-                let cityName = getVal(r.c[7]); // Kolumna H
-                let coords = getVal(r.c[9]);   // Kolumna J
-                if(coords && coords.includes(',')) {
-                    if(!cityData[cityName]) cityData[cityName] = { pos: coords.split(',').map(v => parseFloat(v.trim())), count: 0 };
+                let cityName = getVal(r.c[7]);
+                let dmsCoords = getVal(r.c[9]); // Kolumna J
+                let coords = parseDMS(dmsCoords);
+                if(coords) {
+                    if(!cityData[cityName]) cityData[cityName] = { pos: coords, count: 0 };
                     cityData[cityName].count++;
                 }
             });
             Object.entries(cityData).forEach(([name, data]) => {
-                if(!isNaN(data.pos[0]) && !isNaN(data.pos[1])) {
-                    L.marker(data.pos).addTo(map).bindPopup(`<b>${name}</b><br>Książek: ${data.count}`);
-                }
+                L.marker(data.pos).addTo(map).bindPopup(`<b>${name}</b><br>Książek: ${data.count}`);
             });
         }
 
