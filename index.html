@@ -326,6 +326,7 @@
                 filtered.sort((a, b) => {
                     const norm = (s) => getVal(s).replace(/[\[\]]/g, "").toLowerCase().trim();
                     
+                    // Logika sortowania Lat
                     if (sortVal.includes("year")) {
                         let vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
                         if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
@@ -333,12 +334,21 @@
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
                     
-                    let i = 1; // Default Polish Title
+                    let i = 1;
                     if (sortVal === 'title_he') i = 2;
                     else if (sortVal === 'author') i = 3;
                     else if (sortVal === 'author_he') i = 4;
                     
-                    return norm(a.c[i]).localeCompare(norm(b.c[i]), sortVal.includes('_he') ? 'he' : 'pl');
+                    let valA = norm(a.c[i]);
+                    let valB = norm(b.c[i]);
+
+                    // NOWA LOGIKA: Brak autora na koniec listy
+                    const isAUnknown = isUnknown(valA);
+                    const isBUnknown = isUnknown(valB);
+                    if (isAUnknown && !isBUnknown) return 1;
+                    if (!isAUnknown && isBUnknown) return -1;
+
+                    return valA.localeCompare(valB, sortVal.includes('_he') ? 'he' : 'pl');
                 });
             }
 
