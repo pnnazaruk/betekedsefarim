@@ -308,9 +308,9 @@
                         if (vA === 0 || vA === 999999) return 1; if (vB === 0 || vB === 999999) return -1;
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    // POPRAWIONA LOGIKA SORTOWANIA TYTUŁEM: IGNOROWANIE NAWIASÓW KWADRATOWYCH
+                    // POPRAWIONA LOGIKA: IGNOROWANIE NAWIASÓW KWADRATOWYCH DLA PL I HE
                     let i = (sortVal==='title'||sortVal==='title_he') ? (sortVal.includes('_he')?2:1) : 1;
-                    const norm = (s) => getVal(s).replace(/[\[\]]/g, "").toLowerCase();
+                    const norm = (s) => getVal(s).replace(/[\[\]]/g, "").toLowerCase().trim();
                     return norm(a.c[i]).localeCompare(norm(b.c[i]), sortVal.includes('_he')?'he':'pl');
                 });
             }
