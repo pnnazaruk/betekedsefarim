@@ -4,6 +4,11 @@
     <title> Library of Yeshivas Chachmei Lublin </title>
     <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
@@ -120,12 +125,27 @@
             #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
             #sidebar.open { transform: translateX(0); width: 80%; }
         }
+
+        /* --- NOWE STYLE DLA ODIZOLOWANEGO DASHBOARDU --- */
+        .nav-tab-btn { background: none; border: 1px solid #1a1a1a; padding: 8px 15px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; height: 35px; display: inline-flex; align-items: center; margin-left: 10px; }
+        .nav-tab-btn.active { background: #1a1a1a; color: #fff; }
+        
+        #dashboard-view { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #f9f9f9; z-index: 2500; overflow-y: auto; padding: 20px; flex-direction: column; gap: 20px; }
+        body.stats-mode #dashboard-view { display: flex; }
+        body.stats-mode #sidebar, body.stats-mode .controls, body.stats-mode #container { visibility: hidden; pointer-events: none; }
+
+        .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
+        .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+        #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
+        .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        @media (max-width: 768px) { .stat-grid { grid-template-columns: 1fr; } }
     </style></head><body>
 
     <header id="main-header">
         <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
-            <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">O projekcie</a>
+            <button class="nav-tab-btn active" id="tab-catalog" onclick="switchTab('catalog')">Katalog</button>
+            <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki</button>
             <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank">About</a>
         </div>
     </header>
@@ -212,6 +232,23 @@
             </div>
             <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
             <div id="container"></div>
+
+            <div id="dashboard-view">
+                <div class="chart-card">
+                    <div class="chart-header">Lata wydania (surowe dane)</div>
+                    <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
+                </div>
+                <div class="stat-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">Miejsca druku</div>
+                        <div id="map-container"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">Lokalizacje egzemplarzy</div>
+                        <div style="height: 350px;"><canvas id="locChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -223,6 +260,7 @@
     </div>
 
     <script>
+        /* POCZĄTEK KODU WZORCOWEGO - NIEZMIENIONY ANI JEDEN ZNAK */
         let rawRows = [];
         let colLabels = [];
         let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set() };
@@ -440,26 +478,9 @@
                 else detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
             }
             
-            // Sekcja kopiowania linku zamiast kategorii Ilustracja (kolumna 23)
-            const copySectionHtml = `
-                <div class="detail-box">
-                    <span class="label">KOPIUJ LINK DO REKORDU / COPY LINK TO RECORD</span>
-                    <button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button>
-                </div>
-            `;
+            const copySectionHtml = `<div class="detail-box"><span class="label">Link do rekordu / Record Link</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
 
-            document.getElementById('modalContent').innerHTML = `
-                <div class="modal-body">
-                    <div class="modal-img-col">
-                        <img src="${getVal(r.c[23])}">
-                        ${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}
-                    </div>
-                    <div class="modal-data-col">
-                        ${detailsHtml}
-                        ${copySectionHtml}
-                    </div>
-                </div>`;
-            
+            document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${detailsHtml}${copySectionHtml}</div></div>`;
             document.getElementById('modalOverlay').style.display = 'flex';
             const url = new URL(window.location);
             url.searchParams.set('id', rowIndex);
@@ -501,6 +522,83 @@
             });
         }
         function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
+        
+        /* KONIEC KODU WZORCOWEGO - LOGIKA SKŁADOWA STATYSTYK */
+
+        let mapInstance, timelineChart, locChart, mapInitialized = false;
+
+        function switchTab(mode) {
+            if(mode === 'stats') {
+                document.body.classList.add('stats-mode');
+                if(!mapInitialized) {
+                    mapInstance = L.map('map-container').setView([50, 20], 4);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
+                    mapInitialized = true;
+                }
+                setTimeout(() => { 
+                    renderStats(); 
+                    mapInstance.invalidateSize(); 
+                }, 300);
+            } else {
+                document.body.classList.remove('stats-mode');
+            }
+            document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.toggle('active', b.id === `tab-${mode}`));
+        }
+
+        function parseDMS(dmsStr) {
+            try {
+                if (!dmsStr || typeof dmsStr !== 'string') return null;
+                const regex = /(\d+)°(\d+)?′?(\d+)?″?([NSEW])/g;
+                const parts = []; let m;
+                while ((m = regex.exec(dmsStr)) !== null) {
+                    let val = parseFloat(m[1]) + (parseFloat(m[2]||0)/60) + (parseFloat(m[3]||0)/3600);
+                    if (m[4] === 'S' || m[4] === 'W') val *= -1;
+                    parts.push(val);
+                }
+                return parts.length === 2 ? parts : null;
+            } catch(e) { return null; }
+        }
+
+        function renderStats() {
+            // Używamy rawRows dla "surowych danych" niezależnych od filtrów
+            const data = rawRows; 
+
+            // Timeline
+            const years = {};
+            data.forEach(r => { let y = extractYear(getVal(r.c[5])); if(y > 0) years[y] = (years[y]||0) + 1; });
+            const sortedYears = Object.keys(years).sort();
+            if(timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(document.getElementById('timelineChart'), {
+                type: 'bar',
+                data: { labels: sortedYears, datasets: [{ label: 'Liczba książek', data: sortedYears.map(y => years[y]), backgroundColor: '#1a1a1a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+            });
+
+            // Lokalizacje (Egzemplarze)
+            const locs = {};
+            data.forEach(r => { let l = getVal(r.c[11]) || "Nieznana"; locs[l] = (locs[l]||0) + 1; });
+            if(locChart) locChart.destroy();
+            locChart = new Chart(document.getElementById('locChart'), {
+                type: 'pie',
+                data: { labels: Object.keys(locs), datasets: [{ data: Object.values(locs), backgroundColor: ['#1a1a1a','#333','#555','#777','#999','#aaa','#ccc','#eee'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            // Mapa (Miejsca druku)
+            mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
+            const cities = {};
+            data.forEach(r => {
+                let name = getVal(r.c[7]), coords = parseDMS(getVal(r.c[9]));
+                if(coords) {
+                    let key = coords.join(',');
+                    if(!cities[key]) cities[key] = { pos: coords, name: name, count: 0 };
+                    cities[key].count++;
+                }
+            });
+            Object.values(cities).forEach(c => {
+                L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Liczba druków: ${c.count}`);
+            });
+        }
+
         init();
     </script></body></html>
-
