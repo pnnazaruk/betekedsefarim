@@ -57,7 +57,6 @@
         .facet-item.active { background: #1a1a1a !important; color: #fff !important; }
         .facet-item.heb { direction: rtl; text-align: right; font-family: "SBL Hebrew", serif; font-size: 14px; }
         .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
-        .active .count-pill { background: #444; color: #fff; }
 
         .slider-wrapper { padding: 10px 0; }
         .slider-wrapper.heb { direction: rtl; }
@@ -66,7 +65,6 @@
 
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        
         .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -127,7 +125,7 @@
         </div>
     </header>
 
-    <button id="mobile-toggle" onclick="toggleSidebar()">☰ Filtry / Filters / מסנnenנים</button>
+    <button id="mobile-toggle" onclick="toggleSidebar()">☰ Filtry / Filters / מסננים</button>
 
     <div id="app-container">
         <aside id="sidebar">
@@ -190,7 +188,7 @@
                             <option value="title_he">כותרת</option>
                             <option value="author_he">מחבר</option>
                             <option value="year_asc_he">שנה (מהישן לחדש)</option>
-                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
+                            <option value="year_desc_he">שנה (מהחדש ليשן)</option>
                         </select>
                     </div>
                 </div>
@@ -296,34 +294,6 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
         }
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
-        function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
-        function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
-        function updateHebYearLabel(v) { 
-            let n = parseInt(v); if (n > 5000) n -= 5000;
-            let heb = ""; 
-            let valArr = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1];
-            let l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
-            for(let i=0; i<valArr.length; i++) { while(n >= valArr[i]) { heb += l[i]; n -= valArr[i]; } }
-            document.getElementById('hebYearVal').innerText = heb; 
-        }
-
-        function clearFacet(type) {
-            if (type === 'all') { 
-                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); 
-                document.getElementById('yearSlider').value = 1939; document.getElementById('hebYearSlider').value = 5700;
-                updateYearLabel(1939); updateHebYearLabel(5700); document.getElementById('search').value = "";
-            } else activeFilters[type].clear();
-            filterAndSort();
-        }
-
-        function toggleFilter(val, type) {
-            if (activeFilters[type].has(val)) activeFilters[type].delete(val);
-            else activeFilters[type].add(val);
-            filterAndSort();
-        }
-
         function filterAndSort(updateURL = true, returnData = false) {
             const term = document.getElementById('search').value.toLowerCase().trim();
             const maxYear = parseInt(document.getElementById('yearSlider').value);
@@ -363,8 +333,7 @@
                     return valA.localeCompare(valB, sHE !== 'none' ? 'he' : 'pl');
                 });
             }
-            updateFacetsUI(term, maxYear, maxHebYear);
-            render(filtered);
+            updateFacetsUI(term, maxYear, maxHebYear); render(filtered);
             if (updateURL) syncStateToURL();
             if (isInitialLoad) { const p = new URLSearchParams(window.location.search); if (p.has('id')) openModal(p.get('id')); isInitialLoad = false; }
         }
@@ -409,10 +378,7 @@
                 let vA = isHeb ? heMap[a] : a, vB = isHeb ? heMap[b] : b;
                 return vA.localeCompare(vB, isHeb ? 'he' : 'pl');
             });
-            sortedKeys.forEach(k => {
-                let label = isHeb ? heMap[k] : k;
-                html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')"><span>${label}</span><span class="count-pill">${counts[k]}</span></li>`;
-            });
+            sortedKeys.forEach(k => { html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')"><span>${isHeb?heMap[k]:k}</span><span class="count-pill">${counts[k]}</span></li>`; });
             if (counts['_UNK_']) html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')"><span>${unknownLabel}</span><span class="count-pill">${counts['_UNK_']}</span></li>`;
             list.innerHTML = html;
         }
@@ -445,12 +411,22 @@
             Object.entries(cityData).forEach(([n, d]) => { L.marker(d.pos).addTo(map).bindPopup(`<b>${n}</b><br>Książek: ${d.count}`); });
         }
 
+        function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
+        function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
+        function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
+        function updateYearLabel(v) { document.getElementById('yearVal').innerText = v; }
+        function updateHebYearLabel(v) { 
+            let n = parseInt(v); if (n > 5000) n -= 5000;
+            let heb = "", valArr = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            for(let i=0; i<valArr.length; i++) { while(n >= valArr[i]) { heb += l[i]; n -= valArr[i]; } }
+            document.getElementById('hebYearVal').innerText = heb; 
+        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
         function toggleKeyboard() { let k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
         function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
         function delChar() { let s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
         function render(rows) { document.getElementById('container').innerHTML = rows.map(r => `<div class="item-card" onclick="openModal('${r.c[0].v}')"><div class="item-content"><div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div><div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div><div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div></div></div></div>`).join(''); document.getElementById('inlineCounter').innerText = rows.length; }
         function copyLink(id) { navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?id=' + id).then(() => { const b = document.getElementById('copyBtn'); b.innerText = "SKOPIOWANO / COPIED"; setTimeout(() => b.innerText = "KOPIUJ / COPY", 2000); }); }
-        
         function openModal(rowIndex) {
             const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex); if(!r) return;
             let detailsHtml = ""; let link = getVal(r.c[16]);
@@ -459,14 +435,11 @@
             document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${detailsHtml}</div></div>`;
             document.getElementById('modalOverlay').style.display = 'flex'; const url = new URL(window.location); url.searchParams.set('id', rowIndex); window.history.replaceState({}, '', url);
         }
-
         function closeModalManual() { document.getElementById('modalOverlay').style.display = 'none'; const url = new URL(window.location); url.searchParams.delete('id'); window.history.replaceState({}, '', url); }
         function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalManual(); }
         function updateBadges() { Object.keys(activeFilters).forEach(type => { let badge = document.querySelector(`#det-${type} .active-badge`); if(badge) { badge.innerText = activeFilters[type].size; badge.style.display = activeFilters[type].size > 0 ? 'inline' : 'none'; } }); }
         function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
         function syncStateToURL() { const url = new URL(window.location); if (document.getElementById('search').value) url.searchParams.set('q', document.getElementById('search').value); else url.searchParams.delete('q'); window.history.replaceState({}, '', url); }
         function applyURLState() { const p = new URLSearchParams(window.location.search); if (p.has('q')) document.getElementById('search').value = p.get('q'); }
-        function filterFacetList(input, listId) { let filter = input.value.toLowerCase(); let items = document.querySelectorAll(`#${listId} li`); items.forEach(li => { let span = li.querySelector('span'); if (span) { li.style.display = span.innerText.toLowerCase().includes(filter) ? "flex" : "none"; } }); }
-        
         init();
     </script></body></html>
