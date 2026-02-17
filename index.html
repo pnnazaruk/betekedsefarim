@@ -325,29 +325,20 @@
             if(sortVal !== "none") {
                 filtered.sort((a, b) => {
                     const norm = (s) => getVal(s).replace(/[\[\]]/g, "").toLowerCase().trim();
-                    
-                    // Logika sortowania Lat
                     if (sortVal.includes("year")) {
                         let vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
                         if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
                         if (vA === 0 || vA === 999999) return 1; if (vB === 0 || vB === 999999) return -1;
                         return sortVal.includes("desc") ? vB - vA : vA - vB;
                     }
-                    
                     let i = 1;
                     if (sortVal === 'title_he') i = 2;
                     else if (sortVal === 'author') i = 3;
                     else if (sortVal === 'author_he') i = 4;
-                    
-                    let valA = norm(a.c[i]);
-                    let valB = norm(b.c[i]);
-
-                    // NOWA LOGIKA: Brak autora na koniec listy
-                    const isAUnknown = isUnknown(valA);
-                    const isBUnknown = isUnknown(valB);
+                    let valA = norm(a.c[i]), valB = norm(b.c[i]);
+                    const isAUnknown = isUnknown(valA), isBUnknown = isUnknown(valB);
                     if (isAUnknown && !isBUnknown) return 1;
                     if (!isAUnknown && isBUnknown) return -1;
-
                     return valA.localeCompare(valB, sortVal.includes('_he') ? 'he' : 'pl');
                 });
             }
@@ -428,6 +419,22 @@
             document.getElementById('inlineCounter').innerText = rows.length;
         }
 
+        function copyRecordLink() {
+            const link = window.location.href;
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.getElementById('copyLinkBtn');
+                const originalText = btn.innerText;
+                btn.innerText = "SKOPIOWANO / COPIED";
+                btn.style.background = "#555";
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "#1a1a1a";
+                }, 2000);
+            }).catch(err => {
+                console.error('Błąd kopiowania: ', err);
+            });
+        }
+
         function openModal(rowIndex) {
             const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
             if(!r) return;
@@ -438,7 +445,13 @@
                 if (i === 16 && val.startsWith('http')) detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
                 else detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
             }
-            document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${detailsHtml}</div></div>`;
+            
+            // Logic to append copy button specifically after category 23 (Images)
+            const imgLabel = colLabels[23] ? colLabels[23].label : "Fotografie / Images";
+            const imgVal = getVal(r.c[23]) || "---";
+            const copySectionHtml = `<div class="detail-box"><span class="label">${imgLabel}</span><span>${imgVal}</span><button id="copyLinkBtn" class="link-btn" onclick="copyRecordLink()">KOPIUJ LINK DO REKORDU / COPY LINK TO RECORD</button></div>`;
+            
+            document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${detailsHtml}${copySectionHtml}</div></div>`;
             document.getElementById('modalOverlay').style.display = 'flex';
             const url = new URL(window.location);
             url.searchParams.set('id', rowIndex);
