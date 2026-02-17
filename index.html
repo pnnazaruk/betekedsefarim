@@ -57,6 +57,7 @@
         .facet-item.active { background: #1a1a1a !important; color: #fff !important; }
         .facet-item.heb { direction: rtl; text-align: right; font-family: "SBL Hebrew", serif; font-size: 14px; }
         .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
+        .active .count-pill { background: #444; color: #fff; }
 
         .slider-wrapper { padding: 10px 0; }
         .slider-wrapper.heb { direction: rtl; }
@@ -65,6 +66,7 @@
 
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+        
         .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -187,8 +189,8 @@
                             <option value="none">סדר מקורי</option>
                             <option value="title_he">כותרת</option>
                             <option value="author_he">מחבר</option>
-                            <option value="year_asc_he">שנה (מהישן לחדש)</option>
-                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
+                            <option value="year_asc_he">שנה (מהישן لחדש)</option>
+                            <option value="year_desc_he">שנה (מהחדش לישן)</option>
                         </select>
                     </div>
                 </div>
@@ -233,6 +235,7 @@
         let isInitialLoad = true;
         let mapInitialized = false;
 
+        function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
             if (!s || s === "---") return 999999; 
             let c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
@@ -294,6 +297,44 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
         }
 
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
+        function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
+        function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
+        function updateHebYearLabel(v) { 
+            let n = parseInt(v); if (n > 5000) n -= 5000;
+            let heb = "", valArr = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ر','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            for(let i=0; i<valArr.length; i++) { while(n >= valArr[i]) { heb += l[i]; n -= valArr[i]; } }
+            document.getElementById('hebYearVal').innerText = heb; 
+        }
+        function toggleKeyboard() { let k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
+        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
+        function delChar() { let s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
+
+        function filterFacetList(input, listId) {
+            let filter = input.value.toLowerCase();
+            let items = document.querySelectorAll(`#${listId} li`);
+            items.forEach(li => {
+                let span = li.querySelector('span');
+                if (span) { li.style.display = span.innerText.toLowerCase().includes(filter) ? "flex" : "none"; }
+            });
+        }
+
+        function clearFacet(type) {
+            if (type === 'all') { 
+                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); 
+                document.getElementById('yearSlider').value = 1939; document.getElementById('hebYearSlider').value = 5700;
+                updateYearLabel(1939); updateHebYearLabel(5700); document.getElementById('search').value = "";
+            } else activeFilters[type].clear();
+            filterAndSort();
+        }
+
+        function toggleFilter(val, type) {
+            if (activeFilters[type].has(val)) activeFilters[type].delete(val);
+            else activeFilters[type].add(val);
+            filterAndSort();
+        }
+
         function filterAndSort(updateURL = true, returnData = false) {
             const term = document.getElementById('search').value.toLowerCase().trim();
             const maxYear = parseInt(document.getElementById('yearSlider').value);
@@ -333,7 +374,8 @@
                     return valA.localeCompare(valB, sHE !== 'none' ? 'he' : 'pl');
                 });
             }
-            updateFacetsUI(term, maxYear, maxHebYear); render(filtered);
+            updateFacetsUI(term, maxYear, maxHebYear);
+            render(filtered);
             if (updateURL) syncStateToURL();
             if (isInitialLoad) { const p = new URLSearchParams(window.location.search); if (p.has('id')) openModal(p.get('id')); isInitialLoad = false; }
         }
@@ -365,6 +407,18 @@
             updateBadges();
         }
 
+        function renderFacetList(id, counts, type, isHeb, allLabel, unknownLabel, heMap) {
+            const list = document.getElementById(id); const activeSet = activeFilters[type];
+            let html = `<li class="facet-item ${isHeb?'heb':''} ${activeSet.size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
+            const sortedKeys = Object.keys(counts).filter(k => k !== '_UNK_').sort((a,b) => {
+                let vA = isHeb ? heMap[a] : a, vB = isHeb ? heMap[b] : b;
+                return vA.localeCompare(vB, isHeb ? 'he' : 'pl');
+            });
+            sortedKeys.forEach(k => { html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')"><span>${isHeb?heMap[k]:k}</span><span class="count-pill">${counts[k]}</span></li>`; });
+            if (counts['_UNK_']) html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')"><span>${unknownLabel}</span><span class="count-pill">${counts['_UNK_']}</span></li>`;
+            list.innerHTML = html;
+        }
+
         function updateDashboard() {
             const currentData = filterAndSort(false, true); 
             const yearCounts = {};
@@ -393,47 +447,48 @@
             Object.entries(cityData).forEach(([n, d]) => { L.marker(d.pos).addTo(map).bindPopup(`<b>${n}</b><br>Książek: ${d.count}`); });
         }
 
-        function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
-        function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
-        function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
-        function updateYearLabel(val) { document.getElementById('yearVal').innerText = val; }
-        function updateHebYearLabel(v) { 
-            let n = parseInt(v); if (n > 5000) n -= 5000;
-            let heb = "", valArr = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
-            for(let i=0; i<valArr.length; i++) { while(n >= valArr[i]) { heb += l[i]; n -= valArr[i]; } }
-            document.getElementById('hebYearVal').innerText = heb; 
+        function render(rows) {
+            const container = document.getElementById('container');
+            container.innerHTML = rows.map(r => `
+                <div class="item-card" onclick="openModal('${r.c[0].v}')">
+                    <div class="item-content"><div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
+                        <div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
+                            <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
+                        </div></div></div>`).join('');
+            document.getElementById('inlineCounter').innerText = rows.length;
         }
-        function renderFacetList(id, counts, type, isHeb, allLabel, unknownLabel, heMap) {
-            const list = document.getElementById(id); const activeSet = activeFilters[type];
-            let html = `<li class="facet-item ${isHeb?'heb':''} ${activeSet.size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
-            const sortedKeys = Object.keys(counts).filter(k => k !== '_UNK_').sort((a,b) => {
-                let vA = isHeb ? heMap[a] : a, vB = isHeb ? heMap[b] : b;
-                return vA.localeCompare(vB, isHeb ? 'he' : 'pl');
+
+        function copyLink(id) {
+            const l = window.location.origin + window.location.pathname + '?id=' + id;
+            navigator.clipboard.writeText(l).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerText = "SKOPIOWANO / COPIED";
+                setTimeout(() => btn.innerText = "KOPIUJ / COPY", 2000);
             });
-            sortedKeys.forEach(k => { html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')"><span>${isHeb?heMap[k]:k}</span><span class="count-pill">${counts[k]}</span></li>`; });
-            if (counts['_UNK_']) html += `<li class="facet-item ${isHeb?'heb':''} ${activeSet.has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')"><span>${unknownLabel}</span><span class="count-pill">${counts['_UNK_']}</span></li>`;
-            list.innerHTML = html;
         }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-        function toggleKeyboard() { let k = document.getElementById('keyboard'); k.style.display = k.style.display === 'grid' ? 'none' : 'grid'; }
-        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
-        function delChar() { let s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
-        function render(rows) { document.getElementById('container').innerHTML = rows.map(r => `<div class="item-card" onclick="openModal('${r.c[0].v}')"><div class="item-content"><div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div><div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div><div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div></div></div></div>`).join(''); document.getElementById('inlineCounter').innerText = rows.length; }
-        function copyLink(id) { navigator.clipboard.writeText(window.location.origin + window.location.pathname + '?id=' + id).then(() => { const b = document.getElementById('copyBtn'); b.innerText = "SKOPIOWANO / COPIED"; setTimeout(() => b.innerText = "KOPIUJ / COPY", 2000); }); }
+
         function openModal(rowIndex) {
-            const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex); if(!r) return;
+            const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
+            if(!r) return;
             let detailsHtml = ""; let link = getVal(r.c[16]);
-            for(let i=0; i<=22; i++) { if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue; let val = getVal(r.c[i]); if (i === 16 && val.startsWith('http')) detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`; else detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`; }
-            detailsHtml += `<div class="detail-box"><span class="label">KOPIUJ LINK DO REKORDU / COPY LINK TO RECORD</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
-            document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${detailsHtml}</div></div>`;
-            document.getElementById('modalOverlay').style.display = 'flex'; const url = new URL(window.location); url.searchParams.set('id', rowIndex); window.history.replaceState({}, '', url);
+            for(let i=0; i<=22; i++) {
+                if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue;
+                let val = getVal(r.c[i]);
+                if (i === 16 && val.startsWith('http')) detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
+                else detailsHtml += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
+            }
+            const copySectionHtml = `<div class="detail-box"><span class="label">KOPIUJ LINK DO REKORDU / COPY LINK TO RECORD</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
+            document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${detailsHtml}${copySectionHtml}</div></div>`;
+            document.getElementById('modalOverlay').style.display = 'flex';
+            const url = new URL(window.location); url.searchParams.set('id', rowIndex); window.history.replaceState({}, '', url);
         }
+
         function closeModalManual() { document.getElementById('modalOverlay').style.display = 'none'; const url = new URL(window.location); url.searchParams.delete('id'); window.history.replaceState({}, '', url); }
         function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalManual(); }
         function updateBadges() { Object.keys(activeFilters).forEach(type => { let badge = document.querySelector(`#det-${type} .active-badge`); if(badge) { badge.innerText = activeFilters[type].size; badge.style.display = activeFilters[type].size > 0 ? 'inline' : 'none'; } }); }
-        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
+        function updateSort(l) { if(l === 'PL') sortSelectHE.value = "none"; else sortSelectPL.value = "none"; filterAndSort(); }
         function syncStateToURL() { const url = new URL(window.location); if (search.value) url.searchParams.set('q', search.value); else url.searchParams.delete('q'); window.history.replaceState({}, '', url); }
         function applyURLState() { const p = new URLSearchParams(window.location.search); if (p.has('q')) document.getElementById('search').value = p.get('q'); }
-        function filterFacetList(input, listId) { let filter = input.value.toLowerCase(); let items = document.querySelectorAll(`#${listId} li`); items.forEach(li => { let span = li.querySelector('span'); if (span) { li.style.display = span.innerText.toLowerCase().includes(filter) ? "flex" : "none"; } }); }
+
         init();
     </script></body></html>
