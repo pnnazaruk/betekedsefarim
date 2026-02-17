@@ -4,9 +4,11 @@
     <title> Library of Yeshivas Chachmei Lublin </title>
     <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
     <style>
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
@@ -17,9 +19,10 @@
             border-bottom: 2px solid #1a1a1a; z-index: 4000;
         }
         .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
-        .header-links { display: flex; gap: 15px; align-items: center; }
+        .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+        .header-links a { color: #1a1a1a; text-decoration: underline; }
 
-        /* Ujednolicone przyciski */
+        /* DODATEK: Style przełączania widoków */
         .nav-btn, .about-btn { 
             background: none; border: 1px solid #1a1a1a; padding: 0 15px; cursor: pointer; 
             font-size: 11px; font-weight: bold; text-transform: uppercase; transition: all 0.2s; 
@@ -29,8 +32,25 @@
         .nav-btn:hover, .about-btn:hover { background: #f0f0f0; }
         .nav-btn.active { background: #1a1a1a; color: #fff; }
 
+        /* DODATEK: Widoczność sekcji */
+        body.stats-active #sidebar, 
+        body.stats-active #search-controls { display: none !important; }
+        body.stats-active #container { display: none !important; }
+        #dashboard-view { display: none; flex: 1; overflow-y: auto; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; }
+        body.stats-active #dashboard-view { display: flex; }
+        
+        .chart-container { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
+        .bottom-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+        #map { height: 400px; width: 100%; border: 1px solid #1a1a1a; z-index: 1; }
+        .stat-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+
         #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; position: relative; }
-        #mobile-toggle { display: none; background: #1a1a1a; color: #fff; border: none; padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; cursor: pointer; z-index: 3500; font-size: 13px; }
+
+        #mobile-toggle { 
+            display: none; background: #1a1a1a; color: #fff; border: none; 
+            padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
+            cursor: pointer; z-index: 3500; font-size: 13px;
+        }
         
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
@@ -39,10 +59,14 @@
         }
 
         details.facet-container { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 5px; }
-        summary.facet-summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: bold; text-transform: uppercase; outline: none; }
+        summary.facet-summary { 
+            list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            font-size: 11px; font-weight: bold; text-transform: uppercase; outline: none;
+        }
         summary.facet-summary::-webkit-details-marker { display: none; }
         summary.facet-summary::before { content: '▸'; margin-right: 8px; transition: transform 0.2s; display: inline-block; }
         details[open] summary.facet-summary::before { transform: rotate(90deg); }
+        
         summary.heb { direction: rtl; font-family: "SBL Hebrew", serif; font-size: 14px; text-transform: none; }
         summary.heb::before { content: none; }
         summary.heb::after { content: '◂'; margin-left: 8px; transition: transform 0.2s; display: inline-block; }
@@ -51,6 +75,7 @@
         .active-badge { font-size: 9px; background: #1a1a1a; color: #fff; padding: 0 5px; border-radius: 3px; margin-left: 5px; }
         .facet-inner-content { padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
         .facet-mini-search { width: 100%; padding: 5px; font-size: 12px; border: 1px solid #ccc; box-sizing: border-box; outline: none; margin-bottom: 5px; }
+
         .facet-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; border: 1px solid #eee; background: #fff; display: flex; flex-direction: column; }
         .facet-item { font-size: 12px; padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
         .facet-item:hover { background: #f5f5f5; }
@@ -59,19 +84,21 @@
         .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
         .active .count-pill { background: #444; color: #fff; }
 
+        .slider-wrapper { padding: 10px 0; }
+        .slider-wrapper.heb { direction: rtl; }
         input[type=range] { width: 100%; accent-color: #1a1a1a; }
         .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
 
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
         
-        .search-wrapper { position: relative; width: 100%; }
         #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
 
         .kb-toggle { font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px; }
         .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; padding: 10px; background: #f0f0f0; border: 1px solid #1a1a1a; margin-top: 5px; }
-        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; }
+        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; transition: background 0.2s; }
+        .key:hover { background: #e0e0e0; }
 
         .sort-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
         .sort-container { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; flex: 1; min-width: 180px; }
@@ -79,14 +106,6 @@
         select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
 
         #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; box-sizing: border-box; background: #fff; scroll-behavior: smooth; }
-
-        /* DASHBOARD */
-        #dashboard-view { display: none; flex: 1; overflow-y: auto; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; }
-        .chart-container { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
-        .bottom-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
-        #map { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
-        .stat-title { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-
         .item-card { border: 1px solid #eee; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; transition: all 0.2s ease; cursor: pointer; }
         .item-card:hover { border-color: #1a1a1a; background: #fcfcfc; }
         .item-content { padding: 18px; }
@@ -102,14 +121,32 @@
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
-        .modal-img-col img { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #1a1a1a; margin-bottom: 15px; }
+        
+        .modal-img-col img { 
+            width: 100%; 
+            max-height: 300px; 
+            object-fit: contain; 
+            border: 1px solid #1a1a1a; 
+            margin-bottom: 15px; 
+        }
+
+        .modal-data-col { flex: 1; min-width: 300px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
-        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; border: none; cursor: pointer; }
+        
+        .link-btn { 
+            display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; 
+            text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; border: none; cursor: pointer;
+        }
         .link-btn:hover { background: #555; }
+
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
 
-        @media (max-width: 768px) { #mobile-toggle { display: block; } #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); } #sidebar.open { transform: translateX(0); width: 80%; } .bottom-row { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) {
+            #mobile-toggle { display: block; }
+            #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+            #sidebar.open { transform: translateX(0); width: 80%; }
+        }
     </style></head><body>
 
     <header id="main-header">
@@ -132,98 +169,218 @@
                     <div class="slider-val"><span>1500</span><span id="yearVal">1939</span></div>
                 </div>
             </div>
+
             <div class="facet-section" style="direction: rtl;">
-                <div class="facet-header" style="display: flex; flex-direction: row; justify-content: flex-start;"><span class="facet-title heb">שנה</span></div>
+                <div class="facet-header" style="display: flex; flex-direction: row; justify-content: flex-start;">
+                    <span class="facet-title heb">שנה</span>
+                </div>
                 <div class="slider-wrapper heb">
                     <input type="range" id="hebYearSlider" min="5260" max="5700" value="5700" oninput="updateHebYearLabel(this.value); filterAndSort();">
                     <div class="slider-val" style="direction: rtl;"><span>ש"ק</span><span id="hebYearVal">ת"ש</span></div>
                 </div>
             </div>
+
             <div class="facet-section" style="border-top: 1px solid #1a1a1a; padding-top: 10px;">
                 <span class="clear-btn" style="text-align: center; display: block;" onclick="clearFacet('all')">Wyczyść wszystko / Reset all / נקה הכל</span>
             </div>
-            <details class="facet-container" id="det-author"><summary class="facet-summary">Autor / Author <span class="active-badge" style="display:none">0</span></summary><div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'authorListPL')"><ul id="authorListPL" class="facet-list"></ul></div></details>
-            <details class="facet-container" id="det-city"><summary class="facet-summary">Miasto / City <span class="active-badge" style="display:none">0</span></summary><div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'cityListPL')"><ul id="cityListPL" class="facet-list"></ul></div></details>
-            <details class="facet-container" id="det-printer"><summary class="facet-summary">Druk / Printer <span class="active-badge" style="display:none">0</span></summary><div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'printerListPL')"><ul id="printerListPL" class="facet-list"></ul></div></details>
-            <details class="facet-container" id="det-loc"><summary class="facet-summary">Lokalizacja / Location <span class="active-badge" style="display:none">0</span></summary><div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
-            <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary><div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
-            <details class="facet-container" id="det-city-he"><summary class="facet-summary heb">עיר <span class="active-badge" style="display:none">0</span></summary><div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'cityListHE')"><ul id="cityListHE" class="facet-list"></ul></div></details>
+
+            <details class="facet-container" id="det-author"><summary class="facet-summary">Autor / Author <span class="active-badge" style="display:none">0</span></summary>
+                <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'authorListPL')"><ul id="authorListPL" class="facet-list"></ul></div></details>
+            <details class="facet-container" id="det-city"><summary class="facet-summary">Miasto / City <span class="active-badge" style="display:none">0</span></summary>
+                <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'cityListPL')"><ul id="cityListPL" class="facet-list"></ul></div></details>
+            <details class="facet-container" id="det-printer"><summary class="facet-summary">Druk / Printer <span class="active-badge" style="display:none">0</span></summary>
+                <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'printerListPL')"><ul id="printerListPL" class="facet-list"></ul></div></details>
+            <details class="facet-container" id="det-loc"><summary class="facet-summary">Lokalizacja / Location <span class="active-badge" style="display:none">0</span></summary>
+                <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
+
+            <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
+                <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
+            <details class="facet-container" id="det-city-he"><summary class="facet-summary heb">עיר <span class="active-badge" style="display:none">0</span></summary>
+                <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'cityListHE')"><ul id="cityListHE" class="facet-list"></ul></div></details>
         </aside>
 
         <main id="main-content">
-            <div class="controls">
+            <div class="controls" id="search-controls">
                 <div class="search-wrapper">
                     <input type="text" id="search" placeholder="SZUKAJ / SEARCH / חפש..." onkeyup="filterAndSort()">
                     <div id="inlineCounter"></div>
                 </div>
-                <div id="keyboard" class="keyboard"></div>
+                <span class="kb-toggle" onclick="toggleKeyboard()">KLAWIATURA HEBRAJSKA / מקלדת עברית</span>
+                <div id="keyboard" class="keyboard">
+                    <div class="key" onclick="addChar('ק')">ק</div><div class="key" onclick="addChar('ר')">ר</div><div class="key" onclick="addChar('א')">א</div>
+                    <div class="key" onclick="addChar('ט')">ט</div><div class="key" onclick="addChar('ו')">ו</div><div class="key" onclick="addChar('ן')">ן</div>
+                    <div class="key" onclick="addChar('ם')">ם</div><div class="key" onclick="addChar('פ')">פ</div><div class="key" onclick="delChar()">←</div>
+                    <div class="key" onclick="addChar('ש')">ש</div><div class="key" onclick="addChar('ד')">ד</div><div class="key" onclick="addChar('ג')">ג</div>
+                    <div class="key" onclick="addChar('כ')">כ</div><div class="key" onclick="addChar('ע')">ע</div><div class="key" onclick="addChar('י')">י</div>
+                    <div class="key" onclick="addChar('ח')">ח</div><div class="key" onclick="addChar('ל')">ל</div><div class="key" onclick="addChar('ך')">ך</div>
+                    <div class="key" onclick="addChar('ז')">ז</div><div class="key" onclick="addChar('ס')">ס</div><div class="key" onclick="addChar('ב')">ב</div>
+                    <div class="key" onclick="addChar('ה')">ה</div><div class="key" onclick="addChar('נ')">נ</div><div class="key" onclick="addChar('מ')">מ</div>
+                    <div class="key" onclick="addChar('צ')">צ</div><div class="key" onclick="addChar('ת')">ת</div><div class="key" onclick="addChar('ץ')">ץ</div>
+                </div>
                 <div class="sort-wrapper">
-                    <div class="sort-container"><select id="sortSelectPL" onchange="updateSort('PL')"><option value="none">Oryginalna kolejność</option><option value="title">Tytuł (A-Z)</option><option value="author">Autor (A-Z)</option><option value="year_asc">Rok (Rosnąco)</option><option value="year_desc">Rok (Malejąco)</option></select></div>
-                    <div class="sort-container heb"><select id="sortSelectHE" onchange="updateSort('HE')"><option value="none">סדר מקורי</option><option value="title_he">כותרת</option><option value="author_he">מחבר</option><option value="year_asc_he">שנה (מהישן לחדש)</option><option value="year_desc_he">שנה (מהחדש לישן)</option></select></div>
+                    <div class="sort-container"><span>Sortuj wg / Sort by:</span>
+                        <select id="sortSelectPL" onchange="updateSort('PL')">
+                            <option value="none">Oryginalna kolejność / Default order</option>
+                            <option value="title">Tytuł (A-Z) / Title (A-Z)</option>
+                            <option value="author">Autor (A-Z) / Author (A-Z)</option>
+                            <option value="year_asc">Rok (Rosnąco) / Year (Ascending)</option>
+                            <option value="year_desc">Rok (Malejąco) / Year (Descending)</option>
+                        </select>
+                    </div>
+                    <div class="sort-container heb"><span>:מיין לפי</span>
+                        <select id="sortSelectHE" onchange="updateSort('HE')">
+                            <option value="none">סדר מקורי</option>
+                            <option value="title_he">כותרת</option>
+                            <option value="author_he">מחבר</option>
+                            <option value="year_asc_he">שנה (מהישן לחדש)</option>
+                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
+            
             <div id="container"></div>
+
             <div id="dashboard-view">
-                <div class="chart-container"><div class="stat-title">Lata wydania</div><div style="height:250px;"><canvas id="timelineChart"></canvas></div></div>
+                <div class="chart-container">
+                    <div class="stat-title">Lata wydania / Years of Publication</div>
+                    <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
+                </div>
                 <div class="bottom-row">
-                    <div class="chart-container"><div class="stat-title">Miejsca druku</div><div id="map"></div></div>
-                    <div class="chart-container"><div class="stat-title">Lokalizacja</div><div style="height:350px;"><canvas id="locChart"></canvas></div></div>
+                    <div class="chart-container">
+                        <div class="stat-title">Miejsca druku / Printing Locations</div>
+                        <div id="map"></div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="stat-title">Aktualna lokalizacja / Current Location</div>
+                        <div style="height: 350px;"><canvas id="locChart"></canvas></div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <div id="modalOverlay" onclick="closeModal(event)"><div id="modalWindow"><button class="close-modal" onclick="closeModalManual()">&times;</button><div id="modalContent"></div></div></div>
-
     <script>
-        let rawRows = [], colLabels = [], activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set() };
-        let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg', url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
-        let fuse, map, timelineChart, locChart, mapInitialized = false, isInitialLoad = true;
+        let rawRows = [];
+        let colLabels = [];
+        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set() };
+        let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
+        let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+        let fuse;
+        let isInitialLoad = true;
+        
+        // DODATEK: Zmienne dla dashboardu
+        let map, timelineChart, locChart, mapInitialized = false;
 
-        /* WSZYSTKIE FUNKCJE POMOCNICZE Z WZORCA */
-        function getVal(cell) { return cell && (cell.f || (cell.v !== null ? String(cell.v) : "")) || ""; }
-        function isUnknown(val) { let v = val ? val.trim() : ""; return !v || v === "---" || v === "-"; }
+        /* WSZYSTKIE ORYGINALNE FUNKCJE WZORCA POZOSTAJĄ IDENTYCZNE */
+
         function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
             if (!s || s === "---") return 999999; 
             let c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             let v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
-            let sum = 0, cleanC = c.match(/[\u0590-\u05FF]/g);
-            if (cleanC) cleanC.forEach(char => sum += v[char] || 0);
-            return (sum > 0 && sum < 1000) ? sum + 5000 : sum || 999999;
+            let sum = 0; let cleanC = c.match(/[\u0590-\u05FF]/g);
+            if (cleanC) { for (let i=0; i < cleanC.length; i++) sum += v[cleanC[i]] || 0; }
+            if (sum > 0 && sum < 1000) sum += 5000; return sum || 999999; 
         }
+        function numberToHebrewYear(num) {
+            let n = parseInt(num); if (n > 5000) n -= 5000;
+            let heb = "", v = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], l = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            for(let i=0; i<v.length; i++) { while(n >= v[i]) { heb += l[i]; n -= v[i]; } }
+            return heb;
+        }
+
+        /* DODATEK: Parser DMS dla Mapy */
         function parseDMS(dmsStr) {
-            if (!dmsStr) return null;
+            if (!dmsStr || typeof dmsStr !== 'string') return null;
             const regex = /(\d+)°(\d+)?′?(\d+)?″?([NSEW])/g;
             const parts = []; let match;
             while ((match = regex.exec(dmsStr)) !== null) {
-                let deg = parseInt(match[1]) + (parseInt(match[2]||0)/60) + (parseInt(match[3]||0)/3600);
-                if (match[4] === 'S' || match[4] === 'W') deg *= -1;
-                parts.push(deg);
+                const degrees = parseFloat(match[1]);
+                const minutes = parseFloat(match[2] || 0);
+                const seconds = parseFloat(match[3] || 0);
+                const hemisphere = match[4];
+                let decimal = degrees + (minutes / 60) + (seconds / 3600);
+                if (hemisphere === 'S' || hemisphere === 'W') decimal *= -1;
+                parts.push(decimal);
             }
             return parts.length === 2 ? parts : null;
         }
 
         async function init() {
             try {
-                let r = await fetch(url), t = await r.text();
+                let r = await fetch(url);
+                let t = await r.text();
                 let json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
-                rawRows = json.table.rows; colLabels = json.table.cols;
-                fuse = new Fuse(rawRows.map(row => ({ original: row, searchable: row.c.map(cell => getVal(cell)).join(' ') })), { keys: ['searchable'], threshold: 0.3 });
-                applyURLState(); filterAndSort();
+                rawRows = json.table.rows;
+                colLabels = json.table.cols;
+                const fuseData = rawRows.map(row => ({ original: row, searchable: row.c.map(cell => getVal(cell)).join(' ') }));
+                fuse = new Fuse(fuseData, { keys: ['searchable'], threshold: 0.3, ignoreLocation: true });
+                applyURLState();
+                filterAndSort();
                 document.getElementById('loader').style.display = 'none';
                 window.addEventListener('popstate', () => { applyURLState(); filterAndSort(false); });
             } catch (e) { console.error(e); }
         }
 
-        /* RYGORYSTYCZNIE PRZENIESIONA LOGIKA FILTROWANIA Z WZORCA */
-        function filterAndSort(updateURL = true) {
+        // DODATEK: switchView - zarządza widocznością paska bocznego i wyszukiwarki
+        function switchView(view) {
+            if(view === 'stats') {
+                document.body.classList.add('stats-active');
+                if(!mapInitialized) { 
+                    map = L.map('map').setView([50, 20], 4);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+                    mapInitialized = true; 
+                }
+                setTimeout(() => { updateDashboard(); map.invalidateSize(); }, 100);
+            } else {
+                document.body.classList.remove('stats-active');
+            }
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === `btn-${view}`));
+        }
+
+        // DODATEK: Logika Dashboardu
+        function updateDashboard() {
+            const currentData = filterAndSort(false, true); 
+            const yearCounts = {};
+            currentData.forEach(r => {
+                let y = extractYear(getVal(r.c[5]));
+                if(y > 0) yearCounts[y] = (yearCounts[y] || 0) + 1;
+            });
+            const sortedYears = Object.keys(yearCounts).sort();
+            if(timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(document.getElementById('timelineChart'), {
+                type: 'bar',
+                data: { labels: sortedYears, datasets: [{ label: '', data: sortedYears.map(y => yearCounts[y]), backgroundColor: '#1a1a1a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `Liczba książek: ${ctx.raw}` } } } }
+            });
+            const locCounts = {};
+            currentData.forEach(r => { let l = getVal(r.c[11]) || "Nieznana"; locCounts[l] = (locCounts[l] || 0) + 1; });
+            if(locChart) locChart.destroy();
+            locChart = new Chart(document.getElementById('locChart'), {
+                type: 'pie',
+                data: { labels: Object.keys(locCounts), datasets: [{ data: Object.values(locCounts), backgroundColor: ['#1a1a1a', '#444', '#777', '#aaa', '#ccc'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            map.eachLayer(l => { if(l instanceof L.Marker) map.removeLayer(l); });
+            currentData.forEach(r => {
+                let name = getVal(r.c[7]), dms = getVal(r.c[9]), coords = parseDMS(dms);
+                if(coords) L.marker(coords).addTo(map).bindPopup(`<b>${name}</b>`);
+            });
+        }
+
+        /* ORYGINALNE FUNKCJE LOGIKI WZORCOWEJ BEZ ZMIAN */
+
+        function filterAndSort(updateURL = true, returnData = false) {
             const term = document.getElementById('search').value.toLowerCase().trim();
             const maxYear = parseInt(document.getElementById('yearSlider').value);
             const maxHebYear = parseInt(document.getElementById('hebYearSlider').value);
-            
+            const sPL = document.getElementById('sortSelectPL').value;
+            const sHE = document.getElementById('sortSelectHE').value;
+
             let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
+
             const filtered = searchFiltered.filter(r => {
                 const year = extractYear(getVal(r.c[5])), hebYearNum = hebrewYearToNumber(getVal(r.c[6]));
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
@@ -236,9 +393,31 @@
                 return true;
             });
 
-            render(filtered); updateFacetsUI(searchFiltered, maxYear, maxHebYear);
+            if(returnData) return filtered;
+
+            const sortVal = sPL !== "none" ? sPL : sHE;
+            if(sortVal !== "none") {
+                filtered.sort((a, b) => {
+                    const norm = (s) => getVal(s).replace(/[\[\]]/g, "").toLowerCase().trim();
+                    if (sortVal.includes("year")) {
+                        let vA = extractYear(getVal(a.c[5])), vB = extractYear(getVal(b.c[5]));
+                        if (sortVal.includes("_he")) { vA = hebrewYearToNumber(getVal(a.c[6])); vB = hebrewYearToNumber(getVal(b.c[6])); }
+                        if (vA === 0 || vA === 999999) return 1; if (vB === 0 || vB === 999999) return -1;
+                        return sortVal.includes("desc") ? vB - vA : vA - vB;
+                    }
+                    let i = 1; if (sortVal === 'title_he') i = 2; else if (sortVal === 'author') i = 3; else if (sortVal === 'author_he') i = 4;
+                    let valA = norm(a.c[i]), valB = norm(b.c[i]);
+                    const isAUnknown = isUnknown(valA), isBUnknown = isUnknown(valB);
+                    if (isAUnknown && !isBUnknown) return 1;
+                    if (!isAUnknown && isBUnknown) return -1;
+                    return valA.localeCompare(valB, sortVal.includes('_he') ? 'he' : 'pl');
+                });
+            }
+
+            updateFacetsUI(searchFiltered, maxYear, maxHebYear);
+            render(filtered);
             if (updateURL) syncStateToURL();
-            if (isInitialLoad) { const p = new URLSearchParams(window.location.search); if (p.has('id')) openModal(p.get('id')); isInitialLoad = false; }
+            if (isInitialLoad) { const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('id')) openModal(urlParams.get('id')); isInitialLoad = false; }
         }
 
         function updateFacetsUI(searchFiltered, maxYear, maxHebYear) {
@@ -247,58 +426,67 @@
 
             searchFiltered.forEach(r => {
                 const year = extractYear(getVal(r.c[5])), hebYearNum = hebrewYearToNumber(getVal(r.c[6]));
-                if ((year > 0 && year > maxYear) || (hebYearNum !== 999999 && hebYearNum > maxHebYear)) return;
+                if (!((year === 0 || year <= maxYear) && (hebYearNum === 999999 || hebYearNum <= maxHebYear))) return;
 
                 const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
                 const cityHE = getVal(r.c[22]) || cityPL, authHE = getVal(r.c[4]) || authPL;
 
-                const add = (t, v) => { let k = isUnknown(v)?'_UNK_':v.trim(); counts[t][k] = (counts[t][k]||0)+1; };
-                add('city', cityPL); add('author', authPL); add('printer', prnPL); add('loc', locPL);
-                plToHe.city[isUnknown(cityPL)?'_UNK_':cityPL.trim()] = isUnknown(cityPL)?'לא ידוע':cityHE.trim();
-                plToHe.author[isUnknown(authPL)?'_UNK_':authPL.trim()] = isUnknown(authPL)?'לא ידוע':authHE.trim();
+                // Sprawdzenie powiązań między kategoriami (Cross-filtering)
+                const passCity = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
+                const passAuth = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
+                const passPrn = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
+                const passLoc = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim()));
+
+                if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
+                if (passAuth) { let k = isUnknown(authPL)?'_UNK_':authPL.trim(); counts.author[k] = (counts.author[k]||0)+1; plToHe.author[k] = isUnknown(authPL)?'לא ידוע':authHE.trim(); }
+                if (passPrn) { let k = isUnknown(prnPL)?'_UNK_':prnPL.trim(); counts.printer[k] = (counts.printer[k]||0)+1; }
+                if (passLoc) { let k = isUnknown(locPL)?'_UNK_':locPL.trim(); counts.loc[k] = (counts.loc[k]||0)+1; }
             });
 
-            const renderL = (id, c, t, isH, labels) => {
-                const list = document.getElementById(id); let html = `<li class="facet-item ${activeFilters[t].size===0?'active':''}" onclick="clearFacet('${t}')">${isH?'הכל':'Wszystko/ All'}</li>`;
-                Object.keys(c).sort((a,b)=>(isH?labels[a]:a).localeCompare(isH?labels[b]:b, isH?'he':'pl')).forEach(k => {
-                    if(k==='_UNK_') return;
-                    html += `<li class="facet-item ${activeFilters[t].has(k)?'active':''}" onclick="toggleFilter('${k}','${t}')"><span>${isH?labels[k]:k}</span><span class="count-pill">${c[k]}</span></li>`;
-                });
-                if(c['_UNK_']) html += `<li class="facet-item ${activeFilters[t].has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_','${t}')"><span>${isH?'לא ידוע':'Nieznane'}</span><span class="count-pill">${c['_UNK_']}</span></li>`;
-                list.innerHTML = html;
-            };
-
-            renderL('authorListPL', counts.author, 'author', false);
-            renderL('cityListPL', counts.city, 'city', false);
-            renderL('printerListPL', counts.printer, 'printer', false);
-            renderL('locListPL', counts.loc, 'loc', false);
-            renderL('authorListHE', counts.author, 'author', true, plToHe.author);
-            renderL('cityListHE', counts.city, 'city', true, plToHe.city);
-            Object.keys(activeFilters).forEach(t => { let b = document.querySelector(`#det-${t} .active-badge`), s = activeFilters[t].size; if(b){ b.innerText = s; b.style.display = s>0?'inline':'none'; } });
+            renderFacetList('authorListPL', counts.author, 'author', false, 'Wszystko/ All', 'Nieznany', null);
+            renderFacetList('cityListPL', counts.city, 'city', false, 'Wszystko/ All', 'Nieznane', null);
+            renderFacetList('printerListPL', counts.printer, 'printer', false, 'Wszystko/ All', 'Nieznany', null);
+            renderFacetList('locListPL', counts.loc, 'loc', false, 'Wszystko/ All', 'Nieznana', null);
+            renderFacetList('authorListHE', counts.author, 'author', true, 'הכל', 'לא ידוע', plToHe.author);
+            renderFacetList('cityListHE', counts.city, 'city', true, 'הכל', 'לא ידוע', plToHe.city);
+            
+            Object.keys(activeFilters).forEach(type => {
+                let badge = document.querySelector(`#det-${type} .active-badge`);
+                if(badge) { badge.innerText = activeFilters[type].size; badge.style.display = activeFilters[type].size > 0 ? 'inline' : 'none'; }
+            });
         }
 
-        /* FUNKCJE MODAŁU, DASHBOARDU I RESZTY */
-        function switchView(view) {
-            document.getElementById('container').style.display = view==='catalog'?'block':'none';
-            document.getElementById('dashboard-view').style.display = view==='stats'?'flex':'none';
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id===`btn-${view}`));
-            if(view==='stats') { if(!mapInitialized) { map = L.map('map').setView([50, 20], 4); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map); mapInitialized = true; } setTimeout(() => { updateDashboard(); map.invalidateSize(); }, 100); }
+        function renderFacetList(id, counts, type, isHeb, allLabel, unkLabel, heMap) {
+            const list = document.getElementById(id); let html = `<li class="facet-item ${activeFilters[type].size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
+            Object.keys(counts).sort((a,b) => (isHeb?heMap[a]:a).localeCompare(isHeb?heMap[b]:b, isHeb?'he':'pl')).forEach(k => {
+                if(k==='_UNK_') return;
+                html += `<li class="facet-item ${activeFilters[type].has(k)?'active':''}" onclick="toggleFilter('${k}', '${type}')"><span>${isHeb?heMap[k]:k}</span><span class="count-pill">${counts[k]}</span></li>`;
+            });
+            if(counts['_UNK_']) html += `<li class="facet-item ${activeFilters[type].has('_UNK_')?'active':''}" onclick="toggleFilter('_UNK_', '${type}')"><span>${unkLabel}</span><span class="count-pill">${counts['_UNK_']}</span></li>`;
+            list.innerHTML = html;
         }
-        function updateDashboard() {
-            const data = rawRows; // Statystyki zawsze z całości dla kontekstu
-            const yearCounts = {}; data.forEach(r => { let y = extractYear(getVal(r.c[5])); if(y>0) yearCounts[y] = (yearCounts[y]||0)+1; });
-            const sortedYears = Object.keys(yearCounts).sort();
-            if(timelineChart) timelineChart.destroy();
-            timelineChart = new Chart(document.getElementById('timelineChart'), { type: 'bar', data: { labels: sortedYears, datasets: [{ data: sortedYears.map(y => yearCounts[y]), backgroundColor: '#1a1a1a' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `Liczba książek: ${ctx.raw}` } } } } });
-            const locCounts = {}; data.forEach(r => { let l = getVal(r.c[11]) || "Nieznana"; locCounts[l] = (locCounts[l]||0)+1; });
-            if(locChart) locChart.destroy();
-            locChart = new Chart(document.getElementById('locChart'), { type: 'pie', data: { labels: Object.keys(locCounts), datasets: [{ data: Object.values(locCounts), backgroundColor: ['#1a1a1a', '#444', '#777', '#aaa', '#ccc'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            map.eachLayer(l => { if(l instanceof L.Marker) map.removeLayer(l); });
-            data.forEach(r => { let coords = parseDMS(getVal(r.c[9])); if(coords) L.marker(coords).addTo(map).bindPopup(`<b>${getVal(r.c[7])}</b>`); });
+
+        function render(rows) {
+            const container = document.getElementById('container');
+            container.innerHTML = rows.map(r => `
+                <div class="item-card" onclick="openModal('${r.c[0].v}')">
+                    <div class="item-content"><div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
+                        <div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
+                            <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
+                        </div></div></div>`).join('');
+            document.getElementById('inlineCounter').innerText = rows.length;
         }
-        function toggleFilter(v, t) { if(activeFilters[t].has(v)) activeFilters[t].delete(v); else activeFilters[t].add(v); filterAndSort(); }
+
+        /* POZOSTAŁE FUNKCJE NAGŁÓWKA I SIDEBARA */
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleKeyboard() { let k = document.getElementById('keyboard'); k.style.display = k.style.display==='grid'?'none':'grid'; }
+        function addChar(c) { document.getElementById('search').value += c; filterAndSort(); }
+        function delChar() { let s = document.getElementById('search'); s.value = s.value.slice(0,-1); filterAndSort(); }
         function clearFacet(t) { if(t==='all') { Object.keys(activeFilters).forEach(k=>activeFilters[k].clear()); document.getElementById('search').value=""; } else activeFilters[t].clear(); filterAndSort(); }
-        function render(rows) { document.getElementById('container').innerHTML = rows.map(r => `<div class="item-card" onclick="openModal('${r.c[0].v}')"><div class="item-content"><div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div><div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span></div><div class="column-he"><span>${getVal(r.c[4])}</span></div></div></div></div>`).join(''); document.getElementById('inlineCounter').innerText = rows.length; }
+        function toggleFilter(v, t) { if(activeFilters[t].has(v)) activeFilters[t].delete(v); else activeFilters[t].add(v); filterAndSort(); }
+        function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
+
+        /* MODAL */
         function openModal(id) {
             const r = rawRows.find(row => row.c[0] && row.c[0].v == id); if(!r) return;
             let h = ""; for(let i=0; i<=22; i++) { if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue; h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${getVal(r.c[i]) || "---"}</span></div>`; }
@@ -306,9 +494,17 @@
             document.getElementById('modalOverlay').style.display = 'flex';
         }
         function closeModalManual() { document.getElementById('modalOverlay').style.display = 'none'; }
-        function updateSort(l) { filterAndSort(); }
-        function syncStateToURL() {} function applyURLState() {}
-        function updateYearLabel(v) { document.getElementById('yearVal').innerText = v; }
-        function updateHebYearLabel(v) { updateHebYearLabel(v); } // placeholder
+        function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalManual(); }
+
+        function syncStateToURL() {
+            const url = new URL(window.location);
+            if (document.getElementById('search').value) url.searchParams.set('q', document.getElementById('search').value); else url.searchParams.delete('q');
+            window.history.replaceState({}, '', url);
+        }
+        function applyURLState() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('q')) document.getElementById('search').value = params.get('q');
+        }
+
         init();
     </script></body></html>
