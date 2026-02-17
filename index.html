@@ -210,8 +210,8 @@
                         <select id="sortSelectHE" onchange="updateSort('HE')">
                             <option value="none">סדר מקורי</option>
                             <option value="title_he">כותרת</option>
-                            <option value="year_asc_he">שנה (מהישן לחדش)</option>
-                            <option value="year_desc_he">שנה (מהחדש ליشן)</option>
+                            <option value="year_asc_he">שנה (מהישן לחדש)</option>
+                            <option value="year_desc_he">שנה (מהחדש לישן)</option>
                         </select>
                     </div>
                 </div>
@@ -426,4 +426,5 @@
         function updateSort(l) { if(l === 'PL') document.getElementById('sortSelectHE').value = "none"; else document.getElementById('sortSelectPL').value = "none"; filterAndSort(); }
         init();
     </script></body></html>
+
 
