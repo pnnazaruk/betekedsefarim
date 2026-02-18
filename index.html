@@ -653,7 +653,7 @@ function switchTab(mode) {
                 data: { labels: sortedYears, datasets: [{ label: 'Książki / Books', data: sortedYears.map(y => years[y]), backgroundColor: '#1a1a1a' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
-// --- LOGIKA SANKEY DIAGRAM (v3 - Gwarantowane szare miasta i żywe linie) ---
+// --- LOGIKA SANKEY DIAGRAM (v4 - Stabilne szare miasta i priorytet kolorów) ---
             const authCountsS = {};
             data.forEach(r => {
                 let a = getVal(r.c[3]);
@@ -683,22 +683,21 @@ function switchTab(mode) {
                 return acc;
             }, {}));
 
-            // Intensywna paleta dla autorów
             const sankeyPalette = {
-                [top5SankeyAuth[0]]: '#2E86C1', 
-                [top5SankeyAuth[1]]: '#D35400', 
-                [top5SankeyAuth[2]]: '#C0392B', 
-                [top5SankeyAuth[3]]: '#16A085', 
-                [top5SankeyAuth[4]]: '#F1C40F'
+                [top5SankeyAuth[0]]: '#5DADE2',
+                [top5SankeyAuth[1]]: '#EB984E',
+                [top5SankeyAuth[2]]: '#EC7063',
+                [top5SankeyAuth[3]]: '#48C9B0',
+                [top5SankeyAuth[4]]: '#F4D03F'
             };
 
-            // Tworzymy jawny słownik kolorów dla KAŻDEGO węzła
-            const nodeColorsDict = {};
+            // KLUCZOWE ROZWIĄZANIE: Obiekt nodes z wymuszonym kolorem
+            const nodeConfig = {};
             top5SankeyAuth.forEach(auth => { 
-                nodeColorsDict[auth] = sankeyPalette[auth]; 
+                nodeConfig[auth] = sankeyPalette[auth]; 
             });
             citiesInSankey.forEach(city => { 
-                nodeColorsDict[city] = '#95A5A6'; // Czysty, stały szary dla wszystkich miast
+                nodeConfig[city] = '#BDC3C7'; // Szary dla miast
             });
 
             if (window.sankeyInstance) window.sankeyInstance.destroy();
@@ -709,17 +708,17 @@ function switchTab(mode) {
                 data: {
                     datasets: [{
                         data: aggregatedFlows,
-                        // Przypisanie kolorów do konkretnych nazw węzłów
-                        colorNodes: nodeColorsDict, 
-                        // Kolor linii pobierany od źródła (Autora)
+                        // Przypisujemy konfigurację kolorów węzłów
+                        nodes: nodeConfig,
+                        // colorMode: 'from' przy zdefiniowanych kolorach w 'nodes' 
+                        // powinien teraz dotyczyć tylko samych linii (przepływów)
                         colorFrom: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
                         colorTo: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
                         colorMode: 'from',
-                        alpha: 0.8,
-                        hoverAlpha: 1.0,
+                        alpha: 0.6,
                         labels: {
                             font: {
-                                size: window.innerWidth < 768 ? 9 : 11,
+                                size: isMobile ? 9 : 11,
                                 weight: 'bold',
                                 family: 'Segoe UI'
                             },
@@ -731,7 +730,10 @@ function switchTab(mode) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { left: 5, right: 5, top: 20, bottom: 20 } },
+                    // Wyłączamy nakładanie się warstw (zjawisko zacierania granic węzłów)
+                    layout: {
+                        padding: { left: 5, right: 5, top: 10, bottom: 10 }
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -739,7 +741,7 @@ function switchTab(mode) {
                             callbacks: {
                                 label: (c) => {
                                     const d = c.dataset.data[c.dataIndex];
-                                    return ` ${d.from} → ${d.to}: ${d.flow} egz.`;
+                                    return ` ${d.from} → ${d.to}: ${d.flow}`;
                                 }
                             }
                         }
@@ -856,6 +858,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
