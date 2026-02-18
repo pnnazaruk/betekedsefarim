@@ -123,7 +123,20 @@
         @media (max-width: 768px) {
             #mobile-toggle { display: block; }
             #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
-            #sidebar.open { transform: translateX(0); width: 80%; }
+            #sidebar.open { transform: translateX(0); width: 85%; }
+            
+            /* NOWE POPRAWKI MOBILNE */
+            #main-header { flex-direction: column; gap: 10px; padding: 10px; }
+            .header-title { font-size: 18px; text-align: center; }
+            .header-links { gap: 5px; }
+            .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 9px; height: 30px; }
+            .row-flex { flex-direction: column; gap: 5px; }
+            .title-heb { text-align: left; direction: ltr; } /* Uproszczenie dla wąskich ekranów */
+            .author-row { flex-direction: column; gap: 10px; }
+            .keyboard { grid-template-columns: repeat(6, 1fr); } /* Większe klawisze na mobile */
+            .stat-grid { grid-template-columns: 1fr; }
+            #modalWindow { width: 95%; padding: 15px; }
+            .modal-body { gap: 15px; }
         }
 
         /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
@@ -146,7 +159,6 @@
         .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
         #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
         .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        @media (max-width: 768px) { .stat-grid { grid-template-columns: 1fr; } }
     </style></head><body>
 
     <header id="main-header">
@@ -255,7 +267,7 @@
                     </div>
                     <div class="chart-card">
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
-                        <div style="height: 350px;"><canvas id="locChart"></canvas></div>
+                        <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
                 </div>
             </div>
@@ -491,7 +503,9 @@
             if(mode === 'stats') {
                 document.body.classList.add('stats-mode');
                 if(!mapInitialized) {
-                    mapInstance = L.map('map-container').setView([50, 20], 4);
+                    // Blokada scrollowania mapy jednym palcem na mobile
+                    const mapOptions = window.innerWidth < 768 ? { dragging: !L.Browser.mobile, tap: !L.Browser.mobile } : {};
+                    mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
                     mapInitialized = true;
                 }
@@ -517,6 +531,8 @@
 
         function renderStats() {
             const data = rawRows; 
+            const isMobile = window.innerWidth < 768;
+
             const years = {};
             data.forEach(r => { let y = extractYear(getVal(r.c[5])); if(y > 0) years[y] = (years[y]||0) + 1; });
             const sortedYears = Object.keys(years).sort();
@@ -552,6 +568,10 @@ const locs = {};
             const values = locData.map(d => d[1]);
 
             if(locChart) locChart.destroy();
+            
+            // Dynamiczne dostosowanie wysokości kontenera na mobile
+            if(isMobile) document.getElementById('chart-loc-container').style.height = (labels.length * 40) + "px";
+
             locChart = new Chart(document.getElementById('locChart'), {
                 type: 'bar',
                 data: { 
@@ -599,12 +619,12 @@ options: {
                         grid: { display: false },
                         ticks: { 
                             autoSkip: false, 
-                            font: { size: 11, weight: 'bold' }, 
+                            font: { size: isMobile ? 9 : 11, weight: 'bold' }, 
                             color: '#1a1a1a',
-                            // FUNKCJA SKRACAJĄCA TEKST
+                            // FUNKCJA SKRACAJĄCA TEKST - agresywniejsza na mobile
                             callback: function(value) {
                                 let label = this.getLabelForValue(value);
-                                const maxLength = 35; // Ustaw limit znaków (np. 25)
+                                const maxLength = isMobile ? 18 : 35; 
                                 if (label.length > maxLength) {
                                     return label.substring(0, maxLength) + '...';
                                 }
@@ -632,7 +652,3 @@ options: {
 
         init();
     </script></body></html>
-
-
-
-
