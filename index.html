@@ -13,11 +13,18 @@
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
         body { display: flex; flex-direction: column; }
-
-        #main-header {
-            flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
-            display: flex; flex-direction: row-reverse; justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid #1a1a1a; z-index: 4000;
+    #main-header {
+            flex: 0 0 auto; 
+            background: #fff; 
+            color: #1a1a1a; 
+            padding: 15px 25px;
+            display: flex; 
+            /* ZMIANA: Standardowy kierunek i rozpychanie elementów na boki */
+            flex-direction: row; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #1a1a1a; 
+            z-index: 4000;
         }
         .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
         .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
@@ -145,11 +152,13 @@
     <header id="main-header">
         <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank" class="nav-tab-btn">O projekcie / About</a>
         
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
-            <button class="nav-tab-btn active" id="tab-catalog" onclick="switchTab('catalog')">Katalog / Catalog</button>
-            <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki / Statistics</button>
+        <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank" class="nav-tab-btn">O projekcie / About</a>
+        <button class="nav-tab-btn active" id="tab-catalog" onclick="switchTab('catalog')">Katalog / Catalog</button>
+        <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki / Statistics</button>
         </div>
+
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
     </header>
 
     <button id="mobile-toggle" onclick="toggleSidebar()">☰ Filtry / Filters / מסננים</button>
@@ -543,6 +552,7 @@
 
         init();
     </script></body></html>
+
 
 
 
