@@ -692,19 +692,29 @@ function switchTab(mode) {
             if (window.sankeyInstance) window.sankeyInstance.destroy();
             const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
             
-            window.sankeyInstance = new Chart(ctxSankey, {
+window.sankeyInstance = new Chart(ctxSankey, {
                 type: 'sankey',
                 data: {
                     datasets: [{
                         data: aggregatedFlows,
-                        // NAJPROSTSZY TRIK: 
-                        // Start linii: Kolor Autora
+                        // Start: Zawsze kolor autora
                         colorFrom: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
-                        // Koniec linii: Zawsze szary (to uleczy kolor miast)
-                        colorTo: '#BDC3C7', 
-                        colorMode: 'gradient', // Musi być gradient, by akceptował dwa kolory
+                        
+                        // Cel: Jeśli element jest w stanie hover -> kolor autora (znika gradient)
+                        // Jeśli nie jest -> szary (miasta są szare)
+                        colorTo: (c) => {
+                            const active = c.chart.getActiveElements();
+                            if (active.length > 0 && active[0].index === c.dataIndex) {
+                                return sankeyPalette[c.dataset.data[c.dataIndex].from];
+                            }
+                            return '#BDC3C7';
+                        },
+
+                        colorMode: 'gradient', 
                         alpha: 0.7,
+                        /* Zwiększamy alpha przy najechaniu, aby kolor był intensywny */
                         hoverAlpha: 1.0,
+                        
                         labels: {
                             font: { size: isMobile ? 9 : 11, weight: 'bold', family: 'Segoe UI' },
                             color: '#1a1a1a'
@@ -715,6 +725,10 @@ function switchTab(mode) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    // Wymuszamy odświeżanie kolorów przy każdym ruchu myszy
+                    onHover: (event, chartElement) => {
+                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -839,6 +853,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
