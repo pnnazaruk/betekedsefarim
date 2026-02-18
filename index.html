@@ -125,56 +125,46 @@
     #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
     #sidebar.open { transform: translateX(0); width: 85%; }
     
-    /* REWOLUCJA W PRZEWIJANIU STATYSTYK */
+    /* REWOLUCJA W PRZEWIJANIU STATYSTYK - OSTATECZNA */
     body.stats-mode {
-        overflow-y: auto !important; /* Wymusza scroll przeglądarki */
-        height: auto !important;     /* Pozwala stronie rosnąć */
-        position: static !important; /* Usuwa blokady pozycjonowania */
+        overflow-y: auto !important; 
+        height: auto !important;     
+        position: static !important; 
     }
 
-    body.stats-mode #app-container {
-        display: block !important;    /* Wyłącza flexboxa (kluczowe!) */
-        height: auto !important;
-        overflow: visible !important;
-    }
-
-    body.stats-mode #main-content {
-        height: auto !important;
-        overflow: visible !important;
-        flex: none !important;
-    }
-
+    /* Musimy odblokować KAŻDY kontener po drodze do statystyk */
+    body.stats-mode #app-container,
+    body.stats-mode #main-content,
     body.stats-mode #dashboard-view {
-        display: block !important;   /* Elementy jeden pod drugim */
+        display: block !important;    /* Wyłącza flexboxa blokującego wysokość */
         height: auto !important;
-        overflow: visible !important;
+        overflow: visible !important; /* Pozwala treści wyjść poza ekran */
+        flex: none !important;        /* Usuwa automatyczne dopasowanie do okna */
     }
 
-    /* Całkowite wyłączenie przycisku filtrów w statystykach na mobile */
+    /* Ukrycie przycisku filtrów, by nie przeszkadzał w statystykach */
     body.stats-mode #mobile-toggle {
         display: none !important;
     }
     
-    /* Reszta Twoich poprawek wizualnych */
+    /* Adaptacja nagłówka i kart */
     #main-header { flex-direction: column; gap: 10px; padding: 10px; }
     .header-title { font-size: 18px; text-align: center; }
-    .header-links { gap: 5px; }
-    .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 9px; height: 30px; }
+    .header-links { gap: 5px; justify-content: center; width: 100%; }
+    .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 10px; height: 32px; flex: 1; justify-content: center; }
+    
     .row-flex { flex-direction: column; gap: 5px; }
     .title-heb { text-align: left; direction: ltr; } 
     .author-row { flex-direction: column; gap: 10px; }
-    .keyboard { grid-template-columns: repeat(6, 1fr); } 
     
     .stat-grid { 
-        display: block !important; /* Wykresy pod sobą */
+        display: block !important; 
         width: 100% !important;
     }
     #map-container { 
         height: 350px !important;
         margin-bottom: 20px; 
     }
-    #modalWindow { width: 95%; padding: 15px; }
-    .modal-body { gap: 15px; }
 }
 
         /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
@@ -547,10 +537,10 @@ function switchTab(mode) {
         if(!mapInitialized) {
             const isMobile = window.innerWidth < 768;
             const mapOptions = isMobile ? { 
-                dragging: false,      // Zamrażamy mapę dla scrolla strony
-                tap: false, 
-                touchZoom: false, 
-                scrollWheelZoom: false 
+            dragging: false,       // Kluczowe dla przewijania strony jednym palcem
+            tap: false, 
+            touchZoom: 'center', 
+            scrollWheelZoom: false 
             } : {};
 
             mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
@@ -704,6 +694,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
