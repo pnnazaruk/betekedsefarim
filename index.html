@@ -562,13 +562,22 @@ const locs = {};
                         borderRadius: 4
                     }] 
                 },
-                options: { 
+            options: { 
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
+                    // KLUCZOWE: Umożliwia najechanie na nazwę na osi Y, aby zobaczyć dymek
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: { 
                         legend: { display: false },
-                        tooltip: { enabled: true }
+                        tooltip: { 
+                            enabled: true,
+                            backgroundColor: 'rgba(26, 26, 26, 0.9)', // Ciemne tło Modern Archive
+                            padding: 10
+                        }
                     },
                     scales: {
                         x: { 
@@ -578,7 +587,12 @@ const locs = {};
                         },
                         y: { 
                             grid: { display: false },
-                            ticks: { font: { size: 11, weight: 'bold' }, color: '#1a1a1a' }
+                            ticks: { 
+                                // KLUCZOWA POPRAWKA: Wymusza wyświetlenie wszystkich nazw, nawet tych krótkich
+                                autoSkip: false, 
+                                font: { size: 11, weight: 'bold' }, 
+                                color: '#1a1a1a'
+                            }
                         }
                     }
                 }
@@ -600,3 +614,4 @@ const locs = {};
 
         init();
     </script></body></html>
+
