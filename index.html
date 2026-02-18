@@ -653,7 +653,37 @@ function switchTab(mode) {
                 data: { labels: sortedYears, datasets: [{ label: 'Książki / Books', data: sortedYears.map(y => years[y]), backgroundColor: '#1a1a1a' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
-// 1. Definiujemy kolory z kanałem Alpha (identycznym jak późniejsze alpha linii)
+// --- LOGIKA SANKEY DIAGRAM (v7 - Całkowita unifikacja barw i brak warstw) ---
+            const authCountsS = {};
+            data.forEach(r => {
+                let a = getVal(r.c[3]);
+                if (!isUnknown(a)) authCountsS[a] = (authCountsS[a] || 0) + 1;
+            });
+
+            const top5SankeyAuth = Object.entries(authCountsS)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(e => e[0]);
+
+            const sankeyFlows = [];
+            const citiesInSankey = new Set();
+            data.forEach(r => {
+                let auth = getVal(r.c[3]);
+                let city = getVal(r.c[7]) || "Nieznane / Unknown";
+                if (top5SankeyAuth.includes(auth)) {
+                    sankeyFlows.push({ from: auth, to: city, flow: 1 });
+                    citiesInSankey.add(city);
+                }
+            });
+
+            const aggregatedFlows = Object.values(sankeyFlows.reduce((acc, curr) => {
+                const key = curr.from + "|" + curr.to;
+                if (!acc[key]) acc[key] = { ...curr };
+                else acc[key].flow += 1;
+                return acc;
+            }, {}));
+
+  // 1. Definiujemy kolory z kanałem Alpha (identycznym jak późniejsze alpha linii)
             const sankeyPalette = {
                 [top5SankeyAuth[0]]: 'rgba(93, 173, 226, 0.8)', // Przytłumiony niebieski
                 [top5SankeyAuth[1]]: 'rgba(235, 152, 78, 0.8)', // Przytłumiony pomarańczowy
@@ -825,6 +855,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
