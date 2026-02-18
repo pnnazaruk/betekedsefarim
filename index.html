@@ -245,16 +245,16 @@
 
             <div id="dashboard-view">
                 <div class="chart-card">
-                    <div class="chart-header">Lata wydania / Years of Publication</div>
+                    <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Volumes</div>
                     <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
                 </div>
                 <div class="stat-grid">
                     <div class="chart-card">
-                        <div class="chart-header">Miejsca druku / Printing Locations</div>
+                        <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of the Yeshivas Chachmei Lublin Collection</div>
                         <div id="map-container"></div>
                     </div>
                     <div class="chart-card">
-                        <div class="chart-header">Lokalizacje / Book locations</div>
+                        <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
                 </div>
@@ -527,9 +527,26 @@
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
 // Słupki poziome (Lokalizacje) - Paleta Modern Archive
-            const locs = {};
-            data.forEach(r => { let l = getVal(r.c[11]) || "Nieznana"; locs[l] = (locs[l]||0) + 1; });
-            
+const locs = {};
+            data.forEach(r => { 
+                let rawVal = getVal(r.c[11]);
+                // Usuwamy zbędne spacje i zamieniamy na małe litery do testu
+                let cleanVal = rawVal ? rawVal.trim() : "";
+                let testVal = cleanVal.toLowerCase();
+
+                let finalLabel;
+                // Jeśli komórka spełnia warunek "nieznana" (pusta, myślnik, lub zawiera frazę unknown/nieznan)
+                if (isUnknown(cleanVal) || testVal.includes('unknown') || testVal.includes('nieznan')) {
+                    finalLabel = "Nieznana / Unknown";
+                } else {
+                    finalLabel = cleanVal; // Zachowaj oryginalną pisownię z Excela
+                }
+
+                if (finalLabel) {
+                    locs[finalLabel] = (locs[finalLabel] || 0) + 1; 
+                }
+            });
+
             const locData = Object.entries(locs).sort((a, b) => b[1] - a[1]);
             const labels = locData.map(d => d[0]);
             const values = locData.map(d => d[1]);
@@ -541,7 +558,7 @@
                     labels: labels, 
                     datasets: [{ 
                         data: values, 
-                        backgroundColor: ['#2c3e50', '#5a6a7a', '#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb'],
+                        backgroundColor: ['#2c3e50', '#5a6a7a', '#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb', '#e5e8e8'],
                         borderRadius: 4
                     }] 
                 },
@@ -549,10 +566,20 @@
                     indexAxis: 'y',
                     responsive: true, 
                     maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
                     scales: {
-                        x: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 10 } } },
-                        y: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, color: '#1a1a1a' } }
+                        x: { 
+                            beginAtZero: true, 
+                            grid: { display: false },
+                            ticks: { stepSize: 1 } 
+                        },
+                        y: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 11, weight: 'bold' }, color: '#1a1a1a' }
+                        }
                     }
                 }
             });
@@ -573,6 +600,7 @@
 
         init();
     </script></body></html>
+
 
 
 
