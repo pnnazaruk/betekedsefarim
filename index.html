@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -313,6 +314,12 @@
             <div id="container"></div>
 
             <div id="dashboard-view">
+                <div class="chart-card" style="margin-bottom: 20px;">
+    <div class="chart-header">Relacja Autor -> Miejsce druku dla top 5 autorów / Author-City Relationship for Top Five Authors</div>
+    <div id="sankey-wrapper" style="height: 450px; position: relative;">
+        <canvas id="sankeyChart"></canvas>
+    </div>
+</div>
                 <div class="chart-card">
                     <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
                     <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
@@ -659,6 +666,92 @@ const locs = {};
             // Dynamiczne dostosowanie wysokości kontenera na mobile
             if(isMobile) document.getElementById('chart-loc-container').style.height = (labels.length * 40) + "px";
 
+            // --- LOGIKA DIAGRAMU SANKEYA (AUTOR -> MIASTO) ---
+            const authCounts = {};
+            data.forEach(r => {
+                let a = getVal(r.c[3]);
+                if (!isUnknown(a)) authCounts[a] = (authCounts[a] || 0) + 1;
+            });
+
+            const top5Authors = Object.entries(authCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(entry => entry[0]);
+
+            const sankeyData = [];
+            data.forEach(r => {
+                let auth = getVal(r.c[3]);
+                let city = getVal(r.c[7]) || "Nieznane";
+                if (top5Authors.includes(auth)) {
+                    sankeyData.push({ from: auth, to: city, flow: 1 });
+                }
+            });
+
+            // Agregacja przepływów
+            const aggregatedSankey = sankeyData.reduce((acc, curr) => {
+                const key = curr.from + "→" + curr.to;
+                if (!acc[key]) {
+                    acc[key] = { ...curr };
+                } else {
+                    acc[key].flow += 1;
+                }
+                return acc;
+            }, {});
+
+            // Kolory dla Autorów (Top 5 - przytłumione barwy)
+            const authColors = {
+                [top5Authors[0]]: '#5dade2', // Niebieski
+                [top5Authors[1]]: '#eb984e', // Pomarańczowy
+                [top5Authors[2]]: '#ec7063', // Malinowy
+                [top5Authors[3]]: '#48c9b0', // Turkusowy
+                [top5Authors[4]]: '#f4d03f'  // Żółty
+            };
+
+            // Funkcja przypisująca kolory: Autorzy żywsi, Miasta szare
+            const getColor = (name) => {
+                if (authColors[name]) return authColors[name];
+                // Odcienie szarości dla miast
+                const greys = ['#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb', '#e5e8e8'];
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                return greys[Math.abs(hash) % greys.length];
+            };
+
+            if (window.sankeyInstance) window.sankeyInstance.destroy();
+            
+            const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
+            window.sankeyInstance = new Chart(ctxSankey, {
+                type: 'sankey',
+                data: {
+                    datasets: [{
+                        label: 'Przepływ książek',
+                        data: Object.values(aggregatedSankey),
+                        colorFrom: (c) => getColor(c.dataset.data[c.dataIndex].from),
+                        colorTo: (c) => getColor(c.dataset.data[c.dataIndex].to),
+                        colorMode: 'gradient',
+                        alpha: 0.5,
+                        fontFamily: 'Segoe UI',
+                        labels: {
+                            font: { size: isMobile ? 9 : 11, weight: 'bold' }
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const item = context.dataset.data[context.dataIndex];
+                                    return `${item.from} → ${item.to}: ${item.flow} szt.`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
             locChart = new Chart(document.getElementById('locChart'), {
                 type: 'bar',
                 data: { 
@@ -739,4 +832,5 @@ options: {
 
         init();
     </script></body></html>
+
 
