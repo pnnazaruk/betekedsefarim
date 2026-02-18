@@ -124,7 +124,19 @@
             #mobile-toggle { display: block; }
             #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
             #sidebar.open { transform: translateX(0); width: 85%; }
-            
+            body.stats-mode {
+            overflow-y: auto !important;
+            height: auto !important;
+            }
+            body.stats-mode #app-container {
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+            }
+            body.stats-mode #dashboard-view {
+            overflow: visible !important;
+            height: auto !important;
+            }            
             /* NOWE POPRAWKI MOBILNE */
             #main-header { flex-direction: column; gap: 10px; padding: 10px; }
             .header-title { font-size: 18px; text-align: center; }
@@ -659,4 +671,5 @@ options: {
 
         init();
     </script></body></html>
+
 
