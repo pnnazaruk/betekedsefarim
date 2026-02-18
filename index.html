@@ -334,8 +334,8 @@ body.stats-mode #dashboard-view {
                 </div>
                 <div class="chart-card">
     <div class="chart-header">
-        Relacja pomiędzy najczęstszymi autorami a miejscem druku ich książek / 
-        Relationship between the most frequent authors and the place of printing their books
+        Relacja pomiędzy pięcioma najczęstszymi autorami a miejscem druku ich książek / 
+        Relationship between the five most frequent authors and the place of printing their books
     </div>
     <div id="sankey-container" style="height: 500px; width: 100%; position: relative;">
         <canvas id="sankeyChart"></canvas>
@@ -653,7 +653,7 @@ function switchTab(mode) {
                 data: { labels: sortedYears, datasets: [{ label: 'Książki / Books', data: sortedYears.map(y => years[y]), backgroundColor: '#1a1a1a' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
-// --- OBLICZENIA I KONFIGURACJA SANKEY DIAGRAM ---
+// --- LOGIKA SANKEY DIAGRAM (v2 - Szare Miasta, Solidne Linie) ---
             const authCountsS = {};
             data.forEach(r => {
                 let a = getVal(r.c[3]);
@@ -666,15 +666,16 @@ function switchTab(mode) {
                 .map(e => e[0]);
 
             const sankeyFlows = [];
+            const citiesInSankey = new Set();
             data.forEach(r => {
                 let auth = getVal(r.c[3]);
                 let city = getVal(r.c[7]) || "Nieznane / Unknown";
                 if (top5SankeyAuth.includes(auth)) {
                     sankeyFlows.push({ from: auth, to: city, flow: 1 });
+                    citiesInSankey.add(city);
                 }
             });
 
-            // Agregacja par Autor -> Miasto
             const aggregatedFlows = Object.values(sankeyFlows.reduce((acc, curr) => {
                 const key = curr.from + "|" + curr.to;
                 if (!acc[key]) acc[key] = { ...curr };
@@ -682,23 +683,19 @@ function switchTab(mode) {
                 return acc;
             }, {}));
 
-            // Paleta barw dla autorów i miast
+            // Kolory autorów (przytłumione)
             const sankeyPalette = {
-                [top5SankeyAuth[0]]: '#5DADE2', // Przytłumiony niebieski
-                [top5SankeyAuth[1]]: '#EB984E', // Przytłumiony pomarańczowy
-                [top5SankeyAuth[2]]: '#EC7063', // Przytłumiony malinowy
-                [top5SankeyAuth[3]]: '#48C9B0', // Przytłumiony turkusowy
-                [top5SankeyAuth[4]]: '#F4D03F'  // Przytłumiony żółty
+                [top5SankeyAuth[0]]: '#2E86C1', // Intensywny Niebieski
+                [top5SankeyAuth[1]]: '#D35400', // Intensywny Pomarańczowy
+                [top5SankeyAuth[2]]: '#C0392B', // Mocny Malinowy
+                [top5SankeyAuth[3]]: '#16A085', // Intensywny Turkusowy
+                [top5SankeyAuth[4]]: '#F1C40F'  // Słoneczny Żółty
             };
 
-            // Funkcja doboru koloru (Autorzy: Kolor, Miasta: Szarości)
-            const getSankeyColor = (name) => {
-                if (sankeyPalette[name]) return sankeyPalette[name];
-                const cityGreys = ['#7F8C8D', '#95A5A6', '#BDC3C7', '#D5DBDB'];
-                let hash = 0;
-                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                return cityGreys[Math.abs(hash) % cityGreys.length];
-            };
+            // Budowanie mapy kolorów dla WĘZŁÓW (prostokątów)
+            const nodeColors = {};
+            top5SankeyAuth.forEach(auth => { nodeColors[auth] = sankeyPalette[auth]; });
+            citiesInSankey.forEach(city => { nodeColors[city] = '#95A5A6'; }); // Ciemniejszy szary dla kontrastu
 
             if (window.sankeyInstance) window.sankeyInstance.destroy();
             const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
@@ -708,11 +705,14 @@ function switchTab(mode) {
                 data: {
                     datasets: [{
                         data: aggregatedFlows,
-                        // Ustawienie koloru od Autora (brak gradientu do szarości)
-                        colorFrom: (c) => getSankeyColor(c.dataset.data[c.dataIndex].from),
-                        colorTo: (c) => getSankeyColor(c.dataset.data[c.dataIndex].from),
+                        nodes: nodeColors, 
+                        colorFrom: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
+                        colorTo: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
                         colorMode: 'from',
-                        alpha: 0.6,
+                        /* ZMIANA: Wyższy alpha sprawia, że kolory są wyjściowo żywe */
+                        alpha: 0.85, 
+                        /* Dodajemy ustawienia hover dla ożywienia przy interakcji */
+                        hoverAlpha: 1.0,
                         labels: {
                             font: {
                                 size: isMobile ? 9 : 11,
@@ -727,6 +727,11 @@ function switchTab(mode) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    // Dodajemy interakcję hover, która ożywi linie
+                    interaction: {
+                        mode: 'nearest',
+                        intersect: true
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -851,4 +856,5 @@ options: {
 
         init();
     </script></body></html>
+
 
