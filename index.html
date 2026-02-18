@@ -125,26 +125,30 @@
     #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
     #sidebar.open { transform: translateX(0); width: 85%; }
     
-    /* REWOLUCJA W PRZEWIJANIU STATYSTYK - OSTATECZNA */
     body.stats-mode {
-        overflow-y: auto !important; 
-        height: auto !important;     
-        position: static !important; 
+        overflow-y: auto !important; /* Przywraca suwak przeglądarki */
+        height: auto !important;     /* Pozwala stronie być dłuższą niż ekran */
+        position: relative !important;
     }
 
-    /* Musimy odblokować KAŻDY kontener po drodze do statystyk */
     body.stats-mode #app-container,
-    body.stats-mode #main-content,
-    body.stats-mode #dashboard-view {
-        display: block !important;    /* Wyłącza flexboxa blokującego wysokość */
-        height: auto !important;
-        overflow: visible !important; /* Pozwala treści wyjść poza ekran */
-        flex: none !important;        /* Usuwa automatyczne dopasowanie do okna */
+    body.stats-mode #main-content {
+        height: auto !important;     /* Usuwa sztywne 100% wysokości */
+        overflow: visible !important; /* Pozwala treści "wystawać" poza kontener */
+        display: block !important;    /* Wyłącza Flexboxa, który blokuje wysokość */
+        flex: none !important;
     }
 
-    /* Ukrycie przycisku filtrów, by nie przeszkadzał w statystykach */
+    body.stats-mode #dashboard-view {
+        height: auto !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-direction: column !important; /* Układa karty pionowo */
+        padding-bottom: 50px; /* Margines na dole, by ostatni wykres nie dotykał krawędzi */
+    }
+
     body.stats-mode #mobile-toggle {
-        display: none !important;
+        display: none !important; /* Ukrywa przycisk filtrów, by nie kradł dotyku */
     }
     
     /* Adaptacja nagłówka i kart */
@@ -537,10 +541,10 @@ function switchTab(mode) {
         if(!mapInitialized) {
             const isMobile = window.innerWidth < 768;
             const mapOptions = isMobile ? { 
-            dragging: false,       // Kluczowe dla przewijania strony jednym palcem
-            tap: false, 
-            touchZoom: 'center', 
-            scrollWheelZoom: false 
+                dragging: false,       // Kluczowe: mapa nie przesuwa się jednym palcem
+                tap: false,            // Wyłącza interakcje dotykowe, które blokują scroll
+                scrollWheelZoom: false,
+                touchZoom: false 
             } : {};
 
             mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
@@ -694,6 +698,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
