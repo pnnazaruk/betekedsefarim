@@ -166,23 +166,26 @@
     .author-row { flex-direction: column; gap: 10px; }
     
     /* Układ kart statystyk pod sobą */
-    .stat-grid { 
-        display: block !important; 
-        width: 100% !important;
+    .stat-grid {
+        display: block !important;
+        gap: 0 !important; /* Zerujemy gap, bo używamy margin-bottom w kartach */
     }
-
-    .chart-card {
-        margin-bottom: 20px !important;
+        .chart-card {
         width: 100% !important;
         box-sizing: border-box;
+        margin: 0 0 20px 0 !important; /* Stały odstęp 20px tylko na dole */
+        padding: 15px !important;
+        display: block !important;
     }
 
-    #map-container { 
+        #map-container { 
         height: 350px !important;
         width: 100% !important;
-        margin-bottom: 10px;
-        /* Dodajemy margines dla palców, by łatwiej było przewijać stronę obok mapy */
-        touch-action: pan-y !important; 
+        margin: 0 0 20px 0 !important; /* Taki sam odstęp jak w kartach powyżej */
+        touch-action: pan-y !important;
+    }
+    #dashboard-view > :last-child {
+        margin-bottom: 80px !important; /* Większy margines na samym dole strony */
     }
 }
 
@@ -729,6 +732,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
