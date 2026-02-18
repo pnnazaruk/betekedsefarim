@@ -529,98 +529,21 @@
 // Słupki poziome (Lokalizacje) - Paleta Modern Archive
 const locs = {};
             data.forEach(r => { 
-                let val = getVal(r.c[11]);
-                let cleanVal = val ? val.trim() : "";
+                let rawVal = getVal(r.c[11]);
+                // Usuwamy zbędne spacje i zamieniamy na małe litery do testu
+                let cleanVal = rawVal ? rawVal.trim() : "";
                 let testVal = cleanVal.toLowerCase();
 
-                // Grupowanie wszystkiego co niepewne do jednej kategorii
-                let l = (isUnknown(cleanVal) || testVal.includes('unknown') || testVal === "") 
-                        ? "Nieznana / Unknown" 
-                        : cleanVal;
-                
-                locs[l] = (locs[l]||0) + 1; 
-            });
-
-            // Sortowanie: od największej liczby książek
-            const locData = Object.entries(locs).sort((a, b) => b[1] - a[1]);
-            const labels = locData.map(d => d[0]);
-            const values = locData.map(d => d[1]);
-
-            if(locChart) locChart.destroy();
-            locChart = new Chart(document.getElementById('locChart'), {
-                type: 'bar',
-                data: { 
-                    labels: labels, 
-                    datasets: [{ 
-                        data: values, 
-                        backgroundColor: ['#2c3e50', '#5a6a7a', '#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb'],
-                        borderRadius: 4,
-                        borderWidth: 0
-                    }] 
-                },
-                options: { 
-                    indexAxis: 'y', // Słupki poziome
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false } // Ukrywamy legendę górną (zbędna przy słupkach)
-                    },
-                    scales: {
-                        x: { 
-                            beginAtZero: true, 
-                            grid: { display: false },
-                            ticks: { stepSize: 1 } 
-                        },
-                        y: { 
-                            grid: { display: false },
-                            ticks: { 
-                                autoSkip: false, // WYMUSZA wyświetlenie każdej nazwy (np. Nieznana)
-                                font: { size: 11, weight: 'bold' },
-                                color: '#1a1a1a',
-                                padding: 10
-                            }
-                        }
-                    },
-                    layout: {
-                        padding: { left: 10 } // Dodatkowy margines na długie nazwy
-                    }
+                let finalLabel;
+                // Jeśli komórka spełnia warunek "nieznana" (pusta, myślnik, lub zawiera frazę unknown/nieznan)
+                if (isUnknown(cleanVal) || testVal.includes('unknown') || testVal.includes('nieznan')) {
+                    finalLabel = "Nieznana / Unknown";
+                } else {
+                    finalLabel = cleanVal; // Zachowaj oryginalną pisownię z Excela
                 }
-            });
 
-            const locData = Object.entries(locs).sort((a, b) => b[1] - a[1]);
-            const labels = locData.map(d => d[0]);
-            const values = locData.map(d => d[1]);
-
-            if(locChart) locChart.destroy();
-            locChart = new Chart(document.getElementById('locChart'), {
-                type: 'bar',
-                data: { 
-                    labels: labels, 
-                    datasets: [{ 
-                        data: values, 
-                        backgroundColor: ['#2c3e50', '#5a6a7a', '#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb', '#e5e8e8'],
-                        borderRadius: 4
-                    }] 
-                },
-                options: { 
-                    indexAxis: 'y',
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: { enabled: true }
-                    },
-                    scales: {
-                        x: { 
-                            beginAtZero: true, 
-                            grid: { display: false },
-                            ticks: { stepSize: 1 } 
-                        },
-                        y: { 
-                            grid: { display: false },
-                            ticks: { font: { size: 11, weight: 'bold' }, color: '#1a1a1a' }
-                        }
-                    }
+                if (finalLabel) {
+                    locs[finalLabel] = (locs[finalLabel] || 0) + 1; 
                 }
             });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
@@ -640,6 +563,7 @@ const locs = {};
 
         init();
     </script></body></html>
+
 
 
 
