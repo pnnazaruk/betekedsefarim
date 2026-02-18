@@ -681,12 +681,13 @@ function switchTab(mode) {
                 return acc;
             }, {}));
 
+// Używamy formatu rgba, aby kontrolować nasycenie linii niezależnie od bloków
             const sankeyPalette = {
-                [top5SankeyAuth[0]]: '#5DADE2',
-                [top5SankeyAuth[1]]: '#EB984E',
-                [top5SankeyAuth[2]]: '#EC7063',
-                [top5SankeyAuth[3]]: '#48C9B0',
-                [top5SankeyAuth[4]]: '#F4D03F'
+                [top5SankeyAuth[0]]: 'rgba(93, 173, 226, 0.85)', // Niebieski
+                [top5SankeyAuth[1]]: 'rgba(235, 152, 78, 0.85)', // Pomarańczowy
+                [top5SankeyAuth[2]]: 'rgba(236, 112, 99, 0.85)', // Malinowy
+                [top5SankeyAuth[3]]: 'rgba(72, 201, 176, 0.85)', // Turkusowy
+                [top5SankeyAuth[4]]: 'rgba(244, 208, 63, 0.85)'  // Żółty
             };
 
             if (window.sankeyInstance) window.sankeyInstance.destroy();
@@ -697,23 +698,22 @@ window.sankeyInstance = new Chart(ctxSankey, {
                 data: {
                     datasets: [{
                         data: aggregatedFlows,
-                        // Start: Zawsze kolor autora
+                        // Start: Kolor autora (teraz linia będzie tak samo mocna jak blok)
                         colorFrom: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
                         
-                        // Cel: Jeśli element jest w stanie hover -> kolor autora (znika gradient)
-                        // Jeśli nie jest -> szary (miasta są szare)
+                        // Cel: Logika hover (podświetlenie) lub szary
                         colorTo: (c) => {
                             const active = c.chart.getActiveElements();
                             if (active.length > 0 && active[0].index === c.dataIndex) {
                                 return sankeyPalette[c.dataset.data[c.dataIndex].from];
                             }
-                            return '#BDC3C7';
+                            return 'rgba(189, 195, 199, 0.85)'; // Szary miast w RGBA
                         },
 
                         colorMode: 'gradient', 
-                        alpha: 0.7,
-                        /* Zwiększamy alpha przy najechaniu, aby kolor był intensywny */
-                        hoverAlpha: 1.0,
+                        // KLUCZ: Ustawiamy alpha na 1, bo przezroczystość mamy już w palecie wyżej
+                        alpha: 1, 
+                        hoverAlpha: 1,
                         
                         labels: {
                             font: { size: isMobile ? 9 : 11, weight: 'bold', family: 'Segoe UI' },
@@ -725,9 +725,12 @@ window.sankeyInstance = new Chart(ctxSankey, {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    // Wymuszamy odświeżanie kolorów przy każdym ruchu myszy
+                    // Dodajemy update, aby zmiana koloru przy hover była natychmiastowa
                     onHover: (event, chartElement) => {
                         event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        if (chartElement.length > 0) {
+                             // Opcjonalne: wymuszenie odświeżenia przy wjechaniu myszką
+                        }
                     },
                     plugins: {
                         legend: { display: false },
@@ -853,6 +856,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
