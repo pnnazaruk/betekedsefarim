@@ -666,92 +666,6 @@ const locs = {};
             // Dynamiczne dostosowanie wysokości kontenera na mobile
             if(isMobile) document.getElementById('chart-loc-container').style.height = (labels.length * 40) + "px";
 
-            // --- LOGIKA DIAGRAMU SANKEYA (AUTOR -> MIASTO) ---
-            const authCounts = {};
-            data.forEach(r => {
-                let a = getVal(r.c[3]);
-                if (!isUnknown(a)) authCounts[a] = (authCounts[a] || 0) + 1;
-            });
-
-            const top5Authors = Object.entries(authCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(entry => entry[0]);
-
-            const sankeyData = [];
-            data.forEach(r => {
-                let auth = getVal(r.c[3]);
-                let city = getVal(r.c[7]) || "Nieznane";
-                if (top5Authors.includes(auth)) {
-                    sankeyData.push({ from: auth, to: city, flow: 1 });
-                }
-            });
-
-            // Agregacja przepływów
-            const aggregatedSankey = sankeyData.reduce((acc, curr) => {
-                const key = curr.from + "→" + curr.to;
-                if (!acc[key]) {
-                    acc[key] = { ...curr };
-                } else {
-                    acc[key].flow += 1;
-                }
-                return acc;
-            }, {});
-
-            // Kolory dla Autorów (Top 5 - przytłumione barwy)
-            const authColors = {
-                [top5Authors[0]]: '#5dade2', // Niebieski
-                [top5Authors[1]]: '#eb984e', // Pomarańczowy
-                [top5Authors[2]]: '#ec7063', // Malinowy
-                [top5Authors[3]]: '#48c9b0', // Turkusowy
-                [top5Authors[4]]: '#f4d03f'  // Żółty
-            };
-
-            // Funkcja przypisująca kolory: Autorzy żywsi, Miasta szare
-            const getColor = (name) => {
-                if (authColors[name]) return authColors[name];
-                // Odcienie szarości dla miast
-                const greys = ['#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb', '#e5e8e8'];
-                let hash = 0;
-                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                return greys[Math.abs(hash) % greys.length];
-            };
-
-            if (window.sankeyInstance) window.sankeyInstance.destroy();
-            
-            const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
-            window.sankeyInstance = new Chart(ctxSankey, {
-                type: 'sankey',
-                data: {
-                    datasets: [{
-                        label: 'Przepływ książek',
-                        data: Object.values(aggregatedSankey),
-                        colorFrom: (c) => getColor(c.dataset.data[c.dataIndex].from),
-                        colorTo: (c) => getColor(c.dataset.data[c.dataIndex].to),
-                        colorMode: 'gradient',
-                        alpha: 0.5,
-                        fontFamily: 'Segoe UI',
-                        labels: {
-                            font: { size: isMobile ? 9 : 11, weight: 'bold' }
-                        }
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    const item = context.dataset.data[context.dataIndex];
-                                    return `${item.from} → ${item.to}: ${item.flow} szt.`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
             locChart = new Chart(document.getElementById('locChart'), {
                 type: 'bar',
                 data: { 
@@ -815,6 +729,90 @@ options: {
                 }
             }
             });
+// --- KOMPLEKSOWA LOGIKA SANKEY (PC & MOBILE) ---
+            const authCountsSankey = {};
+            data.forEach(r => {
+                let a = getVal(r.c[3]);
+                if (!isUnknown(a)) authCountsSankey[a] = (authCountsSankey[a] || 0) + 1;
+            });
+
+            // Wybór Top 5 autorów
+            const top5AuthList = Object.entries(authCountsSankey)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(e => e[0]);
+
+            const sankeyLinks = [];
+            data.forEach(r => {
+                let auth = getVal(r.c[3]);
+                let city = getVal(r.c[7]) || "Nieznane";
+                if (top5AuthList.includes(auth)) {
+                    sankeyLinks.push({ from: auth, to: city, flow: 1 });
+                }
+            });
+
+            // Agregacja par Autor -> Miasto
+            const finalLinks = Object.values(sankeyLinks.reduce((acc, curr) => {
+                const key = curr.from + "→" + curr.to;
+                if (!acc[key]) acc[key] = { ...curr };
+                else acc[key].flow += 1;
+                return acc;
+            }, {}));
+
+            // Definicja kolorów (przytłumione barwy)
+            const palette = {
+                [top5AuthList[0]]: '#5dade2', // Niebieski
+                [top5AuthList[1]]: '#eb984e', // Pomarańczowy
+                [top5AuthList[2]]: '#ec7063', // Malinowy
+                [top5AuthList[3]]: '#48c9b0', // Turkusowy
+                [top5AuthList[4]]: '#f4d03f'  // Żółty
+            };
+
+            // Miasta otrzymują kolory od autorów (brak przejścia do szarości)
+            if (window.sankeyInstance) window.sankeyInstance.destroy();
+
+            const ctxS = document.getElementById('sankeyChart').getContext('2d');
+            const screenWidth = window.innerWidth;
+
+            window.sankeyInstance = new Chart(ctxS, {
+                type: 'sankey',
+                data: {
+                    datasets: [{
+                        data: finalLinks,
+                        // Kolorowanie: ścieżka i węzeł biorą kolor od Autora
+                        colorFrom: (c) => palette[c.dataset.data[c.dataIndex].from] || '#bdc3c7',
+                        colorTo: (c) => palette[c.dataset.data[c.dataIndex].from] || '#bdc3c7',
+                        colorMode: 'from', // Stały kolor od źródła (Autora)
+                        alpha: 0.6,
+                        labels: {
+                            font: {
+                                size: screenWidth < 768 ? 9 : 12,
+                                weight: 'bold',
+                                family: 'Segoe UI'
+                            },
+                            color: '#1a1a1a'
+                        },
+                        nodeWidth: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { right: 10, left: 10, top: 10, bottom: 20 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                            callbacks: {
+                                label: (c) => {
+                                    const d = c.dataset.data[c.dataIndex];
+                                    return ` ${d.from} -> ${d.to}: ${d.flow} szt.`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -832,5 +830,6 @@ options: {
 
         init();
     </script></body></html>
+
 
 
