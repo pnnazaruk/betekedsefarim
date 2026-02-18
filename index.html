@@ -562,40 +562,58 @@ const locs = {};
                         borderRadius: 4
                     }] 
                 },
-            options: { 
-                    indexAxis: 'y',
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    // KLUCZOWE: Umożliwia najechanie na nazwę na osi Y, aby zobaczyć dymek
-                    interaction: {
-                        mode: 'y',
-                        intersect: false
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: { 
-                            enabled: true,
-                            backgroundColor: 'rgba(26, 26, 26, 0.9)', // Ciemne tło Modern Archive
-                            padding: 10
+options: { 
+                indexAxis: 'y',
+                responsive: true, 
+                maintainAspectRatio: false, 
+                layout: {
+                    padding: {
+                        left: 10 // Subtelny margines od krawędzi
+                    }
+                },
+                interaction: {
+                    mode: 'y',
+                    intersect: false
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { 
+                        enabled: true,
+                        backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                        padding: 10,
+                        // To wymusi pokazanie PEŁNEJ nazwy w dymku, nawet jeśli na osi jest skrócona
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            }
                         }
+                    }
+                },
+                scales: {
+                    x: { 
+                        beginAtZero: true, 
+                        grid: { display: false },
+                        ticks: { stepSize: 1 } 
                     },
-                    scales: {
-                        x: { 
-                            beginAtZero: true, 
-                            grid: { display: false },
-                            ticks: { stepSize: 1 } 
-                        },
-                        y: { 
-                            grid: { display: false },
-                            ticks: { 
-                                // KLUCZOWA POPRAWKA: Wymusza wyświetlenie wszystkich nazw, nawet tych krótkich
-                                autoSkip: false, 
-                                font: { size: 11, weight: 'bold' }, 
-                                color: '#1a1a1a'
+                    y: { 
+                        grid: { display: false },
+                        ticks: { 
+                            autoSkip: false, 
+                            font: { size: 11, weight: 'bold' }, 
+                            color: '#1a1a1a',
+                            // FUNKCJA SKRACAJĄCA TEKST
+                            callback: function(value) {
+                                let label = this.getLabelForValue(value);
+                                const maxLength = 35; // Ustaw limit znaków (np. 25)
+                                if (label.length > maxLength) {
+                                    return label.substring(0, maxLength) + '...';
+                                }
+                                return label;
                             }
                         }
                     }
                 }
+            }
             });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -614,5 +632,6 @@ const locs = {};
 
         init();
     </script></body></html>
+
 
 
