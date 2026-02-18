@@ -167,19 +167,18 @@
     
     /* Układ kart statystyk pod sobą */
 .stat-grid {
-        display: block !important;
-        gap: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
+    display: flex !important; /* Zmiana z block na flex */
+    flex-direction: column !important;
+    gap: 20px !important; /* Jednolity odstęp między mapą a wykresem lokalizacji */
+    margin-top: 20px !important; /* Odstęp od pierwszego wykresu (timeline) */
+}
 .chart-card {
-        width: 100% !important;
-        margin: 0 0 20px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
-        padding: 15px !important;
-        box-sizing: border-box;
-        border: 1px solid #1a1a1a;
-        display: block !important;
-    }
+    width: 100% !important;
+    margin: 0 !important; /* Usuwamy marginesy, bo gap w stat-grid załatwi sprawę */
+    padding: 15px !important;
+    box-sizing: border-box;
+    border: 1px solid #1a1a1a;
+}
 
 #map-container { 
         height: 350px !important;
@@ -313,13 +312,13 @@
             <div id="container"></div>
 
             <div id="dashboard-view">
-                <div class="chart-card">
+                <div class="chart-card" style="margin-bottom: 20px;">
                     <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
                     <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
                 </div>
                 <div class="stat-grid">
                     <div class="chart-card">
-                        <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of the Yeshivas Chachmei Lublin Library Collection</div>
+                        <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="map-container"></div>
                     </div>
                     <div class="chart-card">
@@ -739,6 +738,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
