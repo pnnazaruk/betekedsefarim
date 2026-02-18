@@ -70,6 +70,11 @@
 
         #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+
+        .search-wrapper { 
+            position: relative; 
+            width: 100%; 
+        }
         
         #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
         #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
@@ -445,7 +450,15 @@
             const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
             if(!r) return;
             let h = ""; let link = getVal(r.c[16]);
-            for(let i=0; i<=22; i++) { if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue; h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${getVal(r.c[i]) || "---"}</span></div>`; }
+            for(let i=0; i<=22; i++) { 
+                if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue; 
+                let val = getVal(r.c[i]);
+                if (val.startsWith('http')) {
+                    h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
+                } else {
+                    h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
+                }
+            }
             const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
             document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${h}${copySection}</div></div>`;
             document.getElementById('modalOverlay').style.display = 'flex';
@@ -528,4 +541,5 @@
 
         init();
     </script></body></html>
+
 
