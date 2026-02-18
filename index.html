@@ -121,54 +121,61 @@
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
 
 @media (max-width: 768px) {
-            #mobile-toggle { display: block; }
-            #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
-            #sidebar.open { transform: translateX(0); width: 85%; }
-            
-            /* CAŁKOWITE ODBLOKOWANIE PRZEWIJANIA DLA STATYSTYK */
-            body.stats-mode {
-                overflow-y: auto !important;
-                height: auto !important;
-                position: relative !important;
-            }
-            body.stats-mode #app-container {
-                display: block !important; /* Zamiana z flex na block, by pozwolić elementom rosnąć */
-                height: auto !important;
-                overflow: visible !important;
-            }
-            body.stats-mode #main-content {
-                display: block !important;
-                height: auto !important;
-                overflow: visible !important;
-                flex: none !important;
-            }
-            body.stats-mode #dashboard-view {
-                display: flex !important;
-                flex-direction: column !important;
-                height: auto !important;
-                overflow: visible !important;
-            }           
-            
-            #main-header { flex-direction: column; gap: 10px; padding: 10px; }
-            .header-title { font-size: 18px; text-align: center; }
-            .header-links { gap: 5px; }
-            .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 9px; height: 30px; }
-            .row-flex { flex-direction: column; gap: 5px; }
-            .title-heb { text-align: left; direction: ltr; } 
-            .author-row { flex-direction: column; gap: 10px; }
-            .keyboard { grid-template-columns: repeat(6, 1fr); } 
-            
-            .stat-grid { 
-                display: flex !important; 
-                flex-direction: column !important; 
-                gap: 20px; 
-            }
-            #map-container { 
-                height: 350px !important; 
-            }
-            #modalWindow { width: 95%; padding: 15px; }
-            .modal-body { gap: 15px; }
-        }
+    #mobile-toggle { display: block; }
+    #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+    #sidebar.open { transform: translateX(0); width: 85%; }
+    
+    /* REWOLUCJA W PRZEWIJANIU STATYSTYK */
+    body.stats-mode {
+        overflow-y: auto !important; /* Wymusza scroll przeglądarki */
+        height: auto !important;     /* Pozwala stronie rosnąć */
+        position: static !important; /* Usuwa blokady pozycjonowania */
+    }
+
+    body.stats-mode #app-container {
+        display: block !important;    /* Wyłącza flexboxa (kluczowe!) */
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    body.stats-mode #main-content {
+        height: auto !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    body.stats-mode #dashboard-view {
+        display: block !important;   /* Elementy jeden pod drugim */
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* Całkowite wyłączenie przycisku filtrów w statystykach na mobile */
+    body.stats-mode #mobile-toggle {
+        display: none !important;
+    }
+    
+    /* Reszta Twoich poprawek wizualnych */
+    #main-header { flex-direction: column; gap: 10px; padding: 10px; }
+    .header-title { font-size: 18px; text-align: center; }
+    .header-links { gap: 5px; }
+    .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 9px; height: 30px; }
+    .row-flex { flex-direction: column; gap: 5px; }
+    .title-heb { text-align: left; direction: ltr; } 
+    .author-row { flex-direction: column; gap: 10px; }
+    .keyboard { grid-template-columns: repeat(6, 1fr); } 
+    
+    .stat-grid { 
+        display: block !important; /* Wykresy pod sobą */
+        width: 100% !important;
+    }
+    #map-container { 
+        height: 350px !important;
+        margin-bottom: 20px; 
+    }
+    #modalWindow { width: 95%; padding: 15px; }
+    .modal-body { gap: 15px; }
+}
 
         /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
         .nav-tab-btn { 
@@ -529,34 +536,36 @@
         let mapInstance, timelineChart, locChart, mapInitialized = false;
 
 function switchTab(mode) {
-            document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${mode}`).classList.add('active');
-            if(mode === 'stats') {
-                document.body.classList.add('stats-mode');
-                if(!mapInitialized) {
-                    // KLUCZOWA ZMIANA: Całkowite zamrożenie interakcji jednym palcem na mobile
-                    const isMobile = window.innerWidth < 768;
-                    const mapOptions = isMobile ? { 
-                        dragging: false,      // Wyłącza przesuwanie mapy (pozwala przewijać stronę)
-                        tap: false,           // Wyłącza kliknięcia w mapę na mobile
-                        touchZoom: false,     // Wyłącza zoom dotykowy
-                        scrollWheelZoom: false 
-                    } : {};
+    document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${mode}`).classList.add('active');
+    
+    // Zamykamy sidebar przy każdej zmianie zakładki
+    document.getElementById('sidebar').classList.remove('open');
 
-                    mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
-                    mapInitialized = true;
-                }
-                setTimeout(() => { 
-                    renderStats(); 
-                    if(mapInstance) mapInstance.invalidateSize(); 
-                }, 300);
-            } else {
-                document.body.classList.remove('stats-mode');
-                // Opcjonalnie: przywróć scroll na górę przy powrocie do katalogu
-                window.scrollTo(0,0);
-            }
+    if(mode === 'stats') {
+        document.body.classList.add('stats-mode');
+        if(!mapInitialized) {
+            const isMobile = window.innerWidth < 768;
+            const mapOptions = isMobile ? { 
+                dragging: false,      // Zamrażamy mapę dla scrolla strony
+                tap: false, 
+                touchZoom: false, 
+                scrollWheelZoom: false 
+            } : {};
+
+            mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
+            mapInitialized = true;
         }
+        setTimeout(() => { 
+            renderStats(); 
+            if(mapInstance) mapInstance.invalidateSize(); 
+        }, 300);
+    } else {
+        document.body.classList.remove('stats-mode');
+        window.scrollTo(0,0); // Reset scrolla przy powrocie do katalogu
+    }
+}
 
         function parseDMS(dmsStr) {
             try {
@@ -695,6 +704,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
