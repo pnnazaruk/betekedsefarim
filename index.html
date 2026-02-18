@@ -546,6 +546,43 @@ const locs = {};
                     locs[finalLabel] = (locs[finalLabel] || 0) + 1; 
                 }
             });
+
+            const locData = Object.entries(locs).sort((a, b) => b[1] - a[1]);
+            const labels = locData.map(d => d[0]);
+            const values = locData.map(d => d[1]);
+
+            if(locChart) locChart.destroy();
+            locChart = new Chart(document.getElementById('locChart'), {
+                type: 'bar',
+                data: { 
+                    labels: labels, 
+                    datasets: [{ 
+                        data: values, 
+                        backgroundColor: ['#2c3e50', '#5a6a7a', '#7f8c8d', '#95a5a6', '#bdc3c7', '#d5dbdb', '#e5e8e8'],
+                        borderRadius: 4
+                    }] 
+                },
+                options: { 
+                    indexAxis: 'y',
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true, 
+                            grid: { display: false },
+                            ticks: { stepSize: 1 } 
+                        },
+                        y: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 11, weight: 'bold' }, color: '#1a1a1a' }
+                        }
+                    }
+                }
+            });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -563,13 +600,3 @@ const locs = {};
 
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
