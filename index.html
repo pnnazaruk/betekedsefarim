@@ -653,44 +653,16 @@ function switchTab(mode) {
                 data: { labels: sortedYears, datasets: [{ label: 'Książki / Books', data: sortedYears.map(y => years[y]), backgroundColor: '#1a1a1a' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
-// --- LOGIKA SANKEY DIAGRAM (v7 - Całkowita unifikacja barw i brak warstw) ---
-            const authCountsS = {};
-            data.forEach(r => {
-                let a = getVal(r.c[3]);
-                if (!isUnknown(a)) authCountsS[a] = (authCountsS[a] || 0) + 1;
-            });
-
-            const top5SankeyAuth = Object.entries(authCountsS)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(e => e[0]);
-
-            const sankeyFlows = [];
-            const citiesInSankey = new Set();
-            data.forEach(r => {
-                let auth = getVal(r.c[3]);
-                let city = getVal(r.c[7]) || "Nieznane / Unknown";
-                if (top5SankeyAuth.includes(auth)) {
-                    sankeyFlows.push({ from: auth, to: city, flow: 1 });
-                    citiesInSankey.add(city);
-                }
-            });
-
-            const aggregatedFlows = Object.values(sankeyFlows.reduce((acc, curr) => {
-                const key = curr.from + "|" + curr.to;
-                if (!acc[key]) acc[key] = { ...curr };
-                else acc[key].flow += 1;
-                return acc;
-            }, {}));
-
-            // Stała paleta kolorów
+// 1. Definiujemy kolory z kanałem Alpha (identycznym jak późniejsze alpha linii)
             const sankeyPalette = {
-                [top5SankeyAuth[0]]: '#5DADE2', 
-                [top5SankeyAuth[1]]: '#EB984E', 
-                [top5SankeyAuth[2]]: '#EC7063', 
-                [top5SankeyAuth[3]]: '#48C9B0', 
-                [top5SankeyAuth[4]]: '#F4D03F'
+                [top5SankeyAuth[0]]: 'rgba(93, 173, 226, 0.8)', // Przytłumiony niebieski
+                [top5SankeyAuth[1]]: 'rgba(235, 152, 78, 0.8)', // Przytłumiony pomarańczowy
+                [top5SankeyAuth[2]]: 'rgba(236, 112, 99, 0.8)', // Przytłumiony malinowy
+                [top5SankeyAuth[3]]: 'rgba(72, 201, 176, 0.8)', // Przytłumiony turkusowy
+                [top5SankeyAuth[4]]: 'rgba(244, 208, 63, 0.8)'  // Przytłumiony żółty
             };
+
+            const greyNode = 'rgba(189, 195, 199, 0.8)'; // Szary dla miast
 
             if (window.sankeyInstance) window.sankeyInstance.destroy();
             const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
@@ -700,35 +672,35 @@ function switchTab(mode) {
                 data: {
                     datasets: [{
                         data: aggregatedFlows,
-                        // WYMUSZENIE KOLORÓW WĘZŁÓW (Node Styling)
+                        // WYMUSZENIE KOLORÓW WĘZŁÓW - używamy RGBA dla spójności
                         colorNodes: (context) => {
                             const name = context.node.id;
-                            // Jeśli węzeł to autor, daj mu kolor z palety, jeśli miasto - szary
-                            return sankeyPalette[name] ? sankeyPalette[name] : '#BDC3C7';
+                            return sankeyPalette[name] ? sankeyPalette[name] : greyNode;
                         },
-                        // WYMUSZENIE KOLORÓW LINII (Flow Styling)
+                        // KOLORY LINII
                         colorFrom: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
                         colorTo: (c) => {
                             const active = c.chart.getActiveElements();
                             if (active.length > 0 && active[0].index === c.dataIndex) {
                                 return sankeyPalette[c.dataset.data[c.dataIndex].from];
                             }
-                            return '#BDC3C7';
+                            return greyNode;
                         },
+                        colorMode: 'gradient',
                         nodeColorMode: 'fixed',
-                        // KLUCZOWE: Identyczna przezroczystość dla wszystkiego
-                        alpha: 0.8,
-                        hoverAlpha: 1.0,
-                        // CAŁKOWITE USUNIĘCIE LINII OBRYSÓW
+                        
+                        // KLUCZOWE: Ustawiamy alpha na 1, bo przezroczystość mamy w RGBA
+                        alpha: 1, 
+                        hoverAlpha: 1,
+                        
                         borderWidth: 0,
-                        nodePadding: 20,
                         nodeWidth: 15,
+                        nodePadding: 20
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 10, bottom: 10, left: 5, right: 5 } },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -853,6 +825,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
