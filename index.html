@@ -125,25 +125,28 @@
             #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
             #sidebar.open { transform: translateX(0); width: 85%; }
             
-            /* ODBLOKOWANIE PRZEWIJANIA STATYSTYK */
+            /* CAŁKOWITE ODBLOKOWANIE PRZEWIJANIA DLA STATYSTYK */
             body.stats-mode {
                 overflow-y: auto !important;
                 height: auto !important;
+                position: relative !important;
             }
             body.stats-mode #app-container {
+                display: block !important; /* Zamiana z flex na block, by pozwolić elementom rosnąć */
                 height: auto !important;
                 overflow: visible !important;
-                display: block !important;
             }
-            /* KLUCZOWY DODATEK: Odblokowanie kontenera treści */
             body.stats-mode #main-content {
-                overflow: visible !important;
+                display: block !important;
                 height: auto !important;
+                overflow: visible !important;
                 flex: none !important;
             }
             body.stats-mode #dashboard-view {
-                overflow: visible !important;
+                display: flex !important;
+                flex-direction: column !important;
                 height: auto !important;
+                overflow: visible !important;
             }           
             
             #main-header { flex-direction: column; gap: 10px; padding: 10px; }
@@ -161,7 +164,7 @@
                 gap: 20px; 
             }
             #map-container { 
-                height: 300px !important; 
+                height: 350px !important; 
             }
             #modalWindow { width: 95%; padding: 15px; }
             .modal-body { gap: 15px; }
@@ -525,21 +528,33 @@
 
         let mapInstance, timelineChart, locChart, mapInitialized = false;
 
-        function switchTab(mode) {
+function switchTab(mode) {
             document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab-${mode}`).classList.add('active');
             if(mode === 'stats') {
                 document.body.classList.add('stats-mode');
                 if(!mapInitialized) {
-                    // Blokada scrollowania mapy jednym palcem na mobile
-                    const mapOptions = window.innerWidth < 768 ? { dragging: !L.Browser.mobile, tap: !L.Browser.mobile } : {};
+                    // KLUCZOWA ZMIANA: Całkowite zamrożenie interakcji jednym palcem na mobile
+                    const isMobile = window.innerWidth < 768;
+                    const mapOptions = isMobile ? { 
+                        dragging: false,      // Wyłącza przesuwanie mapy (pozwala przewijać stronę)
+                        tap: false,           // Wyłącza kliknięcia w mapę na mobile
+                        touchZoom: false,     // Wyłącza zoom dotykowy
+                        scrollWheelZoom: false 
+                    } : {};
+
                     mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
                     mapInitialized = true;
                 }
-                setTimeout(() => { renderStats(); mapInstance.invalidateSize(); }, 300);
+                setTimeout(() => { 
+                    renderStats(); 
+                    if(mapInstance) mapInstance.invalidateSize(); 
+                }, 300);
             } else {
                 document.body.classList.remove('stats-mode');
+                // Opcjonalnie: przywróć scroll na górę przy powrocie do katalogu
+                window.scrollTo(0,0);
             }
         }
 
@@ -680,6 +695,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
