@@ -125,17 +125,20 @@
     #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
     #sidebar.open { transform: translateX(0); width: 85%; }
     
+    html.stats-mode,
     body.stats-mode {
-        overflow-y: auto !important; /* Przywraca suwak przeglądarki */
-        height: auto !important;     /* Pozwala stronie być dłuższą niż ekran */
+        overflow-y: auto !important; 
+        overflow-x: hidden !important;
+        height: auto !important;     
         position: relative !important;
     }
 
     body.stats-mode #app-container,
     body.stats-mode #main-content {
-        height: auto !important;     /* Usuwa sztywne 100% wysokości */
-        overflow: visible !important; /* Pozwala treści "wystawać" poza kontener */
-        display: block !important;    /* Wyłącza Flexboxa, który blokuje wysokość */
+        height: auto !important;     
+        min-height: 100vh !important;
+        overflow: visible !important; 
+        display: block !important;    
         flex: none !important;
     }
 
@@ -143,16 +146,17 @@
         height: auto !important;
         overflow: visible !important;
         display: flex !important;
-        flex-direction: column !important; /* Układa karty pionowo */
-        padding-bottom: 50px; /* Margines na dole, by ostatni wykres nie dotykał krawędzi */
+        flex-direction: column !important; 
+        padding: 15px !important;
+        padding-bottom: 80px !important; 
     }
 
     body.stats-mode #mobile-toggle {
-        display: none !important; /* Ukrywa przycisk filtrów, by nie kradł dotyku */
+        display: none !important; 
     }
     
     /* Adaptacja nagłówka i kart */
-    #main-header { flex-direction: column; gap: 10px; padding: 10px; }
+    #main-header { flex-direction: column; gap: 10px; padding: 10px; height: auto !important; }
     .header-title { font-size: 18px; text-align: center; }
     .header-links { gap: 5px; justify-content: center; width: 100%; }
     .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 10px; height: 32px; flex: 1; justify-content: center; }
@@ -161,13 +165,24 @@
     .title-heb { text-align: left; direction: ltr; } 
     .author-row { flex-direction: column; gap: 10px; }
     
+    /* Układ kart statystyk pod sobą */
     .stat-grid { 
         display: block !important; 
         width: 100% !important;
     }
+
+    .chart-card {
+        margin-bottom: 20px !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
     #map-container { 
         height: 350px !important;
-        margin-bottom: 20px; 
+        width: 100% !important;
+        margin-bottom: 10px;
+        /* Dodajemy margines dla palców, by łatwiej było przewijać stronę obok mapy */
+        touch-action: pan-y !important; 
     }
 }
 
@@ -533,22 +548,37 @@ function switchTab(mode) {
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`tab-${mode}`).classList.add('active');
     
-    // Zamykamy sidebar przy każdej zmianie zakładki
+    // Zamykamy sidebar, aby nie blokował widoku na mobile
     document.getElementById('sidebar').classList.remove('open');
 
     if(mode === 'stats') {
+        // Kluczowe: dodajemy klasę do html i body, aby odblokować CSS
         document.body.classList.add('stats-mode');
+        document.documentElement.classList.add('stats-mode');
+
         if(!mapInitialized) {
             const isMobile = window.innerWidth < 768;
+            
+            // KONFIGURACJA MAPY DLA MOBILE I PC
             const mapOptions = isMobile ? { 
-                dragging: false,       // Kluczowe: mapa nie przesuwa się jednym palcem
-                tap: false,            // Wyłącza interakcje dotykowe, które blokują scroll
-                scrollWheelZoom: false,
-                touchZoom: false 
+                dragging: true,           // Pozwalamy na ruch...
+                touchZoom: true,          // ...i powiększanie palcami
+                tap: true,
+                scrollWheelZoom: false,   // Ale wyłączamy scroll kółkiem myszy (by nie psuć scrolla strony)
+                // Wymuszenie użycia dwóch palców do przesuwania mapy na telefonie
+                // Dzięki temu jeden palec zawsze przewija stronę!
+                bounceAtZoomLimits: true
             } : {};
 
             mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
+            
+            // Specjalny "bezpiecznik" dla mobile:
+            if (isMobile) {
+                // Informujemy użytkownika (opcjonalnie), że mapę obsługuje się dwoma palcami
+                mapInstance.on('focus', () => { mapInstance.scrollWheelZoom.enable(); });
+            }
+
             mapInitialized = true;
         }
         setTimeout(() => { 
@@ -557,7 +587,8 @@ function switchTab(mode) {
         }, 300);
     } else {
         document.body.classList.remove('stats-mode');
-        window.scrollTo(0,0); // Reset scrolla przy powrocie do katalogu
+        document.documentElement.classList.remove('stats-mode');
+        window.scrollTo(0,0);
     }
 }
 
@@ -698,6 +729,7 @@ options: {
 
         init();
     </script></body></html>
+
 
 
 
