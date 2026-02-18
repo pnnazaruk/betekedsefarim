@@ -123,8 +123,12 @@
         .nav-tab-btn.active { background: #1a1a1a; color: #fff; }
         
         #dashboard-view { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #f9f9f9; z-index: 2500; overflow-y: auto; padding: 20px; flex-direction: column; gap: 20px; }
-        body.stats-mode #dashboard-view { display: flex; }
-        body.stats-mode #sidebar, body.stats-mode .controls, body.stats-mode #container { visibility: hidden; pointer-events: none; }
+        body.stats-mode #dashboard-view { display: flex; display: none; 
+        width: 100%; /* Zajmij pełną szerokość rodzica */
+        min-height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;}
+        body.stats-mode #sidebar { display: none !important; }, body.stats-mode .controls, body.stats-mode #container { visibility: hidden; pointer-events: none; display: block; }
 
         .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
         .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
@@ -133,7 +137,7 @@
     </style></head><body>
 
     <header id="main-header">
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובליン</div>
+        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
         <div class="header-links">
             <button class="nav-tab-btn active" id="tab-catalog" onclick="switchTab('catalog')">Katalog / Catalog</button>
             <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki / Statistics</button>
@@ -525,3 +529,4 @@
 
         init();
     </script></body></html>
+
