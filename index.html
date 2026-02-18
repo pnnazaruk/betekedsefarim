@@ -120,6 +120,20 @@
         .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; border: none; cursor: pointer; }
         .link-btn:hover { background: #555; }
         .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
+        body.stats-mode {
+    overflow-y: auto !important;
+}
+
+body.stats-mode #app-container,
+body.stats-mode #main-content {
+    overflow: visible !important;
+    height: auto !important;
+}
+
+body.stats-mode #dashboard-view {
+    overflow-y: visible !important;
+    height: auto !important;
+}
 
 @media (max-width: 768px) {
     #mobile-toggle { display: block; }
@@ -837,3 +851,4 @@ options: {
 
         init();
     </script></body></html>
+
