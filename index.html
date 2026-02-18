@@ -175,18 +175,18 @@
     }
 .chart-card {
         width: 100% !important;
-        /* Ustawiamy stały, identyczny odstęp pod KAŻDĄ kartą */
-        margin: 0 0 20px 0 !important; 
+        margin: 0 0 20px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
         padding: 15px !important;
         box-sizing: border-box;
-        display: block !important;
         border: 1px solid #1a1a1a;
+        display: block !important;
     }
 
 #map-container { 
         height: 350px !important;
         width: 100% !important;
-        margin: 0 !important; /* Mapa nie potrzebuje marginesu, bo jej karta go ma */
+        margin: 0 !important; /* Czyścimy margines mapy, bo siedzi w chart-card */
+        margin-top: 0;
         touch-action: pan-y !important;
     }
     #dashboard-view {
@@ -314,16 +314,19 @@
             <div id="container"></div>
 
             <div id="dashboard-view">
-                <div class="chart-card" style="margin-bottom: 20px;">
-    <div class="chart-header">Relacja Autor -> Miejsce druku dla top 5 autorów / Author-City Relationship for Top Five Authors</div>
-    <div id="sankey-wrapper" style="height: 450px; position: relative;">
-        <canvas id="sankeyChart"></canvas>
-    </div>
-</div>
                 <div class="chart-card">
                     <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
                     <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
                 </div>
+                <div class="chart-card">
+    <div class="chart-header">
+        Relacja pomiędzy najczęstszymi autorami a miejscem druku ich książek / 
+        Relationship between the most frequent authors and the place of printing their books
+    </div>
+    <div id="sankey-container" style="height: 500px; width: 100%; position: relative;">
+        <canvas id="sankeyChart"></canvas>
+    </div>
+</div>
                 <div class="stat-grid">
                     <div class="chart-card">
                         <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of Books from the Yeshivas Chachmei Lublin Library</div>
@@ -636,6 +639,94 @@ function switchTab(mode) {
                 data: { labels: sortedYears, datasets: [{ label: 'Książki / Books', data: sortedYears.map(y => years[y]), backgroundColor: '#1a1a1a' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
             });
+// --- OBLICZENIA I KONFIGURACJA SANKEY DIAGRAM ---
+            const authCountsS = {};
+            data.forEach(r => {
+                let a = getVal(r.c[3]);
+                if (!isUnknown(a)) authCountsS[a] = (authCountsS[a] || 0) + 1;
+            });
+
+            const top5SankeyAuth = Object.entries(authCountsS)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(e => e[0]);
+
+            const sankeyFlows = [];
+            data.forEach(r => {
+                let auth = getVal(r.c[3]);
+                let city = getVal(r.c[7]) || "Nieznane / Unknown";
+                if (top5SankeyAuth.includes(auth)) {
+                    sankeyFlows.push({ from: auth, to: city, flow: 1 });
+                }
+            });
+
+            // Agregacja par Autor -> Miasto
+            const aggregatedFlows = Object.values(sankeyFlows.reduce((acc, curr) => {
+                const key = curr.from + "|" + curr.to;
+                if (!acc[key]) acc[key] = { ...curr };
+                else acc[key].flow += 1;
+                return acc;
+            }, {}));
+
+            // Paleta barw dla autorów i miast
+            const sankeyPalette = {
+                [top5SankeyAuth[0]]: '#5DADE2', // Przytłumiony niebieski
+                [top5SankeyAuth[1]]: '#EB984E', // Przytłumiony pomarańczowy
+                [top5SankeyAuth[2]]: '#EC7063', // Przytłumiony malinowy
+                [top5SankeyAuth[3]]: '#48C9B0', // Przytłumiony turkusowy
+                [top5SankeyAuth[4]]: '#F4D03F'  // Przytłumiony żółty
+            };
+
+            // Funkcja doboru koloru (Autorzy: Kolor, Miasta: Szarości)
+            const getSankeyColor = (name) => {
+                if (sankeyPalette[name]) return sankeyPalette[name];
+                const cityGreys = ['#7F8C8D', '#95A5A6', '#BDC3C7', '#D5DBDB'];
+                let hash = 0;
+                for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                return cityGreys[Math.abs(hash) % cityGreys.length];
+            };
+
+            if (window.sankeyInstance) window.sankeyInstance.destroy();
+            const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
+            
+            window.sankeyInstance = new Chart(ctxSankey, {
+                type: 'sankey',
+                data: {
+                    datasets: [{
+                        data: aggregatedFlows,
+                        // Ustawienie koloru od Autora (brak gradientu do szarości)
+                        colorFrom: (c) => getSankeyColor(c.dataset.data[c.dataIndex].from),
+                        colorTo: (c) => getSankeyColor(c.dataset.data[c.dataIndex].from),
+                        colorMode: 'from',
+                        alpha: 0.6,
+                        labels: {
+                            font: {
+                                size: isMobile ? 9 : 11,
+                                weight: 'bold',
+                                family: 'Segoe UI'
+                            },
+                            color: '#1a1a1a'
+                        },
+                        nodeWidth: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 26, 26, 0.9)',
+                            callbacks: {
+                                label: (c) => {
+                                    const d = c.dataset.data[c.dataIndex];
+                                    return ` ${d.from} → ${d.to}: ${d.flow}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
 // Słupki poziome (Lokalizacje) - Paleta Modern Archive
 const locs = {};
             data.forEach(r => { 
@@ -729,90 +820,6 @@ options: {
                 }
             }
             });
-// --- KOMPLEKSOWA LOGIKA SANKEY (PC & MOBILE) ---
-            const authCountsSankey = {};
-            data.forEach(r => {
-                let a = getVal(r.c[3]);
-                if (!isUnknown(a)) authCountsSankey[a] = (authCountsSankey[a] || 0) + 1;
-            });
-
-            // Wybór Top 5 autorów
-            const top5AuthList = Object.entries(authCountsSankey)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(e => e[0]);
-
-            const sankeyLinks = [];
-            data.forEach(r => {
-                let auth = getVal(r.c[3]);
-                let city = getVal(r.c[7]) || "Nieznane";
-                if (top5AuthList.includes(auth)) {
-                    sankeyLinks.push({ from: auth, to: city, flow: 1 });
-                }
-            });
-
-            // Agregacja par Autor -> Miasto
-            const finalLinks = Object.values(sankeyLinks.reduce((acc, curr) => {
-                const key = curr.from + "→" + curr.to;
-                if (!acc[key]) acc[key] = { ...curr };
-                else acc[key].flow += 1;
-                return acc;
-            }, {}));
-
-            // Definicja kolorów (przytłumione barwy)
-            const palette = {
-                [top5AuthList[0]]: '#5dade2', // Niebieski
-                [top5AuthList[1]]: '#eb984e', // Pomarańczowy
-                [top5AuthList[2]]: '#ec7063', // Malinowy
-                [top5AuthList[3]]: '#48c9b0', // Turkusowy
-                [top5AuthList[4]]: '#f4d03f'  // Żółty
-            };
-
-            // Miasta otrzymują kolory od autorów (brak przejścia do szarości)
-            if (window.sankeyInstance) window.sankeyInstance.destroy();
-
-            const ctxS = document.getElementById('sankeyChart').getContext('2d');
-            const screenWidth = window.innerWidth;
-
-            window.sankeyInstance = new Chart(ctxS, {
-                type: 'sankey',
-                data: {
-                    datasets: [{
-                        data: finalLinks,
-                        // Kolorowanie: ścieżka i węzeł biorą kolor od Autora
-                        colorFrom: (c) => palette[c.dataset.data[c.dataIndex].from] || '#bdc3c7',
-                        colorTo: (c) => palette[c.dataset.data[c.dataIndex].from] || '#bdc3c7',
-                        colorMode: 'from', // Stały kolor od źródła (Autora)
-                        alpha: 0.6,
-                        labels: {
-                            font: {
-                                size: screenWidth < 768 ? 9 : 12,
-                                weight: 'bold',
-                                family: 'Segoe UI'
-                            },
-                            color: '#1a1a1a'
-                        },
-                        nodeWidth: 20
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: { padding: { right: 10, left: 10, top: 10, bottom: 20 } },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(26, 26, 26, 0.9)',
-                            callbacks: {
-                                label: (c) => {
-                                    const d = c.dataset.data[c.dataIndex];
-                                    return ` ${d.from} -> ${d.to}: ${d.flow} szt.`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -830,6 +837,3 @@ options: {
 
         init();
     </script></body></html>
-
-
-
