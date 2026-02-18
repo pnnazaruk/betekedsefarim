@@ -174,18 +174,18 @@
     }
 .chart-card {
         width: 100% !important;
-        margin: 0 0 20px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
+        /* Ustawiamy stały, identyczny odstęp pod KAŻDĄ kartą */
+        margin: 0 0 20px 0 !important; 
         padding: 15px !important;
         box-sizing: border-box;
-        border: 1px solid #1a1a1a;
         display: block !important;
+        border: 1px solid #1a1a1a;
     }
 
 #map-container { 
         height: 350px !important;
         width: 100% !important;
-        margin: 0 !important; /* Czyścimy margines mapy, bo siedzi w chart-card */
-        margin-top: 0;
+        margin: 0 !important; /* Mapa nie potrzebuje marginesu, bo jej karta go ma */
         touch-action: pan-y !important;
     }
     #dashboard-view {
@@ -739,3 +739,4 @@ options: {
 
         init();
     </script></body></html>
+
