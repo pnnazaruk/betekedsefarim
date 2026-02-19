@@ -928,7 +928,7 @@ addedNodes.add('center');
             title: 'Tytuł / Title: ' + title, // Dymek
             shape: 'dot',
             size: 20,
-            color: '#636363' // Orange
+            color: '#eeeeee' // Orange
         });
 
         edges.add({ from: 'center', to: bookId, color: '#eeeeee' });
@@ -942,11 +942,11 @@ addedNodes.add('center');
                     title: 'Autor / Author: ' + author, // Dymek
                     shape: 'dot', 
                     size: 25, 
-                    color: '##7777e6' // Blue
+                    color: '#7e7ee6' // Blue
                 });
                 addedNodes.add(author);
             }
-            edges.add({ from: bookId, to: author, color: '#7777e6' });
+            edges.add({ from: bookId, to: author, color: '#7e7ee6' });
         }
 
         // DRUKARZ - Turkusowy rąb (diamond) z podpisem
@@ -1001,6 +1001,7 @@ addedNodes.add('center');
             
         init();
     </script></body></html>
+
 
 
 
