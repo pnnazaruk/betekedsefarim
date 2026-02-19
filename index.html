@@ -869,6 +869,8 @@ options: {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
+            renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
+        }
 function renderNetworkGraph(data) {
             const container = document.getElementById('network-graph');
             
@@ -961,9 +963,9 @@ function renderNetworkGraph(data) {
             };
             new vis.Network(container, graphData, options);
         }
-            renderNetworkGraph(data);
-
+            
         init();
     </script></body></html>
+
 
 
