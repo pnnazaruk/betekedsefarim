@@ -959,8 +959,11 @@ function renderNetworkGraph() {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
+            renderNetworkGraph(); 
+        } //
         }
 
         init();
     </script></body></html>
+
 
