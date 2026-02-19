@@ -884,7 +884,7 @@ function renderNetworkGraph(data) {
                     authCounts[a] = (authCounts[a] || 0) + 1;
                 }
             });
-            const top5Printers = Object.entries(counts)
+            authCount top5Printers = Object.entries(counts)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5)
                 .map(e => e[0]);
@@ -918,6 +918,7 @@ borderWidth: 0, // Całkowite usunięcie ramki
 });
 addedNodes.add('center');
 
+    data.forEach(r => {
     const printer = getVal(r.c[10]);
     if (top5Printers.includes(printer)) {
         const title = getVal(r.c[1]);
@@ -1008,8 +1009,8 @@ edges.add({
     to: city, 
     dashes: true, 
     color: '#c73848', 
-    length: 350 // Miasta będą w najbardziej zewnętrznym kręgu
-});
+    length: 350 
+           });
         }
     }
 });
@@ -1031,4 +1032,5 @@ const options = {
             
         init();
     </script></body></html>
+
 
