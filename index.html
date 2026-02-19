@@ -1005,18 +1005,23 @@ addedNodes.add('center');
 });
 
             const graphData = { nodes: nodes, edges: edges };
-            const options = {
-                interaction: { hover: true, tooltipDelay: 200 },
-                physics: { 
-                    stabilization: { iterations: 100 },
-                    barnesHut: { gravitationalConstant: -4000 }
-                }
-            };
+const options = {
+    interaction: { hover: true, tooltipDelay: 200 },
+    physics: { 
+        stabilization: { iterations: 150 },
+        barnesHut: { 
+            gravitationalConstant: -5000, // Silniejsze odpychanie punktów
+            springConstant: 0.04,         // Elastyczność sprężyn
+            springLength: 200             // Domyślna baza długości
+        }
+    }
+};
             new vis.Network(container, graphData, options);
         }
             
         init();
     </script></body></html>
+
 
 
 
