@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
 
     <style>
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
@@ -44,6 +45,10 @@
             padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
             transition: transform 0.3s ease;
         }
+
+        #network-container {
+    touch-action: none; /* Zapobiega przewijaniu strony podczas przesuwania grafu na mobile */
+}
 
         details.facet-container { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 5px; }
         summary.facet-summary { 
@@ -350,6 +355,12 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
+<div class="chart-card" style="margin-top: 20px;">
+    <div class="chart-header">
+        Sieć powiązań: Jesziwa -> Obecne lokalizacje / Connection Network: Yeshiva -> Current Locations
+    </div>
+    <div id="network-container" style="height: 500px; width: 100%; background: #fafafa; border: 1px solid #eee;"></div>
+</div>
                 </div>
             </div>
         </main>
@@ -837,6 +848,115 @@ options: {
                     }
                 }
             }
+                // --- LOGIKA NETWORK GRAPH (Cytoscape.js) ---
+const netData = rawRows;
+const connections = {};
+const centerNodeId = 'JCL_CENTER';
+
+// 1. Agregacja danych: Jesziwa -> Lokalizacja
+netData.forEach(r => {
+    let loc = getVal(r.c[11]);
+    if (isUnknown(loc) || loc.toLowerCase().includes('unknown')) loc = "Nieznana / Unknown";
+    else loc = loc.trim();
+    
+    connections[loc] = (connections[loc] || 0) + 1;
+});
+
+// 2. Budowa elementów grafu
+const elements = [
+    { 
+        data: { 
+            id: centerNodeId, 
+            label: 'Jeszywas Chachmej Lublin',
+            isCenter: true 
+        } 
+    }
+];
+
+// Paleta z Sankey (używamy tych samych kolorów dla spójności)
+const netPalette = ['#5dab e2', '#eb984e', '#ec7063', '#48c9b0', '#f4d03f', '#bdc3c7'];
+
+Object.entries(connections).forEach(([loc, count], index) => {
+    const nodeId = `loc_${index}`;
+    // Dodaj węzeł lokalizacji
+    elements.push({
+        data: { 
+            id: nodeId, 
+            label: `${loc}\n(${count})`,
+            size: 10 + Math.sqrt(count) * 5 // Dynamiczna wielkość na podstawie liczby książek
+        }
+    });
+    // Dodaj krawędź (połączenie)
+    elements.push({
+        data: { 
+            source: centerNodeId, 
+            target: nodeId, 
+            weight: count 
+        }
+    });
+});
+
+// 3. Inicjalizacja Cytoscape
+if (window.cy) window.cy.destroy();
+window.cy = cytoscape({
+    container: document.getElementById('network-container'),
+    elements: elements,
+    style: [
+        {
+            selector: 'node',
+            style: {
+                'label': 'data(label)',
+                'text-wrap': 'wrap',
+                'text-max-width': '80px',
+                'font-size': '10px',
+                'color': '#1a1a1a',
+                'text-valign': 'bottom',
+                'text-margin-y': '5px',
+                'background-color': '#bdc3c7',
+                'width': 'data(size)',
+                'height': 'data(size)'
+            }
+        },
+        {
+            selector: `node[id="${centerNodeId}"]`,
+            style: {
+                'background-image': 'https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png',
+                'background-fit': 'cover',
+                'width': '60px',
+                'height': '60px',
+                'border-width': '2px',
+                'border-color': '#1a1a1a',
+                'font-weight': 'bold',
+                'font-size': '12px',
+                'text-margin-y': '8px'
+            }
+        },
+        {
+            selector: 'edge',
+            style: {
+                'width': 'mapData(weight, 1, 100, 1, 10)', // Grubsza linia dla większej liczby książek
+                'line-color': '#ddd',
+                'curve-style': 'bezier',
+                'target-arrow-shape': 'triangle',
+                'target-arrow-color': '#ddd',
+                'opacity': 0.6
+            }
+        }
+    ],
+    layout: {
+        name: 'concentric', // Układ koncentryczny - idealny dla pokazania centrum
+        concentric: function(node) { return node.data('isCenter') ? 2 : 1; },
+        levelWidth: function() { return 1; },
+        padding: 30,
+        startAngle: 3/2 * Math.PI,
+        fit: true
+    },
+    userZoomingEnabled: true,
+    userPanningEnabled: true
+});
+
+// Automatyczne dopasowanie przy zmianie rozmiaru okna
+window.addEventListener('resize', () => { if(window.cy) window.cy.fit(); });
             });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -855,3 +975,4 @@ options: {
 
         init();
     </script></body></html>
+
