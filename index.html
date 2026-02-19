@@ -846,7 +846,9 @@ options: {
             }
             });
 }
+// Czyścimy markery mapy przed rysowaniem nowych
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
+
             const cities = {};
             data.forEach(r => {
                 let name = getVal(r.c[7]), coords = parseDMS(getVal(r.c[9]));
@@ -856,92 +858,111 @@ options: {
                     cities[key].count++;
                 }
             });
+
             Object.values(cities).forEach(c => {
-                L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
+                L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek: ${c.count}`);
             });
+
+            // Wywołujemy graf
+            renderNetworkGraph(); 
         }
-    function renderNetworkGraph() {
-    const data = rawRows;
-    const isMobile = window.innerWidth < 768;
 
-    const authCounts = {};
-    data.forEach(r => {
-        let a = getVal(r.c[3]);
-        if (!isUnknown(a)) authCounts[a] = (authCounts[a] || 0) + 1;
-    });
+        // --- OSOBNA I POPRAWNA FUNKCJA GRAFU ---
+        function renderNetworkGraph() {
+            const data = rawRows;
+            const isMobile = window.innerWidth < 768;
 
-    const top10Authors = Object.entries(authCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(e => e[0]);
+            // 1. Ograniczenie do TOP 10 autorów
+            const authCounts = {};
+            data.forEach(r => {
+                let a = getVal(r.c[3]);
+                if (!isUnknown(a)) authCounts[a] = (authCounts[a] || 0) + 1;
+            });
 
-    const nodes = new vis.DataSet();
-    const edges = new vis.DataSet();
-    const addedNodes = new Set();
+            const top10Authors = Object.entries(authCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(e => e[0]);
 
-    nodes.add({
-        id: 'center',
-        label: 'Jeszywas Chachmej Lublin\nישיבת חכמי לובלין',
-        color: { background: '#FFD700', border: '#FFD700', highlight: { background: '#FFD700', border: '#FFD700' } },
-        size: 40, shape: 'dot', borderWidth: 0, font: { size: 16, multi: true, weight: 'bold' }
-    });
-    addedNodes.add('center');
+            const nodes = new vis.DataSet();
+            const edges = new vis.DataSet();
+            const addedNodes = new Set();
 
-    data.forEach(r => {
-        const author = getVal(r.c[3]);
-        if (top10Authors.includes(author)) {
-            const title = getVal(r.c[1]);
-            const city = getVal(r.c[7]);
-            const printer = getVal(r.c[10]);
-            const bookId = `book_${r.c[0].v}`;
+            // Punkt Centralny: Jeszywa
+            nodes.add({
+                id: 'center',
+                label: 'Jeszywas Chachmej Lublin\nישיבת חכמי לובלין',
+                color: { 
+                    background: '#FFD700', 
+                    border: '#FFD700',
+                    highlight: { background: '#FFD700', border: '#FFD700' }
+                },
+                size: 40,
+                font: { size: 16, multi: true, weight: 'bold' },
+                shape: 'dot',
+                borderWidth: 0
+            });
+            addedNodes.add('center');
 
-            if (!addedNodes.has(bookId)) {
-                nodes.add({ id: bookId, label: title, shape: 'dot', size: 12, color: '#000000', font: {size: 10} });
-                edges.add({ from: 'center', to: bookId, color: '#eeeeee', length: 200 });
-                addedNodes.add(bookId);
-            }
+            data.forEach(r => {
+                const author = getVal(r.c[3]);
+                if (top10Authors.includes(author)) {
+                    const title = getVal(r.c[1]);
+                    const city = getVal(r.c[7]);
+                    const printer = getVal(r.c[10]);
+                    const bookId = `book_${r.c[0] ? r.c[0].v : Math.random()}`;
 
-            if (!isUnknown(author)) {
-                if (!addedNodes.has(author)) {
-                    nodes.add({ id: author, label: author, shape: 'dot', size: 15, color: '#E91E63', title: `Autor: ${author}` });
-                    addedNodes.add(author);
+                    // TYTUŁ - czarne koło
+                    if (!addedNodes.has(bookId)) {
+                        nodes.add({ id: bookId, label: title, shape: 'dot', size: 12, color: '#000000', font: {size: 10} });
+                        edges.add({ from: 'center', to: bookId, color: '#eeeeee', length: 200 });
+                        addedNodes.add(bookId);
+                    }
+
+                    // AUTOR - malinowe koło + dymek
+                    if (!isUnknown(author)) {
+                        if (!addedNodes.has(author)) {
+                            nodes.add({ id: author, label: author, shape: 'dot', size: 15, color: '#E91E63', title: `Autor: ${author}` });
+                            addedNodes.add(author);
+                        }
+                        edges.add({ from: author, to: bookId, color: '#000000', width: 1 });
+                    }
+
+                    // MIEJSCE - czerwone małe koło
+                    if (!isUnknown(city)) {
+                        if (!addedNodes.has(city)) {
+                            nodes.add({ id: city, label: city, shape: 'dot', size: 8, color: '#FF0000' });
+                            addedNodes.add(city);
+                        }
+                        edges.add({ from: bookId, to: city, color: '#cccccc', dashes: true });
+                    }
+
+                    // DRUKARZ - turkusowy romb + dymek
+                    if (!isUnknown(printer)) {
+                        if (!addedNodes.has(printer)) {
+                            nodes.add({ id: printer, label: printer, shape: 'diamond', size: 15, color: '#40E0D0', title: `druk: ${printer}` });
+                            addedNodes.add(printer);
+                        }
+                        edges.add({ from: printer, to: bookId, color: '#000000', dashes: true, width: 1 });
+                    }
                 }
-                edges.add({ from: author, to: bookId, color: '#000000', width: 1 });
-            }
+            });
 
-            if (!isUnknown(city)) {
-                if (!addedNodes.has(city)) {
-                    nodes.add({ id: city, label: city, shape: 'dot', size: 8, color: '#FF0000' });
-                    addedNodes.add(city);
-                }
-                edges.add({ from: bookId, to: city, color: '#cccccc', dashes: true });
-            }
+            const container = document.getElementById('network-graph');
+            const options = {
+                nodes: { borderWidth: 1, font: { color: '#34495e' } },
+                physics: {
+                    enabled: true,
+                    barnesHut: { gravitationalConstant: -3000, centralGravity: 0.3, springLength: 120 },
+                    stabilization: { iterations: 100 }
+                },
+                interaction: { hover: true, zoomView: !isMobile, dragView: true }
+            };
 
-            if (!isUnknown(printer)) {
-                if (!addedNodes.has(printer)) {
-                    nodes.add({ id: printer, label: printer, shape: 'diamond', size: 15, color: '#40E0D0', title: `druk: ${printer}` });
-                    addedNodes.add(printer);
-                }
-                edges.add({ from: printer, to: bookId, color: '#000000', dashes: true, width: 1 });
-            }
+            new vis.Network(container, { nodes, edges }, options);
         }
-    });
-
-    const container = document.getElementById('network-graph');
-    const options = {
-        nodes: { borderWidth: 1, font: { color: '#34495e' } },
-        physics: {
-            enabled: true,
-            barnesHut: { gravitationalConstant: -3000, centralGravity: 0.3, springLength: 120 },
-            stabilization: { iterations: 150 }
-        },
-        interaction: { hover: true, zoomView: !isMobile, dragView: true }
-    };
-
-    // To musi być TUTAJ, przed ostatnią klamrą:
-    new vis.Network(container, { nodes, edges }, options);
-}
 
         init();
     </script></body></html>
+
 
