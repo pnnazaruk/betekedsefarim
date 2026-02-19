@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
     <style>
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
@@ -351,6 +352,12 @@ body.stats-mode #dashboard-view {
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
                 </div>
+        <div class="chart-card" style="grid-column: span 2;">
+    <div class="chart-header">
+        Relacje 30 najczęstszych autorów / Network of 30 most frequent authors
+    </div>
+    <div id="network-graph" style="height: 600px; width: 100%; background: #ffffff;"></div>
+</div>
             </div>
         </main>
     </div>
@@ -838,6 +845,107 @@ options: {
                 }
             }
             });
+function renderNetworkGraph() {
+    const data = rawRows;
+    const isMobile = window.innerWidth < 768;
+
+    // 1. Znajdź 30 najczęstszych autorów
+    const authCounts = {};
+    data.forEach(r => {
+        let a = getVal(r.c[3]);
+        if (!isUnknown(a)) authCounts[a] = (authCounts[a] || 0) + 1;
+    });
+
+    const top30Authors = Object.entries(authCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30)
+        .map(e => e[0]);
+
+    const nodes = new vis.DataSet();
+    const edges = new vis.DataSet();
+
+    // Punkt Centralny: Jeszywa
+    nodes.add({
+        id: 'center',
+        label: 'Jeszywas Chachmej Lublin\nישיבת חכמי לובלין',
+        color: { background: '#FFD700', border: '#1a1a1a' }, // Żółte koło
+        size: 40,
+        font: { size: 16, multi: true, weight: 'bold' },
+        shape: 'dot'
+    });
+
+    const addedNodes = new Set(['center']);
+
+    data.forEach(r => {
+        const author = getVal(r.c[3]);
+        if (top30Authors.includes(author)) {
+            const title = getVal(r.c[1]);
+            const city = getVal(r.c[7]);
+            const printer = getVal(r.c[10]);
+            const year = getVal(r.c[5]);
+            const bookId = `book_${r.c[0].v}`;
+
+            // Dodaj książkę (lewituje wokół centrum)
+            if (!addedNodes.has(bookId)) {
+                nodes.add({ id: bookId, label: title, shape: 'dot', size: 10, color: '#1a1a1a' });
+                edges.add({ from: 'center', to: bookId, color: '#eeeeee', length: 250 });
+                addedNodes.add(bookId);
+            }
+
+            // Relacja z Autorem
+            if (!isUnknown(author)) {
+                if (!addedNodes.has(author)) {
+                    nodes.add({ id: author, label: author, shape: 'text', font: { size: 12, color: '#2c3e50' } });
+                    addedNodes.add(author);
+                }
+                edges.add({ from: bookId, to: author, color: '#bdc3c7' });
+            }
+
+            // Relacja z Miastem
+            if (!isUnknown(city)) {
+                if (!addedNodes.has(city)) {
+                    nodes.add({ id: city, label: city, shape: 'text', font: { size: 10, color: '#7f8c8d' } });
+                    addedNodes.add(city);
+                }
+                edges.add({ from: bookId, to: city, color: '#ecf0f1', dashes: true });
+            }
+
+            // Relacja z Drukarzem + Dymek z datą
+            if (!isUnknown(printer)) {
+                if (!addedNodes.has(printer)) {
+                    nodes.add({ id: printer, label: printer, shape: 'text', font: { size: 10, color: '#e67e22' } });
+                    addedNodes.add(printer);
+                }
+                edges.add({ 
+                    from: bookId, 
+                    to: printer, 
+                    title: `Rok wydania / Year: ${year}`, // Tooltip
+                    color: '#f39c12',
+                    width: 2 
+                });
+            }
+        }
+    });
+
+    const container = document.getElementById('network-graph');
+    const graphData = { nodes: nodes, edges: edges };
+    const options = {
+        nodes: { borderWidth: 2 },
+        edges: { smooth: { type: 'continuous' } },
+        physics: {
+            enabled: true,
+            barnesHut: { gravitationalConstant: -2000, centralGravity: 0.3, springLength: 95 },
+            stabilization: { iterations: 100 }
+        },
+        interaction: {
+            hover: true,
+            zoomView: !isMobile, // Wyłączamy zoom kółkiem na mobile dla lepszego przewijania
+            dragView: true
+        }
+    };
+
+    new vis.Network(container, graphData, options);
+}
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -855,3 +963,4 @@ options: {
 
         init();
     </script></body></html>
+
