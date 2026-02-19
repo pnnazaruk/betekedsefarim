@@ -886,15 +886,21 @@ options: {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
-            renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
-        }
-let networkInstance = null; // Zmienna globalna do zarządzania odświeżaniem
+window.currentData = data; 
+            renderNetworkGraph(data, 10, 10); 
+        } // Tu kończy się funkcja init lub renderStats
+
+// --- TE LINIE MUSZĄ BYĆ "NA ZEWNĄTRZ" ---
+
+let networkInstance = null; 
 
 function renderNetworkGraph(data, limit = 10, categoryIndex = 10) {
     const container = document.getElementById('network-graph');
-    if (networkInstance !== null) { networkInstance.destroy(); }
+    if (networkInstance !== null) {
+        networkInstance.destroy();
+        networkInstance = null;
+    }
 
-    // 1. Logika wyboru TOP na podstawie parametrów użytkownika
     const counts = {};
     data.forEach(r => {
         let val = getVal(r.c[categoryIndex]);
@@ -912,62 +918,55 @@ function renderNetworkGraph(data, limit = 10, categoryIndex = 10) {
     const edges = new vis.DataSet();
     const addedNodes = new Set();
 
-    // 2. Węzeł Centralny - Jeszywa
     nodes.add({
-        id: 'center', label: 'Jeszywas Chachmej Lublin', shape: 'dot', size: 80, 
-        color: { background: '#f2c635', border: '#f2c635' },
-        font: { size: 18, weight: 'bold' }, borderWidth: 0
+        id: 'center', label: 'Jeszywas Chachmej Lublin', shape: 'dot', size: 50,
+        color: { background: '#f2c635', border: '#d4ac2b' },
+        font: { size: 16, weight: 'bold' }, fixed: true // Centrum nie ucieka
     });
     addedNodes.add('center');
 
-    // 3. Budowanie sieci relacji
     data.forEach(r => {
-        const currentItemValue = getVal(r.c[categoryIndex]);
-        if (topItems.includes(currentItemValue)) {
+        const currentItem = getVal(r.c[categoryIndex]);
+        if (topItems.includes(currentItem)) {
             const title = getVal(r.c[1]), author = getVal(r.c[3]), 
                   city = getVal(r.c[7]), printer = getVal(r.c[10]);
+            
             const bookId = 'book_' + Math.random().toString(36).substr(2, 9);
 
-            // TYTUŁ (Relacja wyjściowa)
             nodes.add({
-                id: bookId, label: title.substring(0, 15) + '...', shape: 'dot', size: 20,
-                color: { background: '#c5c9c9', border: '#c5c9c9' }, borderWidth: 0,
-                title: 'Tytuł: ' + title
+                id: bookId, label: '', title: title, shape: 'dot', size: 7,
+                color: '#c5c9c9', borderWidth: 0
             });
-            edges.add({ from: 'center', to: bookId, color: { color: '#c5c9c9', inherit: false }, length: 110 });
+            edges.add({ from: 'center', to: bookId, color: '#eee', width: 1 });
 
-            // AUTOR (Niebieski)
-            if (author && author !== '-') {
-                if (!addedNodes.has(author)) {
-                    nodes.add({ id: author, label: author, shape: 'dot', size: (categoryIndex == 3 ? 35 : 25), color: '#0000FF', borderWidth: 0 });
-                    addedNodes.add(author);
+            // Relacje (Dynamiczne rozmiary)
+            const processNode = (id, label, color, shape, size) => {
+                if (id && id !== '-' && !addedNodes.has(id)) {
+                    nodes.add({ id, label, shape, size, color, font: { size: 11 } });
+                    addedNodes.add(id);
                 }
-                edges.add({ from: bookId, to: author, color: '#0000FF', length: 250 });
-            }
+                if (id && id !== '-') edges.add({ from: bookId, to: id, color: color, width: 0.5 });
+            };
 
-            // DRUKARZ (Turkusowy)
-            if (printer && printer !== '-') {
-                if (!addedNodes.has(printer)) {
-                    nodes.add({ id: printer, label: printer, shape: 'diamond', size: (categoryIndex == 10 ? 40 : 22), color: '#6abbc4', borderWidth: 0 });
-                    addedNodes.add(printer);
-                }
-                edges.add({ from: bookId, to: printer, color: '#6abbc4', length: 200 });
-            }
-
-            // MIEJSCE (Czerwony)
-            if (city && city !== '-') {
-                if (!addedNodes.has(city)) {
-                    nodes.add({ id: city, label: city, shape: 'dot', size: (categoryIndex == 7 ? 30 : 12), color: '#c73848', borderWidth: 0 });
-                    addedNodes.add(city);
-                }
-                edges.add({ from: bookId, to: city, dashes: true, color: '#c73848', length: 350 });
-            }
+            processNode(author, author, '#0000FF', 'dot', (categoryIndex == 3 ? 25 : 15));
+            processNode(printer, printer, '#6abbc4', 'diamond', (categoryIndex == 10 ? 25 : 15));
+            processNode(city, city, '#c73848', 'dot', (categoryIndex == 7 ? 20 : 10));
         }
     });
 
-  networkInstance = new vis.Network(container, { nodes, edges }, {
-        physics: { stabilization: { iterations: 100 }, barnesHut: { gravitationalConstant: -7000, springLength: 200 } },
-        interaction: { hover: true, tooltipDelay: 300 }
+    const options = {
+        physics: {
+            stabilization: { iterations: 100 },
+            barnesHut: { gravitationalConstant: -8000, springLength: 150, springConstant: 0.04 },
+        },
+        interaction: { hideEdgesOnDrag: true, tooltipDelay: 200 }
+    };
+
+    networkInstance = new vis.Network(container, { nodes, edges }, options);
+    
+    // Zatrzymujemy fizykę po ułożeniu, żeby nie obciążać procesora
+    networkInstance.on("stabilizationIterationsDone", function () {
+        networkInstance.setOptions({ physics: false });
     });
 } // <--- TO JEST JEDYNE I OSTATECZNE ZAMKNIĘCIE FUNKCJI renderNetworkGraph
 
@@ -977,13 +976,33 @@ document.getElementById('graph-range')?.addEventListener('input', function(e) {
 });
 
 function updateGraph() {
-    const limit = parseInt(document.getElementById('graph-range').value);
-    const category = parseInt(document.getElementById('graph-category').value);
-    if (window.currentData) {
-        renderNetworkGraph(window.currentData, limit, category);
-    }
+    const limitInput = document.getElementById('graph-range');
+    const categoryInput = document.getElementById('graph-category');
+    
+    if (!limitInput || !categoryInput) return;
+
+    const limit = parseInt(limitInput.value);
+    const category = parseInt(categoryInput.value);
+
+    // Pokazujemy loader lub informację (opcjonalnie)
+    const container = document.getElementById('network-graph');
+    container.style.opacity = "0.5";
+
+    setTimeout(() => {
+        if (window.currentData) {
+            renderNetworkGraph(window.currentData, limit, category);
+        }
+        container.style.opacity = "1";
+    }, 100);
 }
+
+// Obsługa suwaka (zmiana cyfry w locie)
+document.getElementById('graph-range')?.addEventListener('input', function(e) {
+    const valSpan = document.getElementById('graph-count-val');
+    if (valSpan) valSpan.innerText = e.target.value;
+});
 
 // --- START APLIKACJI ---
 init();
 </script></body></html>
+
