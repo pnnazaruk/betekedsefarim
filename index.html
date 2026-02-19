@@ -871,7 +871,8 @@ options: {
                     }
                 }
             }
- mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
+// --- LOGIKA MAPY (Wewnątrz renderStats) ---
+            mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
                 let name = getVal(r.c[7]), coords = parseDMS(getVal(r.c[9]));
@@ -885,12 +886,13 @@ options: {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
 
-            // --- INICJALIZACJA GRAFU ---
-            window.currentData = data; // Zapisujemy dane do pamięci dla suwaka
-            renderNetworkGraph(data, 10, 10); // Startujemy domyślnie: Top 10 Drukarzy
-        } // ZAMKNIĘCIE FUNKCJI renderStats (lub głównej funkcji przetwarzającej)
+            // --- INICJALIZACJA DANYCH DLA GRAFU ---
+            window.currentData = data; 
+            renderNetworkGraph(data, 10, 10); 
+            
+        } // <--- TO JEST KLUCZOWE ZAMKNIĘCIE FUNKCJI renderStats
 
-        // --- UNIWERSALNA FUNKCJA GRAFU (POZA INNYMI FUNKCJAMI) ---
+        // --- UNIWERSALNA FUNKCJA GRAFU (POZA renderStats) ---
         let networkInstance = null;
 
         function renderNetworkGraph(data, limit = 10, categoryIndex = 10) {
@@ -969,8 +971,8 @@ options: {
             });
         }
 
-        // --- OBSŁUGA INTERFEJSU ---
-        document.getElementById('graph-range').addEventListener('input', function(e) {
+        // --- OBSŁUGA INTERFEJSU (Poza funkcjami) ---
+        document.getElementById('graph-range')?.addEventListener('input', function(e) {
             document.getElementById('graph-count-val').innerText = e.target.value;
         });
 
@@ -983,18 +985,6 @@ options: {
         }
             
         init();
-    </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    </script>
+</body>
+</html>
