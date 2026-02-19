@@ -879,14 +879,14 @@ function renderNetworkGraph(data) {
             // Logika wyboru 30 autorów
             const authCounts = {};
             data.forEach(r => {
-                let a = getVal(r.c[3]);
+                let a = getVal(r.c[10]);
                 if (a && a !== '-' && !a.toLowerCase().includes('brak')) {
                     authCounts[a] = (authCounts[a] || 0) + 1;
                 }
             });
-            const top10Authors = Object.entries(authCounts)
+            const top5Printers = Object.entries(counts)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 10)
+                .slice(0, 5)
                 .map(e => e[0]);
 
             const nodes = new vis.DataSet();
@@ -918,12 +918,11 @@ borderWidth: 0, // Całkowite usunięcie ramki
 });
 addedNodes.add('center');
 
-            data.forEach(r => {
-    const author = getVal(r.c[3]);
-    if (top10Authors.includes(author)) {
+    const printer = getVal(r.c[10]);
+    if (top5Printers.includes(printer)) {
         const title = getVal(r.c[1]);
         const city = getVal(r.c[7]);
-        const printer = getVal(r.c[10]);
+        const author = getVal(r.c[3]);
         const year = getVal(r.c[5]);
         const bookId = 'book_' + Math.random().toString(36).substr(2, 9);
 
@@ -1032,3 +1031,4 @@ const options = {
             
         init();
     </script></body></html>
+
