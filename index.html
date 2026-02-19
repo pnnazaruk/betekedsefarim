@@ -931,7 +931,12 @@ addedNodes.add('center');
             color: '#eeeeee' // Orange
         });
 
-        edges.add({ from: 'center', to: bookId, color: '#eeeeee' });
+        edges.add({ 
+    from: 'center', 
+    to: bookId, 
+    color: '#eeeeee', 
+    length: 100 // Bardzo krótka linia
+});
 
         // AUTORZY - Niebieskie koła z podpisem
         if (author && author !== '-') {
@@ -946,7 +951,12 @@ addedNodes.add('center');
                 });
                 addedNodes.add(author);
             }
-            edges.add({ from: bookId, to: author, color: '#7e7ee6' });
+           edges.add({ 
+    from: bookId, 
+    to: author, 
+    color: '#7e7ee6', 
+    length: 250 // Dłuższa linia wypychająca autorów dalej
+});
         }
 
         // DRUKARZ - Turkusowy rąb (diamond) z podpisem
@@ -983,7 +993,13 @@ addedNodes.add('center');
                 });
                 addedNodes.add(city);
             }
-            edges.add({ from: bookId, to: city, dashes: true, color: '#FF0000' });
+           edges.add({ 
+    from: bookId, 
+    to: city, 
+    dashes: true, 
+    color: '#FF0000', 
+    length: 350 // Miasta będą w najbardziej zewnętrznym kręgu
+});
         }
     }
 });
@@ -1001,6 +1017,7 @@ addedNodes.add('center');
             
         init();
     </script></body></html>
+
 
 
 
