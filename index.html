@@ -4,12 +4,12 @@
     <title> Library of Yeshivas Chachmei Lublin </title>
     <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
     <style>
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
@@ -351,13 +351,13 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
-                </div>
         <div class="chart-card" style="grid-column: span 2;">
     <div class="chart-header">
         Relacje 30 najczęstszych autorów / Network of 30 most frequent authors
     </div>
     <div id="network-graph" style="height: 600px; width: 100%; background: #ffffff;"></div>
 </div>
+                </div>
             </div>
         </main>
     </div>
@@ -845,7 +845,7 @@ options: {
                 }
             }
             });
-function renderNetworkGraph() {
+        function renderNetworkGraph() {
     const data = rawRows;
     const isMobile = window.innerWidth < 768;
 
@@ -865,10 +865,10 @@ function renderNetworkGraph() {
     const edges = new vis.DataSet();
     const addedNodes = new Set();
 
-    // Punkt Centralny: Jeszywa
+    // Punkt Centralny: Jeszywa (Żółty bez ramki, po najechaniu żółty)
     nodes.add({
         id: 'center',
-        label: 'Jeszywas Chachmej Lublin\nישיבת חכmi לובלין',
+        label: 'Jeszywas Chachmej Lublin\nישיבת חכמי לובלין',
         color: { 
             background: '#FFD700', 
             border: '#FFD700',
@@ -889,23 +889,31 @@ function renderNetworkGraph() {
             const printer = getVal(r.c[10]);
             const bookId = `book_${r.c[0].v}`;
 
-            // TYTUŁ - czarne koło
+            // 2. TYTUŁ - czarne koło
             if (!addedNodes.has(bookId)) {
                 nodes.add({ id: bookId, label: title, shape: 'dot', size: 12, color: '#000000', font: {size: 10} });
                 edges.add({ from: 'center', to: bookId, color: '#eeeeee', length: 200 });
                 addedNodes.add(bookId);
             }
 
-            // AUTOR - malinowe koło
+            // 3. AUTOR - malinowe koło + dymek
             if (!isUnknown(author)) {
                 if (!addedNodes.has(author)) {
-                    nodes.add({ id: author, label: author, shape: 'dot', size: 15, color: '#E91E63', title: `Autor: ${author}` });
+                    nodes.add({ 
+                        id: author, 
+                        label: author, 
+                        shape: 'dot', 
+                        size: 15, 
+                        color: '#E91E63', // Malinowy
+                        title: `Autor: ${author}` 
+                    });
                     addedNodes.add(author);
                 }
+                // Linia od autora do tytułu - czarna
                 edges.add({ from: author, to: bookId, color: '#000000', width: 1 });
             }
 
-            // MIEJSCE - czerwone małe
+            // 4. MIEJSCE WYDANIA - czerwone mniejsze koło
             if (!isUnknown(city)) {
                 if (!addedNodes.has(city)) {
                     nodes.add({ id: city, label: city, shape: 'dot', size: 8, color: '#FF0000' });
@@ -914,12 +922,20 @@ function renderNetworkGraph() {
                 edges.add({ from: bookId, to: city, color: '#cccccc', dashes: true });
             }
 
-            // DRUKARZ - turkusowy romb
+            // 5. DRUKARZ - turkusowy romb + dymek
             if (!isUnknown(printer)) {
                 if (!addedNodes.has(printer)) {
-                    nodes.add({ id: printer, label: printer, shape: 'diamond', size: 15, color: '#40E0D0', title: `druk: ${printer}` });
+                    nodes.add({ 
+                        id: printer, 
+                        label: printer, 
+                        shape: 'diamond', 
+                        size: 15, 
+                        color: '#40E0D0', // Turkusowy
+                        title: `druk: ${printer}` 
+                    });
                     addedNodes.add(printer);
                 }
+                // Linia od drukarza do tytułu - czarna przerywana
                 edges.add({ from: printer, to: bookId, color: '#000000', dashes: true, width: 1 });
             }
         }
@@ -940,27 +956,9 @@ function renderNetworkGraph() {
             dragView: true
         }
     };
-    
-    new vis.Network(container, graphData, options);
-} 
-
-    const container = document.getElementById('network-graph');
-    const graphData = { nodes: nodes, edges: edges };
-    const options = {
-        nodes: { borderWidth: 2 },
-        edges: { smooth: { type: 'continuous' } },
-        physics: {
-            enabled: true,
-            barnesHut: { gravitationalConstant: -2000, centralGravity: 0.3, springLength: 95 },
-            stabilization: { iterations: 100 }
-        },
-        interaction: {
-            hover: true,
-            zoomView: !isMobile, // Wyłączamy zoom kółkiem na mobile dla lepszego przewijania
-            dragView: true
-        }
-    };
-
+renderNetworkGraph(); 
+}
+            
     new vis.Network(container, graphData, options);
 }
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
@@ -973,19 +971,10 @@ function renderNetworkGraph() {
                     cities[key].count++;
                 }
             });
-
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
-
-            // WYWOŁANIE (sama nazwa):
-            renderNetworkGraph(); 
-        } // To zamyka renderStats
+        }
 
         init();
     </script></body></html>
-
-
-
-
-
