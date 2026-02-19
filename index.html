@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
     <style>
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
@@ -353,17 +352,6 @@ body.stats-mode #dashboard-view {
                     </div>
                 </div>
             </div>
-<div class="chart-card" style="margin-top: 20px;">
-    <div class="chart-header">
-        Relacje między Jeszywas Chachmej Lublin a książkami, autorami i drukarzami / 
-        Relationships between Yeshivas Chachmei Lublin, books, authors, and printers
-    </div>
-    <div id="network-graph" style="height: 600px; width: 100%; border: 1px solid #eee; background: #fafafa;"></div>
-    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-        * Użyj kółka myszy lub dwóch palców, aby przybliżyć. Przeciągnij węzły, aby zmienić ich układ. / 
-        Use mouse wheel or two fingers to zoom. Drag nodes to rearrange.
-    </div>
-</div>
         </main>
     </div>
 
@@ -850,80 +838,6 @@ options: {
                 }
             }
             });
-// --- LOGIKA NETWORK GRAPH ---
-const graphContainer = document.getElementById('network-graph');
-const nodes = new vis.DataSet();
-const edges = new vis.DataSet();
-
-// 1. Węzeł centralny: Jesziwa
-nodes.add({
-    id: 'center',
-    label: 'Jeszywas Chachmej Lublin',
-    shape: 'image',
-    image: 'https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png',
-    size: 40,
-    font: { size: 16, weight: 'bold' }
-});
-
-// 2. Pobieramy próbkę danych (np. 30 rekordów), by graf był czytelny
-const sampleData = data.slice(0, 30);
-
-sampleData.forEach((r, index) => {
-    const bookId = `book_${index}`;
-    const title = getVal(r.c[1]);
-    const author = getVal(r.c[3]);
-    const printer = getVal(r.c[10]);
-    const year = getVal(r.c[5]);
-
-    // Węzeł Książki
-    nodes.add({
-        id: bookId,
-        label: title.length > 20 ? title.substring(0, 20) + "..." : title,
-        title: title, // Tooltip
-        color: '#1a1a1a',
-        font: { color: '#ffffff' },
-        shape: 'box'
-    });
-    edges.add({ from: 'center', to: bookId, color: '#ccc' });
-
-    // Węzeł Autora (jeśli istnieje)
-    if (!isUnknown(author)) {
-        if (!nodes.get(author)) {
-            nodes.add({ id: author, label: author, color: '#5dadee', shape: 'dot', size: 15 });
-        }
-        edges.add({ from: bookId, to: author, dashes: true });
-    }
-
-    // Węzeł Drukarni (jeśli istnieje)
-    if (!isUnknown(printer)) {
-        if (!nodes.get(printer)) {
-            nodes.add({ id: printer, label: printer, color: '#48c9b0', shape: 'diamond', size: 10 });
-        }
-        edges.add({ from: bookId, to: printer });
-    }
-});
-
-const networkData = { nodes: nodes, edges: edges };
-const networkOptions = {
-    nodes: {
-        font: { face: 'Segoe UI', size: 12 }
-    },
-    edges: {
-        smooth: { type: 'continuous' }
-    },
-    physics: {
-        barnesHut: { gravitationalConstant: -2000, centralGravity: 0.3, springLength: 150 },
-        stabilization: { iterations: 100 }
-    },
-    interaction: {
-        hover: true,
-        zoomView: true,
-        dragNodes: true
-    }
-};
-
-// Inicjalizacja grafu
-new vis.Network(graphContainer, networkData, networkOptions);
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -941,4 +855,3 @@ new vis.Network(graphContainer, networkData, networkOptions);
 
         init();
     </script></body></html>
-
