@@ -363,12 +363,26 @@ body.stats-mode #dashboard-view {
                     <div class="chart-card">
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
-                    </div>
-<div class="chart-card" style="grid-column: 1 / -1; margin-top: 20px; border-radius: 0;">
-    <div class="chart-header" style="border-radius: 0;">
-        Powiązania i Relacje / Connections & Relations
+                    <div class="chart-card" style="grid-column: 1 / -1; margin-top: 20px; border-radius: 0; position: relative;">
+    <div class="chart-header" style="border-radius: 0;">Dynamiczna Analiza Relacji / Dynamic Relations Analysis</div>
+    
+    <div style="padding: 15px; background: #f9f9f9; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <label style="font-size: 14px; font-weight: bold;">Analizuj według / Analyze by:</label>
+        <select id="graph-category" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;">
+            <option value="10">Drukarze / Printers</option>
+            <option value="3">Autorzy / Authors</option>
+            <option value="7">Miasta / Cities</option>
+        </select>
+
+        <label style="font-size: 14px; font-weight: bold;">Ilość (Top): <span id="graph-count-val">10</span></label>
+        <input type="range" id="graph-range" min="1" max="50" value="10" style="width: 150px; cursor: pointer;">
+        
+        <button onclick="updateGraph()" style="padding: 6px 20px; cursor: pointer; background: #f2c635; border: none; font-weight: bold; border-radius: 4px;">
+            Generuj / Generate
+        </button>
     </div>
-    <div id="network-graph" style="height: 600px;"></div>
+
+    <div id="network-graph" style="height: 650px; background: #fff;"></div>
 </div>
                 </div>
             </div>
@@ -857,8 +871,7 @@ options: {
                     }
                 }
             }
-            });
-            mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
+ mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
                 let name = getVal(r.c[7]), coords = parseDMS(getVal(r.c[9]));
@@ -871,163 +884,102 @@ options: {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
-            renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
-        }
-function renderNetworkGraph(data) {
+
+            // --- INICJALIZACJA GRAFU ---
+            window.currentData = data; // Zapisujemy dane do pamięci dla suwaka
+            renderNetworkGraph(data, 10, 10); // Startujemy domyślnie: Top 10 Drukarzy
+        } // ZAMKNIĘCIE FUNKCJI renderStats (lub głównej funkcji przetwarzającej)
+
+        // --- UNIWERSALNA FUNKCJA GRAFU (POZA INNYMI FUNKCJAMI) ---
+        let networkInstance = null;
+
+        function renderNetworkGraph(data, limit = 10, categoryIndex = 10) {
             const container = document.getElementById('network-graph');
-            
-            // Logika wyboru 30 autorów
-            const authCounts = {};
+            if (networkInstance !== null) {
+                networkInstance.destroy();
+            }
+
+            const counts = {};
             data.forEach(r => {
-                let a = getVal(r.c[3]);
-                if (a && a !== '-' && !a.toLowerCase().includes('brak')) {
-                    authCounts[a] = (authCounts[a] || 0) + 1;
+                let val = getVal(r.c[categoryIndex]);
+                if (val && val !== '-' && !val.toLowerCase().includes('brak')) {
+                    counts[val] = (counts[val] || 0) + 1;
                 }
             });
-            const top10Authors = Object.entries(authCounts)
+
+            const topItems = Object.entries(counts)
                 .sort((a, b) => b[1] - a[1])
-                .slice(0, 10)
+                .slice(0, limit)
                 .map(e => e[0]);
 
             const nodes = new vis.DataSet();
             const edges = new vis.DataSet();
             const addedNodes = new Set();
 
-            // Centralny punkt
-nodes.add({
-    id: 'center',
-    label: 'Jeszywas Chachmej Lublin',
-    title: 'Jeszywas Chachmej Lublin', // Dymek
-    shape: 'dot',
-    size: 80, // Zwiększony rozmiar
-borderWidth: 0, // Całkowite usunięcie ramki
-    borderWidthSelected: 0, // Usunięcie ramki również po kliknięciu
-    color: {
-        background: '#f2c635',
-        border: '#f2c635', // Dla pewności ustawiamy kolor ramki identyczny z tłem
-        highlight: {
-            background: '#f2c635',
-            border: '#f2c635'
-        }
-    },
-    hover: { // Kolor po najechaniu myszką (to naprawia Twój problem)
-            background: '#f2c635',
-            border: '#f2c635'
-        },
-    font: { size: 18, weight: 'bold' }
-});
-addedNodes.add('center');
+            nodes.add({
+                id: 'center', label: 'Jeszywas Chachmej Lublin', shape: 'dot', size: 80, borderWidth: 0,
+                color: { background: '#f2c635', border: '#f2c635', hover: '#f2c635', highlight: '#f2c635' },
+                font: { size: 18, weight: 'bold' }
+            });
+            addedNodes.add('center');
 
             data.forEach(r => {
-    const author = getVal(r.c[3]);
-    if (top10Authors.includes(author)) {
-        const title = getVal(r.c[1]);
-        const city = getVal(r.c[7]);
-        const printer = getVal(r.c[10]);
-        const year = getVal(r.c[5]);
-        const bookId = 'book_' + Math.random().toString(36).substr(2, 9);
+                const currentItem = getVal(r.c[categoryIndex]);
+                if (topItems.includes(currentItem)) {
+                    const title = getVal(r.c[1]), author = getVal(r.c[3]), 
+                          city = getVal(r.c[7]), printer = getVal(r.c[10]);
+                    const bookId = 'book_' + Math.random().toString(36).substr(2, 9);
 
-        // TYTUŁY - Pomarańczowe koła z podpisem
-        nodes.add({
-            id: bookId,
-            label: title.substring(0, 15) + '...', // Podpis pod kołem
-            title: 'Tytuł / Title: ' + title, // Dymek
-            shape: 'dot',
-            size: 20,
-            color: '#c5c9c9' // Orange
-        });
+                    nodes.add({
+                        id: bookId, label: title.substring(0, 15) + '...', shape: 'dot', size: 20, borderWidth: 0,
+                        color: { background: '#c5c9c9', border: '#c5c9c9', hover: '#c5c9c9', highlight: '#c5c9c9' },
+                        title: 'Tytuł: ' + title
+                    });
+                    edges.add({ from: 'center', to: bookId, color: { color: '#c5c9c9', inherit: false }, length: 100 });
 
-edges.add({ 
-            from: 'center', 
-            to: bookId, 
-            color: {
-                color: '#c5c9c9',      // Kolor linii
-                highlight: '#c5c9c9',  // Kolor po kliknięciu
-                hover: '#c5c9c9',      // Kolor po najechaniu
-                inherit: false         // WYMAGANE: wyłącza dziedziczenie koloru z Jeszywy
-            },
-            length: 100
-        });
+                    if (author && author !== '-') {
+                        if (!addedNodes.has(author)) {
+                            nodes.add({ id: author, label: author, shape: 'dot', size: (categoryIndex == 3 ? 35 : 25), color: '#0000FF', borderWidth: 0 });
+                            addedNodes.add(author);
+                        }
+                        edges.add({ from: bookId, to: author, color: '#0000FF', length: 250 });
+                    }
 
-        // AUTORZY - Niebieskie koła z podpisem
-        if (author && author !== '-') {
-            if (!addedNodes.has(author)) {
-                nodes.add({ 
-                    id: author, 
-                    label: author, // Podpis pod kołem
-                    title: 'Autor / Author: ' + author, // Dymek
-                    shape: 'dot', 
-                    size: 25, 
-                    color: '#678ed6' // Blue
-                });
-                addedNodes.add(author);
-            }
-           edges.add({ 
-    from: bookId, 
-    to: author, 
-    color: '#678ed6', 
-    length: 250 // Dłuższa linia wypychająca autorów dalej
-});
-        }
+                    if (printer && printer !== '-') {
+                        if (!addedNodes.has(printer)) {
+                            nodes.add({ id: printer, label: printer, shape: 'diamond', size: (categoryIndex == 10 ? 35 : 22), color: '#6abbc4', borderWidth: 0 });
+                            addedNodes.add(printer);
+                        }
+                        edges.add({ from: bookId, to: printer, color: '#6abbc4', length: 200 });
+                    }
 
-        // DRUKARZ - Turkusowy rąb (diamond) z podpisem
-        if (printer && printer !== '-') {
-            if (!addedNodes.has(printer)) {
-                nodes.add({ 
-                    id: printer, 
-                    label: printer, // Podpis pod rąbem
-                    title: 'Drukarz / Printer: ' + printer, // Dymek
-                    shape: 'diamond', 
-                    size: 12, 
-                    color: '#6abbc4' // Turquoise
-                });
-                addedNodes.add(printer);
-            }
-            edges.add({ 
-                from: bookId, 
-                to: printer, 
-                color: '#6abbc4',
-                title: 'Rok wydania / Year: ' + year // Dymek na linii
+                    if (city && city !== '-') {
+                        if (!addedNodes.has(city)) {
+                            nodes.add({ id: city, label: city, shape: 'dot', size: (categoryIndex == 7 ? 30 : 12), color: '#c73848', borderWidth: 0 });
+                            addedNodes.add(city);
+                        }
+                        edges.add({ from: bookId, to: city, dashes: true, color: '#c73848', length: 350 });
+                    }
+                }
+            });
+
+            networkInstance = new vis.Network(container, { nodes, edges }, {
+                physics: { stabilization: { iterations: 150 }, barnesHut: { gravitationalConstant: -6000, springLength: 200 } },
+                interaction: { hover: true, tooltipDelay: 200 }
             });
         }
 
-        // MIASTA - Najmniejsze czerwone koła
-        if (city && city !== '-') {
-            if (!addedNodes.has(city)) {
-                nodes.add({ 
-                    id: city, 
-                    label: city, // Podpis pod kołem
-                    title: 'Miejsce / Place: ' + city, // Dymek
-                    shape: 'dot', 
-                    size: 12, // Najmniejsze
-                    color: '#c73848' // Red
-                });
-                addedNodes.add(city);
-            }
-           edges.add({ 
-    from: bookId, 
-    to: city, 
-    dashes: true, 
-    color: '#c73848', 
-    length: 350 // Miasta będą w najbardziej zewnętrznym kręgu
-});
-        }
-    }
-});
+        // --- OBSŁUGA INTERFEJSU ---
+        document.getElementById('graph-range').addEventListener('input', function(e) {
+            document.getElementById('graph-count-val').innerText = e.target.value;
+        });
 
-            const graphData = { nodes: nodes, edges: edges };
-const options = {
-    interaction: { hover: true, tooltipDelay: 200 },
-    physics: { 
-        stabilization: { iterations: 150 },
-        barnesHut: { 
-            gravitationalConstant: -5000, // Silniejsze odpychanie punktów
-            springConstant: 0.04,         // Elastyczność sprężyn
-            springLength: 200             // Domyślna baza długości
-        }
-    }
-};
-            new vis.Network(container, graphData, options);
+        function updateGraph() {
+            const limit = parseInt(document.getElementById('graph-range').value);
+            const category = parseInt(document.getElementById('graph-category').value);
+            if (window.currentData) {
+                renderNetworkGraph(window.currentData, limit, category);
+            }
         }
             
         init();
