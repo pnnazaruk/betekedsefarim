@@ -682,15 +682,17 @@ function switchTab(mode) {
                 else acc[key].flow += 1;
                 return acc;
             }, {}));
-const sankeyPalette = {
-    'Michał Anioł': '#5DADE2',    // Jasnoniebieski
-    'Leonardo da Vinci': '#48C9B0', // Turkusowy
-    'Rafał Santi': '#AF7AC5',       // Fioletowy
-    'Donatello': '#F4D03F',         // Żółty
-    'Tycjan': '#EB984E'             // Pomarańczowy
-};
 
-const greyNode = '#D5DBDB'; // Jednolity jasnoszary dla miast
+  // 1. Definiujemy kolory z kanałem Alpha (identycznym jak późniejsze alpha linii)
+            const sankeyPalette = {
+                [top5SankeyAuth[0]]: 'rgba(93, 173, 226, 0.8)', // Przytłumiony niebieski
+                [top5SankeyAuth[1]]: 'rgba(235, 152, 78, 0.8)', // Przytłumiony pomarańczowy
+                [top5SankeyAuth[2]]: 'rgba(236, 112, 99, 0.8)', // Przytłumiony malinowy
+                [top5SankeyAuth[3]]: 'rgba(72, 201, 176, 0.8)', // Przytłumiony turkusowy
+                [top5SankeyAuth[4]]: 'rgba(244, 208, 63, 0.8)'  // Przytłumiony żółty
+            };
+
+            const greyNode = 'rgba(189, 195, 199, 0.8)'; // Szary dla miast
 
             if (window.sankeyInstance) window.sankeyInstance.destroy();
             const ctxSankey = document.getElementById('sankeyChart').getContext('2d');
@@ -698,32 +700,33 @@ const greyNode = '#D5DBDB'; // Jednolity jasnoszary dla miast
             window.sankeyInstance = new Chart(ctxSankey, {
                 type: 'sankey',
                 data: {
-datasets: [{
-    data: aggregatedFlows,
-    // 1. Wyłączamy gradient i automatykę
-    colorMode: false, 
-    
-    // 2. Wymuszamy kolor linii na kolor autora (z palety)
-    colorFrom: (c) => {
-        const authorName = c.dataset.data[c.dataIndex].from;
-        return sankeyPalette[authorName] || greyNode;
-    },
-    
-    // 3. Węzły: autorzy z palety, reszta (miasta) na szaro
-    colorNodes: (context) => {
-        const name = context.node.id;
-        return sankeyPalette[name] ? sankeyPalette[name] : greyNode;
-    },
-
-    // 4. Klucz do spójności: Usuń przezroczystość z RGBA w palecie 
-    // i ustaw ją tutaj globalnie dla całego diagramu
-    alpha: 0.7, 
-    hoverAlpha: 0.9,
-
-    borderWidth: 0,
-    nodeWidth: 15,
-    nodePadding: 20
-}]
+                    datasets: [{
+                        data: aggregatedFlows,
+                        // WYMUSZENIE KOLORÓW WĘZŁÓW - używamy RGBA dla spójności
+                        colorNodes: (context) => {
+                            const name = context.node.id;
+                            return sankeyPalette[name] ? sankeyPalette[name] : greyNode;
+                        },
+                        // KOLORY LINII
+                        colorFrom: (c) => sankeyPalette[c.dataset.data[c.dataIndex].from],
+                        colorTo: (c) => {
+                            const active = c.chart.getActiveElements();
+                            if (active.length > 0 && active[0].index === c.dataIndex) {
+                                return sankeyPalette[c.dataset.data[c.dataIndex].from];
+                            }
+                            return greyNode;
+                        },
+                        colorMode: 'gradient',
+                        nodeColorMode: 'fixed',
+                        
+                        // KLUCZOWE: Ustawiamy alpha na 1, bo przezroczystość mamy w RGBA
+                        alpha: 1, 
+                        hoverAlpha: 1,
+                        
+                        borderWidth: 0,
+                        nodeWidth: 15,
+                        nodePadding: 20
+                    }]
                 },
                 options: {
                     responsive: true,
@@ -852,17 +855,3 @@ options: {
 
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
