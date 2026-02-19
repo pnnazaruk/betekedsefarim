@@ -956,14 +956,17 @@ function renderNetworkGraph() {
                     cities[key].count++;
                 }
             });
+
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
+
+            // WYWOŁANIE (sama nazwa):
             renderNetworkGraph(); 
-        } //
-        }
+        } // To zamyka renderStats
 
         init();
     </script></body></html>
+
 
 
