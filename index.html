@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
     <style>
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
@@ -38,6 +39,19 @@
             padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
             cursor: pointer; z-index: 3500; font-size: 13px;
         }
+
+        #network-graph {
+        height: 600px; /* Stała wysokość na desktopie */
+        width: 100%;
+        background: #ffffff;
+        border-radius: 12px;
+        margin-top: 20px;
+        border: 1px solid #eee;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    @media (max-width: 768px) {
+        #network-graph { height: 400px; } /* Niższy graf na telefonach */
+    }
         
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
@@ -350,6 +364,10 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
+                    <div class="chart-container" style="grid-column: 1 / -1; height: auto;">
+    <h4>Powiązania i Relacje / Connections & Relations</h4>
+    <div id="network-graph"></div>
+</div>
                 </div>
             </div>
         </main>
@@ -851,7 +869,100 @@ options: {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
+function renderNetworkGraph(data) {
+            const container = document.getElementById('network-graph');
+            
+            // Logika wyboru 30 autorów
+            const authCounts = {};
+            data.forEach(r => {
+                let a = getVal(r.c[3]);
+                if (a && a !== '-' && !a.toLowerCase().includes('brak')) {
+                    authCounts[a] = (authCounts[a] || 0) + 1;
+                }
+            });
+            const top30Authors = Object.entries(authCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 30)
+                .map(e => e[0]);
+
+            const nodes = new vis.DataSet();
+            const edges = new vis.DataSet();
+            const addedNodes = new Set();
+
+            // Centralny punkt
+            nodes.add({
+                id: 'center',
+                label: 'Jeszywas Chachmej Lublin\n(Yeshivas Chachmei Lublin)',
+                shape: 'dot',
+                size: 40,
+                color: { background: '#FFD700', border: '#DAA520' },
+                font: { size: 16, weight: 'bold' }
+            });
+            addedNodes.add('center');
+
+            data.forEach(r => {
+                const author = getVal(r.c[3]);
+                if (top30Authors.includes(author)) {
+                    const title = getVal(r.c[1]);
+                    const city = getVal(r.c[7]);
+                    const printer = getVal(r.c[10]);
+                    const year = getVal(r.c[5]);
+                    const bookId = 'book_' + Math.random().toString(36).substr(2, 9);
+
+                    nodes.add({
+                        id: bookId,
+                        label: title.substring(0, 20) + '...',
+                        title: 'Tytuł / Title: ' + title,
+                        shape: 'dot',
+                        size: 10,
+                        color: '#97c2fc'
+                    });
+
+                    edges.add({ from: 'center', to: bookId, color: '#eeeeee' });
+
+                    if (author && author !== '-') {
+                        if (!addedNodes.has(author)) {
+                            nodes.add({ id: author, label: author, color: '#E91E63', size: 15 });
+                            addedNodes.add(author);
+                        }
+                        edges.add({ from: bookId, to: author, color: '#E91E63' });
+                    }
+
+                    if (city && city !== '-') {
+                        if (!addedNodes.has(city)) {
+                            nodes.add({ id: city, label: city, shape: 'diamond', color: '#4CAF50' });
+                            addedNodes.add(city);
+                        }
+                        edges.add({ from: bookId, to: city, dashes: true, color: '#4CAF50' });
+                    }
+
+                    if (printer && printer !== '-') {
+                        if (!addedNodes.has(printer)) {
+                            nodes.add({ id: printer, label: printer, shape: 'triangle', color: '#2196F3' });
+                            addedNodes.add(printer);
+                        }
+                        edges.add({ 
+                            from: bookId, 
+                            to: printer, 
+                            color: '#2196F3',
+                            title: 'Rok wydania / Year: ' + year 
+                        });
+                    }
+                }
+            });
+
+            const graphData = { nodes: nodes, edges: edges };
+            const options = {
+                interaction: { hover: true, tooltipDelay: 200 },
+                physics: { 
+                    stabilization: { iterations: 100 },
+                    barnesHut: { gravitationalConstant: -3000 }
+                }
+            };
+            new vis.Network(container, graphData, options);
         }
+            renderNetworkGraph(data);
 
         init();
     </script></body></html>
+
