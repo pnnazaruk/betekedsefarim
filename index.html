@@ -364,28 +364,50 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     <div class="chart-card" style="grid-column: 1 / -1; margin-top: 20px; border-radius: 0; position: relative;">
-    <div class="chart-header" style="border-radius: 0;">Dynamiczna Analiza Relacji / Dynamic Relations Analysis</div>
-    
-    <div style="padding: 15px; background: #f9f9f9; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-        <label style="font-size: 14px; font-weight: bold;">Analizuj według / Analyze by:</label>
-        <select id="graph-category" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;">
-            <option value="10">Drukarze / Printers</option>
-            <option value="3">Autorzy / Authors</option>
-            <option value="7">Miasta / Cities</option>
-        </select>
+<div class="chart-card">
+                    <div class="chart-header">
+                        Relacja pomiędzy pięcioma najczęstszymi autorami a miejscem druku ich książek / 
+                        Relationship between the five most frequent authors and the place of printing their books
+                    </div>
+                    <div id="sankey-container" style="height: 500px; width: 100%; position: relative;">
+                        <canvas id="sankeyChart"></canvas>
+                    </div>
+                </div>
 
-        <label style="font-size: 14px; font-weight: bold;">Ilość (Top): <span id="graph-count-val">10</span></label>
-        <input type="range" id="graph-range" min="1" max="50" value="10" style="width: 150px; cursor: pointer;">
-        
-        <button onclick="updateGraph()" style="padding: 6px 20px; cursor: pointer; background: #f2c635; border: none; font-weight: bold; border-radius: 4px;">
-            Generuj / Generate
-        </button>
-    </div>
+                <div class="stat-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="chart-card">
+                        <div class="chart-header">Miejsca druku książek / Printing Locations</div>
+                        <div id="map-container" style="height: 350px;"></div>
+                    </div>
 
-    <div id="network-graph" style="height: 650px; background: #fff;"></div>
-</div>
+                    <div class="chart-card">
+                        <div class="chart-header">Obecna lokalizacja / Current Location</div>
+                        <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
+                    </div> </div>
+
+                <div class="chart-card" style="margin-top: 20px; border-radius: 0; position: relative;">
+                    <div class="chart-header" style="border-radius: 0;">Dynamiczna Analiza Relacji / Dynamic Relations Analysis</div>
+                    
+                    <div style="padding: 15px; background: #f9f9f9; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <label style="font-size: 14px; font-weight: bold;">Analizuj według / Analyze by:</label>
+                        <select id="graph-category" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;">
+                            <option value="10">Drukarze / Printers</option>
+                            <option value="3">Autorzy / Authors</option>
+                            <option value="7">Miasta / Cities</option>
+                        </select>
+
+                        <label style="font-size: 14px; font-weight: bold;">Ilość (Top): <span id="graph-count-val">10</span></label>
+                        <input type="range" id="graph-range" min="1" max="50" value="10" style="width: 150px; cursor: pointer;">
+                        
+                        <button onclick="updateGraph()" style="padding: 6px 20px; cursor: pointer; background: #f2c635; border: none; font-weight: bold; border-radius: 4px;">
+                            Generuj / Generate
+                        </button>
+                    </div>
+
+                    <div id="network-graph" style="height: 650px; background: #fff;"></div>
                 </div>
             </div>
+                </div>
         </main>
     </div>
 
@@ -988,3 +1010,4 @@ options: {
     </script>
 </body>
 </html>
+
