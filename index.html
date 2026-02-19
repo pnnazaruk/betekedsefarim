@@ -932,13 +932,13 @@ addedNodes.add('center');
             title: 'Tytuł / Title: ' + title, // Dymek
             shape: 'dot',
             size: 20,
-            color: '#828181' // Orange
+            color: '#c5c9c9' // Orange
         });
 
         edges.add({ 
     from: 'center', 
     to: bookId, 
-    color: '#828181', 
+    color: '##c5c9c9', 
     length: 100 // Bardzo krótka linia
 });
 
@@ -951,14 +951,14 @@ addedNodes.add('center');
                     title: 'Autor / Author: ' + author, // Dymek
                     shape: 'dot', 
                     size: 25, 
-                    color: '#4680eb' // Blue
+                    color: '#678ed6' // Blue
                 });
                 addedNodes.add(author);
             }
            edges.add({ 
     from: bookId, 
     to: author, 
-    color: '#4680eb', 
+    color: '#678ed6', 
     length: 250 // Dłuższa linia wypychająca autorów dalej
 });
         }
@@ -972,14 +972,14 @@ addedNodes.add('center');
                     title: 'Drukarz / Printer: ' + printer, // Dymek
                     shape: 'diamond', 
                     size: 12, 
-                    color: '#46e0eb' // Turquoise
+                    color: '#6abbc4' // Turquoise
                 });
                 addedNodes.add(printer);
             }
             edges.add({ 
                 from: bookId, 
                 to: printer, 
-                color: '#46e0eb',
+                color: '#6abbc4',
                 title: 'Rok wydania / Year: ' + year // Dymek na linii
             });
         }
@@ -993,7 +993,7 @@ addedNodes.add('center');
                     title: 'Miejsce / Place: ' + city, // Dymek
                     shape: 'dot', 
                     size: 12, // Najmniejsze
-                    color: '#FF0000' // Red
+                    color: '#c73848' // Red
                 });
                 addedNodes.add(city);
             }
@@ -1001,7 +1001,7 @@ addedNodes.add('center');
     from: bookId, 
     to: city, 
     dashes: true, 
-    color: '#FF0000', 
+    color: '#c73848', 
     length: 350 // Miasta będą w najbardziej zewnętrznym kręgu
 });
         }
@@ -1025,6 +1025,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
