@@ -908,6 +908,10 @@ borderWidth: 0, // Całkowite usunięcie ramki
             border: '#f2c635'
         }
     },
+    hover: { // Kolor po najechaniu myszką (to naprawia Twój problem)
+            background: '#f2c635',
+            border: '#f2c635'
+        }
     font: { size: 18, weight: 'bold' }
 });
 addedNodes.add('center');
@@ -928,13 +932,13 @@ addedNodes.add('center');
             title: 'Tytuł / Title: ' + title, // Dymek
             shape: 'dot',
             size: 20,
-            color: '#eeeeee' // Orange
+            color: '#828181' // Orange
         });
 
         edges.add({ 
     from: 'center', 
     to: bookId, 
-    color: '#eeeeee', 
+    color: '#828181', 
     length: 100 // Bardzo krótka linia
 });
 
@@ -947,14 +951,14 @@ addedNodes.add('center');
                     title: 'Autor / Author: ' + author, // Dymek
                     shape: 'dot', 
                     size: 25, 
-                    color: '#7e7ee6' // Blue
+                    color: '#4680eb' // Blue
                 });
                 addedNodes.add(author);
             }
            edges.add({ 
     from: bookId, 
     to: author, 
-    color: '#7e7ee6', 
+    color: '#4680eb', 
     length: 250 // Dłuższa linia wypychająca autorów dalej
 });
         }
@@ -967,15 +971,15 @@ addedNodes.add('center');
                     label: printer, // Podpis pod rąbem
                     title: 'Drukarz / Printer: ' + printer, // Dymek
                     shape: 'diamond', 
-                    size: 15, 
-                    color: '#46c7ba' // Turquoise
+                    size: 12, 
+                    color: '#46e0eb' // Turquoise
                 });
                 addedNodes.add(printer);
             }
             edges.add({ 
                 from: bookId, 
                 to: printer, 
-                color: '#46c7ba',
+                color: '#46e0eb',
                 title: 'Rok wydania / Year: ' + year // Dymek na linii
             });
         }
@@ -1021,6 +1025,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
