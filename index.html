@@ -965,10 +965,14 @@ borderWidth: 0, // Całkowite usunięcie ramki
             border: '#f2c635'
         }
     },
-    hover: { // Kolor po najechaniu myszką (to naprawia Twój problem)
-            background: '#f2c635',
-            border: '#f2c635'
-        },
+chosen: {
+        node: function(values, id, selected, hovering) {
+            if (hovering) {
+                values.color = '#f2c635'; // Zmuszamy do zachowania oryginalnego koloru
+                values.borderWidth = 0;
+            }
+        }
+    },
     font: { size: 18, weight: 'bold' }
 });
 addedNodes.add('center');
@@ -1002,6 +1006,13 @@ edges.add({
                 hover: '#c5c9c9',      // Kolor po najechaniu
                 inherit: false         // WYMAGANE: wyłącza dziedziczenie koloru z Jeszywy
             },
+    chosen: {
+        edge: function(values, id, selected, hovering) {
+            if (hovering) {
+                values.width = 1; // Zapobiega pogrubieniu linii przy najechaniu
+            }
+        }
+    },
             length: 100
         });
 
@@ -1094,5 +1105,6 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
