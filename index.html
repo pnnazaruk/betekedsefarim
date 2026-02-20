@@ -298,7 +298,7 @@ body.stats-mode #dashboard-view {
 
             <details class="facet-container" id="det-author"><summary class="facet-summary">Autor / Author <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'authorListPL')"><ul id="authorListPL" class="facet-list"></ul></div></details>
-            <details class="facet-container" id="det-city"><summary class="facet-summary">Miasto / City <span class="active-badge" style="display:none">0</span></summary>
+            <details class="facet-container" id="det-city"><summary class="facet-summary">Miejsce / Place <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'cityListPL')"><ul id="cityListPL" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-printer"><summary class="facet-summary">Druk / Printer <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'printerListPL')"><ul id="printerListPL" class="facet-list"></ul></div></details>
@@ -389,11 +389,11 @@ body.stats-mode #dashboard-view {
         <button onclick="updateGraph()" class="graph-btn">Generuj / Generate</button>
 
         <div style="display: flex; gap: 10px; margin-left: auto; font-size: 12px;">
-            <span><span style="color:#f2c635">●</span> Jeszywas Chachmej Lublin</span>
-            <span><span style="color:#c5c9c9">●</span> Tytuł</span> <span><span style="color:#678ed6">●</span> Autor</span>
-            <span><span style="color:#678ed6">●</span> Autor</span>
-            <span><span style="color:#6abbc4">◆</span> Drukarz</span>
-            <span><span style="color:#c73848">●</span> Miasto</span>
+            <span><span style="color:#f2c635">●</span> Jeszywas Chachmej Lublin / Yeshivas Chachmei Lublin</span>
+            <span><span style="color:#c5c9c9">●</span> Tytuł / Title</span> <span><span style="color:#678ed6">●</span> Autor</span>
+            <span><span style="color:#678ed6">●</span> Autor / Author</span>
+            <span><span style="color:#6abbc4">◆</span> Drukarz / Printer</span>
+            <span><span style="color:#c73848">●</span> Miejsce / Place</span>
         </div>
     </div>
 
@@ -1105,6 +1105,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
