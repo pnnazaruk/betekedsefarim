@@ -121,7 +121,19 @@
         .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 20px; }
         .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .column-he { font-size: 16px; color: #222; text-align: right; direction: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
-
+.graph-btn {
+    background: #fff;
+    border: 1px solid #000;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+.graph-btn:hover {
+    background: #000;
+    color: #fff;
+}
+        
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
         #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
@@ -364,11 +376,31 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
-<div class="chart-card" style="grid-column: 1 / -1; margin-top: 20px; border-radius: 0;">
-    <div class="chart-header" style="border-radius: 0;">
-        Powiązania i Relacje / Connections & Relations
+<div class="chart-card" style="grid-column: 1 / -1; margin-top: 20px; border-radius: 0; position: relative;">
+    <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
+    
+    <div style="padding: 15px; background: #fff; border-bottom: 1px solid #000; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <label style="font-size: 14px; font-weight: bold;">Analizuj / Analyze:</label>
+        <select id="graph-mode" style="padding: 5px; border: 1px solid #000; background: #fff; cursor: pointer;">
+            <option value="author">Top 10 Autorów / Top 10 Authors</option>
+            <option value="printer">Top 5 Drukarzy / Top 5 Printers</option>
+        </select>
+
+        <button onclick="updateGraph()" class="graph-btn">Generuj / Generate</button>
+
+        <div style="display: flex; gap: 10px; margin-left: auto; font-size: 12px;">
+            <span><span style="color:#f2c635">●</span> Jeszywa</span>
+            <span><span style="color:#678ed6">●</span> Autor</span>
+            <span><span style="color:#6abbc4">◆</span> Drukarz</span>
+            <span><span style="color:#c73848">●</span> Miasto</span>
+        </div>
     </div>
-    <div id="network-graph" style="height: 600px;"></div>
+
+    <div id="network-graph" style="height: 650px; background: #fff;"></div>
+    
+    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: #555; background: rgba(255,255,255,0.8); padding: 5px;">
+        PL: Przeciągnij, aby przesunąć. Użyj rolki, by przybliżyć. | EN: Drag to move. Use scroll to zoom.
+    </div>
 </div>
                 </div>
             </div>
@@ -873,21 +905,26 @@ options: {
             });
             renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
         }
+        let networkInstance = null;
 function renderNetworkGraph(data) {
             const container = document.getElementById('network-graph');
-            
-            // Logika wyboru 30 autorów
-            const authCounts = {};
-            data.forEach(r => {
-                let a = getVal(r.c[3]);
-                if (a && a !== '-' && !a.toLowerCase().includes('brak')) {
-                    authCounts[a] = (authCounts[a] || 0) + 1;
-                }
-            });
-            const top10Authors = Object.entries(authCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10)
-                .map(e => e[0]);
+
+    const isAuthorMode = mode === 'author';
+const categoryIndex = isAuthorMode ? 3 : 10; // 3 to autor, 10 to drukarz
+const limit = isAuthorMode ? 10 : 5;
+
+const counts = {};
+data.forEach(r => {
+    let val = getVal(r.c[categoryIndex]);
+    if (val && val !== '-' && !val.toLowerCase().includes('brak')) {
+        counts[val] = (counts[val] || 0) + 1;
+    }
+});
+
+const topItems = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(e => e[0]);
 
             const nodes = new vis.DataSet();
             const edges = new vis.DataSet();
@@ -919,8 +956,8 @@ borderWidth: 0, // Całkowite usunięcie ramki
 addedNodes.add('center');
 
             data.forEach(r => {
-    const author = getVal(r.c[3]);
-    if (top10Authors.includes(author)) {
+    const currentItem = getVal(r.c[categoryIndex]);
+    if (topItems.includes(currentItem)) {
         const title = getVal(r.c[1]);
         const city = getVal(r.c[7]);
         const printer = getVal(r.c[10]);
@@ -957,7 +994,7 @@ edges.add({
                     label: author, // Podpis pod kołem
                     title: 'Autor / Author: ' + author, // Dymek
                     shape: 'dot', 
-                    size: 25, 
+                    size: (isAuthorMode ? 25 : 15),
                     color: '#678ed6' // Blue
                 });
                 addedNodes.add(author);
@@ -978,7 +1015,7 @@ edges.add({
                     label: printer, // Podpis pod rąbem
                     title: 'Drukarz / Printer: ' + printer, // Dymek
                     shape: 'diamond', 
-                    size: 12, 
+                    size: (isAuthorMode ? 15 : 30), 
                     color: '#6abbc4' // Turquoise
                 });
                 addedNodes.add(printer);
@@ -1027,8 +1064,9 @@ const options = {
         }
     }
 };
-            new vis.Network(container, graphData, options);
+            networkInstance = new vis.Network(container, graphData, options);
         }
             
         init();
     </script></body></html>
+
