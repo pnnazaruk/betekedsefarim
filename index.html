@@ -1171,7 +1171,7 @@ const options = {
         renderNetworkGraph(window.currentData, mode);
     }
 }
-// MODUŁ PROWENIENCJI - WERSJA Z POPRAWNĄ RELACJĄ WYCHODZĄCĄ
+// MODUŁ PROWENIENCJI - LOGIKA CELU (DESTINATION-BASED)
 const ProvenanceModule = {
     instance: null,
 
@@ -1188,52 +1188,49 @@ const ProvenanceModule = {
         
         let lastNodeId = null;
         let nodeIndex = 0;
-        
-        // Zmienne do przechowywania stylu z POPRZEDNIEGO węzła
-        let lastNodeAction = "";
-        let lastNodeColor = "#2B7CE9";
 
         parts.forEach((part, index) => {
             if (part === ">" || part === "|") return;
 
+            // 1. WYDOBYWANIE AKCJI Z AKTUALNEGO ELEMENTU
             const actionMatch = part.match(/\(([^)]+)\)$/);
             const currentAction = actionMatch ? actionMatch[1] : ""; 
             const cleanContent = part.replace(/\s*\([^)]+\)$/, "").trim();
             
-            let currentBorderColor = "#2B7CE9";
-            if (currentAction.match(/Grabież|Loot/i)) currentBorderColor = "#c73848";
-            if (currentAction.match(/Dar|Donation/i)) currentBorderColor = "#28a745";
+            // 2. KOLORYSTYKA (Na podstawie tego, co dzieje się w tym węźle)
+            let nodeColor = "#2B7CE9"; // Domyślny niebieski
+            if (currentAction.match(/Grabież|Loot/i)) nodeColor = "#c73848"; // Czerwony dla grabiącego
+            if (currentAction.match(/Dar|Donation/i)) nodeColor = "#28a745"; // Zielony dla obdarowanego
 
             const nodeId = nodeIndex++;
             
-            // DODAWANIE WĘZŁA
+            // 3. DODAWANIE WĘZŁA
             nodes.add({
                 id: nodeId,
                 label: cleanContent.replace(/:/g, '\n'),
                 shape: 'box',
                 margin: 10,
-                color: { background: '#fff', border: currentBorderColor },
+                color: { background: '#fff', border: nodeColor },
                 font: { size: 12, multi: true, align: 'center' },
                 borderWidth: 2
             });
 
-            // TWORZENIE RELACJI
+            // 4. TWORZENIE RELACJI
             if (lastNodeId !== null) {
                 const prevSeparator = parts[index - 1];
 
                 if (prevSeparator === ">") {
-                    // TUTAJ KLUCZOWA ZMIANA:
-                    // Używamy lastNodeAction i lastNodeColor (z darczyńcy), 
-                    // a nie z odbiorcy!
+                    // Linia przyjmuje kolor i napis z węzła, DO KTÓREGO prowadzi
                     edges.add({
                         from: lastNodeId,
                         to: nodeId,
-                        label: lastNodeAction, // Napis "Dar" brany z Calika
+                        label: currentAction, // Napis (np. Dar) pojawia się nad linią DO węzła
                         arrows: 'to',
-                        color: { color: lastNodeColor, opacity: 0.8 }, // Kolor zielony brany z Calika
+                        color: { color: nodeColor, opacity: 0.8 }, // Linia ma kolor docelowy
                         font: { size: 10, background: '#ffffff', strokeWidth: 0 }
                     });
                 } else if (prevSeparator === "|") {
+                    // Połączenie bez zmiany własności (szara przerywana linia)
                     edges.add({
                         from: lastNodeId,
                         to: nodeId,
@@ -1244,11 +1241,7 @@ const ProvenanceModule = {
                     });
                 }
             }
-            
-            // Na końcu pętli zapamiętujemy dane aktualnego węzła jako "poprzednie" dla następnego kroku
             lastNodeId = nodeId;
-            lastNodeAction = currentAction;
-            lastNodeColor = currentBorderColor;
         });
 
         const options = {
@@ -1262,9 +1255,10 @@ const ProvenanceModule = {
 
         this.instance = new vis.Network(container, { nodes, edges }, options);
     }
-};  
+};
         init();
     </script></body></html>
+
 
 
 
