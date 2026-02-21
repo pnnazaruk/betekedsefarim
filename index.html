@@ -653,48 +653,72 @@ function renderProvenanceGraph(text) {
 
     const nodes = new vis.DataSet();
     const edges = new vis.DataSet();
-    const steps = text.split(/(?=[>|])|(?<=[>|])/g);
     
+    // Rozbijamy na etapy według separatorów > i |
+    const steps = text.split(/(?=[>|])|(?<=[>|])/g);
     let nodeIndex = 0;
     let lastNodeId = null;
 
     steps.forEach((step) => {
         const s = step.trim();
         if (s === '>' || s === '|') return;
-        
-        const match = s.match(/^(.*?):\s*(.*?)\s*\((.*?)\)$/) || [null, s, "", ""];
-        const person = match[1] ? match[1].trim() : s;
-        const city = match[2] ? match[2].trim() : "";
-        const action = match[3] ? match[3].trim() : "";
 
-        // Logika kolorów i stylów
+        // --- NOWA LOGIKA PARSOWANIA ---
+        // Wyciągamy to co w nawiasie (akcja)
+        const actionMatch = s.match(/\(([^)]+)\)$/);
+        const action = actionMatch ? actionMatch[1] : "Własność";
+        
+        // Czyścimy tekst z nawiasu na końcu
+        let cleanText = s.replace(/\s*\([^)]+\)$/, "").trim();
+        
+        // Rozdzielamy po dwukropkach
+        let parts = cleanText.split(':').map(p => p.trim());
+        
+        let label = "";
+        let city = "";
+
+        if (parts.length >= 3) {
+            // Format: Data : Osoba : Miasto
+            label = `${parts[0]}: ${parts[1]}`;
+            city = parts[2];
+        } else if (parts.length === 2) {
+            // Format: Osoba : Miasto
+            label = parts[0];
+            city = parts[1];
+        } else {
+            label = parts[0];
+            city = "Nieokreślone";
+        }
+        // ------------------------------
+
+        // Style graficzne
         let nodeColor = '#ffffff'; 
         let borderColor = '#2B7CE9';
         if (action.match(/Grabież|Loot/i)) { nodeColor = '#fff5f5'; borderColor = '#c73848'; }
         if (action.match(/Dar|Donation/i)) { nodeColor = '#f5fff5'; borderColor = '#28a745'; }
-        if (action.match(/Druk/i)) { nodeColor = '#f8f9fa'; borderColor = '#6c757d'; }
+        if (action.match(/Druk|Printer/i)) { nodeColor = '#f8f9fa'; borderColor = '#6c757d'; }
 
-        // Pobieranie współrzędnych dla "efektu mapy"
+        // Pozycjonowanie geograficzne (Pseudo-mapa)
         let coords = locationCoordinates[city];
-        let xPos = nodeIndex * 250; // Domyślny układ poziomy
+        let xPos = nodeIndex * 280; 
         let yPos = 0;
 
-        // Jeśli mamy współrzędne, modyfikujemy Y, by odzwierciedlić północ-południe (skalowane)
         if (coords && coords.length === 2) {
-            yPos = (52.5 - coords[0]) * 400; // Prosta projekcja na osi Y
+            // Skalowanie współrzędnych dla wizualizacji (Polska ok. 49-55N)
+            yPos = (53 - coords[0]) * 350; 
         }
 
         const nodeId = nodeIndex++;
         nodes.add({
             id: nodeId,
-            label: `<b>${person}</b>\n<i>${city}</i>`,
+            label: `<b>${label}</b>\n<i>${city}</i>`,
             shape: 'box',
-            margin: 10,
-            widthConstraint: { maximum: 180 },
-            color: { background: nodeColor, border: borderColor, hover: { background: '#e8f1ff' } },
+            margin: 12,
+            widthConstraint: { maximum: 200 },
+            color: { background: nodeColor, border: borderColor },
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 4 },
-            font: { multi: 'html', size: 14, color: '#333' },
+            shadow: { enabled: true, color: 'rgba(0,0,0,0.08)', size: 3 },
+            font: { multi: 'html', size: 13, color: '#333' },
             x: xPos,
             y: yPos
         });
@@ -706,26 +730,21 @@ function renderProvenanceGraph(text) {
             edges.add({
                 from: lastNodeId,
                 to: nodeId,
-                label: action, // WYŚWIETLANIE TYPU RELACJI NAD LINIA
-                font: { align: 'top', size: 10, color: borderColor, background: '#ffffff' },
-                arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+                label: action,
+                font: { align: 'top', size: 9, color: borderColor, background: '#ffffff' },
+                arrows: { to: { enabled: true, scaleFactor: 0.6 } },
                 dashes: !isDirect || action.match(/Grabież|Loot/i),
-                color: { color: borderColor, opacity: 0.8 },
+                color: { color: borderColor, opacity: 0.7 },
                 width: 1.5,
-                smooth: { type: 'curvedCW', roundness: 0.2 }
+                smooth: { type: 'curvedCW', roundness: 0.15 }
             });
         }
         lastNodeId = nodeId;
     });
 
     const options = {
-        physics: false, // Wyłączone, by zachować nasz "mapowy" układ
-        interaction: { 
-            dragNodes: true, 
-            dragView: true, 
-            zoomView: true,
-            hover: true
-        }
+        physics: false,
+        interaction: { dragNodes: true, dragView: true, zoomView: true }
     };
 
     new vis.Network(container, { nodes, edges }, options);
@@ -1264,6 +1283,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
