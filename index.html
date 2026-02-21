@@ -654,6 +654,7 @@ function renderProvenanceGraph(text) {
     const nodes = new vis.DataSet();
     const edges = new vis.DataSet();
     const steps = text.split(/(?=[>|])|(?<=[>|])/g);
+    
     let nodeIndex = 0;
     let lastNodeId = null;
 
@@ -666,40 +667,68 @@ function renderProvenanceGraph(text) {
         const city = match[2] ? match[2].trim() : "";
         const action = match[3] ? match[3].trim() : "";
 
-        let nodeColor = '#d2e3f9'; 
-        if (action.match(/Grabież|Loot/i)) nodeColor = '#ff9999'; 
-        if (action.match(/Dar|Donation/i)) nodeColor = '#99ff99'; 
-        if (action.match(/Druk/i)) nodeColor = '#e0e0e0';
+        // Logika kolorów i stylów
+        let nodeColor = '#ffffff'; 
+        let borderColor = '#2B7CE9';
+        if (action.match(/Grabież|Loot/i)) { nodeColor = '#fff5f5'; borderColor = '#c73848'; }
+        if (action.match(/Dar|Donation/i)) { nodeColor = '#f5fff5'; borderColor = '#28a745'; }
+        if (action.match(/Druk/i)) { nodeColor = '#f8f9fa'; borderColor = '#6c757d'; }
+
+        // Pobieranie współrzędnych dla "efektu mapy"
+        let coords = locationCoordinates[city];
+        let xPos = nodeIndex * 250; // Domyślny układ poziomy
+        let yPos = 0;
+
+        // Jeśli mamy współrzędne, modyfikujemy Y, by odzwierciedlić północ-południe (skalowane)
+        if (coords && coords.length === 2) {
+            yPos = (52.5 - coords[0]) * 400; // Prosta projekcja na osi Y
+        }
 
         const nodeId = nodeIndex++;
         nodes.add({
             id: nodeId,
-            label: `${person}\n${city}`,
+            label: `<b>${person}</b>\n<i>${city}</i>`,
             shape: 'box',
-            color: { background: nodeColor, border: '#666' },
-            font: { size: 12 },
-            x: nodeId * 220,
-            y: 0
+            margin: 10,
+            widthConstraint: { maximum: 180 },
+            color: { background: nodeColor, border: borderColor, hover: { background: '#e8f1ff' } },
+            borderWidth: 2,
+            shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 4 },
+            font: { multi: 'html', size: 14, color: '#333' },
+            x: xPos,
+            y: yPos
         });
 
         if (lastNodeId !== null) {
             const separator = steps[steps.indexOf(step) - 1];
             const isDirect = separator === '>';
+            
             edges.add({
                 from: lastNodeId,
                 to: nodeId,
-                arrows: isDirect ? 'to' : '',
-                dashes: !isDirect,
-                color: { color: isDirect ? '#2B7CE9' : '#cccccc' }
+                label: action, // WYŚWIETLANIE TYPU RELACJI NAD LINIA
+                font: { align: 'top', size: 10, color: borderColor, background: '#ffffff' },
+                arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+                dashes: !isDirect || action.match(/Grabież|Loot/i),
+                color: { color: borderColor, opacity: 0.8 },
+                width: 1.5,
+                smooth: { type: 'curvedCW', roundness: 0.2 }
             });
         }
         lastNodeId = nodeId;
     });
 
-    new vis.Network(container, { nodes, edges }, {
-        physics: false,
-        interaction: { dragNodes: false, dragView: true, zoomView: true }
-    });
+    const options = {
+        physics: false, // Wyłączone, by zachować nasz "mapowy" układ
+        interaction: { 
+            dragNodes: true, 
+            dragView: true, 
+            zoomView: true,
+            hover: true
+        }
+    };
+
+    new vis.Network(container, { nodes, edges }, options);
 }
         
 function openModal(rowIndex) {
@@ -1235,6 +1264,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
