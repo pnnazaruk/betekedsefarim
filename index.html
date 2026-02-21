@@ -654,7 +654,7 @@ function renderProvenanceGraph(text) {
     const nodes = new vis.DataSet();
     const edges = new vis.DataSet();
     
-    // Rozbijamy na etapy według separatorów > i |
+    // Rozbijamy na etapy (obsługa separatorów > oraz |)
     const steps = text.split(/(?=[>|])|(?<=[>|])/g);
     let nodeIndex = 0;
     let lastNodeId = null;
@@ -663,91 +663,79 @@ function renderProvenanceGraph(text) {
         const s = step.trim();
         if (s === '>' || s === '|') return;
 
-        // --- NOWA LOGIKA PARSOWANIA ---
-        // Wyciągamy to co w nawiasie (akcja)
+        // Ekstrakcja akcji z ostatniego nawiasu
         const actionMatch = s.match(/\(([^)]+)\)$/);
-        const action = actionMatch ? actionMatch[1] : "Własność";
+        const action = actionMatch ? actionMatch[1] : "Własność / Owner";
         
-        // Czyścimy tekst z nawiasu na końcu
-        let cleanText = s.replace(/\s*\([^)]+\)$/, "").trim();
+        // Czyszczenie tekstu z akcji
+        let info = s.replace(/\s*\([^)]+\)$/, "").trim();
         
-        // Rozdzielamy po dwukropkach
-        let parts = cleanText.split(':').map(p => p.trim());
+        // Rozdzielanie pozostałych informacji (Data : Osoba : Miasto)
+        let parts = info.split(':').map(p => p.trim());
         
-        let label = "";
+        let labelText = "";
         let city = "";
 
         if (parts.length >= 3) {
-            // Format: Data : Osoba : Miasto
-            label = `${parts[0]}: ${parts[1]}`;
+            labelText = `<b>${parts[0]}: ${parts[1]}</b>`;
             city = parts[2];
         } else if (parts.length === 2) {
-            // Format: Osoba : Miasto
-            label = parts[0];
+            labelText = `<b>${parts[0]}</b>`;
             city = parts[1];
         } else {
-            label = parts[0];
+            labelText = `<b>${parts[0]}</b>`;
             city = "Nieokreślone";
         }
-        // ------------------------------
 
-        // Style graficzne
-        let nodeColor = '#ffffff'; 
-        let borderColor = '#2B7CE9';
-        if (action.match(/Grabież|Loot/i)) { nodeColor = '#fff5f5'; borderColor = '#c73848'; }
-        if (action.match(/Dar|Donation/i)) { nodeColor = '#f5fff5'; borderColor = '#28a745'; }
-        if (action.match(/Druk|Printer/i)) { nodeColor = '#f8f9fa'; borderColor = '#6c757d'; }
+        // Kolorystyka
+        let bColor = '#2B7CE9';
+        let bgColor = '#ffffff';
+        if (action.match(/Grabież|Loot/i)) { bColor = '#c73848'; bgColor = '#fff5f5'; }
+        if (action.match(/Dar|Donation/i)) { bColor = '#28a745'; bgColor = '#f5fff5'; }
+        if (action.match(/Druk|Printer/i)) { bColor = '#6c757d'; bgColor = '#f8f9fa'; }
 
-        // Pozycjonowanie geograficzne (Pseudo-mapa)
-        let coords = locationCoordinates[city];
-        let xPos = nodeIndex * 280; 
+        // Pozycjonowanie (Map-hybrid)
+        let xPos = nodeIndex * 300;
         let yPos = 0;
-
-        if (coords && coords.length === 2) {
-            // Skalowanie współrzędnych dla wizualizacji (Polska ok. 49-55N)
-            yPos = (53 - coords[0]) * 350; 
+        if (locationCoordinates[city]) {
+            yPos = (52.5 - locationCoordinates[city][0]) * 400;
         }
 
         const nodeId = nodeIndex++;
         nodes.add({
             id: nodeId,
-            label: `<b>${label}</b>\n<i>${city}</i>`,
+            label: `${labelText}\n<i>${city}</i>`,
             shape: 'box',
             margin: 12,
-            widthConstraint: { maximum: 200 },
-            color: { background: nodeColor, border: borderColor },
+            color: { background: bgColor, border: bColor },
+            font: { multi: 'html', size: 14 },
             borderWidth: 2,
-            shadow: { enabled: true, color: 'rgba(0,0,0,0.08)', size: 3 },
-            font: { multi: 'html', size: 13, color: '#333' },
+            shadow: true,
             x: xPos,
             y: yPos
         });
 
         if (lastNodeId !== null) {
             const separator = steps[steps.indexOf(step) - 1];
-            const isDirect = separator === '>';
-            
             edges.add({
                 from: lastNodeId,
                 to: nodeId,
                 label: action,
-                font: { align: 'top', size: 9, color: borderColor, background: '#ffffff' },
-                arrows: { to: { enabled: true, scaleFactor: 0.6 } },
-                dashes: !isDirect || action.match(/Grabież|Loot/i),
-                color: { color: borderColor, opacity: 0.7 },
-                width: 1.5,
-                smooth: { type: 'curvedCW', roundness: 0.15 }
+                font: { size: 10, align: 'top', background: '#ffffff' },
+                arrows: 'to',
+                dashes: (separator === '|' || action.match(/Grabież|Loot/i)),
+                color: { color: bColor, opacity: 0.6 },
+                width: 2,
+                smooth: { type: 'curvedCW', roundness: 0.2 }
             });
         }
         lastNodeId = nodeId;
     });
 
-    const options = {
+    new vis.Network(container, { nodes, edges }, {
         physics: false,
         interaction: { dragNodes: true, dragView: true, zoomView: true }
-    };
-
-    new vis.Network(container, { nodes, edges }, options);
+    });
 }
         
 function openModal(rowIndex) {
@@ -771,7 +759,8 @@ function openModal(rowIndex) {
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
 
     // NOWE: Pobranie tekstu proweniencji z kolumny Y (indeks 24)
-    const provText = r.c[24] ? getVal(r.c[24]) : "";
+    const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v) : "";
+console.log("Pobrana proweniencja:", provText);
 
     // NOWE: Definicja sekcji wizualizacji (domyślnie ukryta)
     const provenanceSection = `
@@ -1283,6 +1272,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
