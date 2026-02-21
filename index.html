@@ -645,7 +645,8 @@ function renderProvenanceGraph(text) {
     const container = document.getElementById('provenance-graph');
     const section = document.getElementById('provenance-section');
     
-    if (!text || text === '-' || text.trim() === "") {
+    // Jeśli brak tekstu, ukrywamy sekcję i przerywamy
+    if (!text || text === '-' || text.length < 5) {
         section.style.display = 'none';
         return;
     }
@@ -661,16 +662,16 @@ function renderProvenanceGraph(text) {
 
     steps.forEach((step) => {
         const s = step.trim();
-        if (s === '>' || s === '|') return;
+        if (s === '>' || s === '|' || s === '') return;
 
-        // Ekstrakcja akcji z ostatniego nawiasu
+        // 1. Wyciągamy akcję z ostatniego nawiasu
         const actionMatch = s.match(/\(([^)]+)\)$/);
         const action = actionMatch ? actionMatch[1] : "Własność / Owner";
         
-        // Czyszczenie tekstu z akcji
+        // 2. Czyścimy tekst z nawiasu
         let info = s.replace(/\s*\([^)]+\)$/, "").trim();
         
-        // Rozdzielanie pozostałych informacji (Data : Osoba : Miasto)
+        // 3. Rozdzielamy po dwukropkach (Data : Osoba : Miasto)
         let parts = info.split(':').map(p => p.trim());
         
         let labelText = "";
@@ -687,7 +688,7 @@ function renderProvenanceGraph(text) {
             city = "Nieokreślone";
         }
 
-        // Kolorystyka
+        // Stylistyka węzła
         let bColor = '#2B7CE9';
         let bgColor = '#ffffff';
         if (action.match(/Grabież|Loot/i)) { bColor = '#c73848'; bgColor = '#fff5f5'; }
@@ -695,10 +696,10 @@ function renderProvenanceGraph(text) {
         if (action.match(/Druk|Printer/i)) { bColor = '#6c757d'; bgColor = '#f8f9fa'; }
 
         // Pozycjonowanie (Map-hybrid)
-        let xPos = nodeIndex * 300;
+        let xPos = nodeIndex * 320;
         let yPos = 0;
-        if (locationCoordinates[city]) {
-            yPos = (52.5 - locationCoordinates[city][0]) * 400;
+        if (locationCoordinates && locationCoordinates[city]) {
+            yPos = (52.5 - locationCoordinates[city][0]) * 450;
         }
 
         const nodeId = nodeIndex++;
@@ -708,7 +709,7 @@ function renderProvenanceGraph(text) {
             shape: 'box',
             margin: 12,
             color: { background: bgColor, border: bColor },
-            font: { multi: 'html', size: 14 },
+            font: { multi: 'html', size: 14, color: '#333' },
             borderWidth: 2,
             shadow: true,
             x: xPos,
@@ -721,17 +722,18 @@ function renderProvenanceGraph(text) {
                 from: lastNodeId,
                 to: nodeId,
                 label: action,
-                font: { size: 10, align: 'top', background: '#ffffff' },
+                font: { size: 10, align: 'top', background: '#ffffff', strokeWidth: 0 },
                 arrows: 'to',
                 dashes: (separator === '|' || action.match(/Grabież|Loot/i)),
                 color: { color: bColor, opacity: 0.6 },
                 width: 2,
-                smooth: { type: 'curvedCW', roundness: 0.2 }
+                smooth: { type: 'curvedCW', roundness: 0.15 }
             });
         }
         lastNodeId = nodeId;
     });
 
+    // Inicjalizacja sieci
     new vis.Network(container, { nodes, edges }, {
         physics: false,
         interaction: { dragNodes: true, dragView: true, zoomView: true }
@@ -759,8 +761,8 @@ function openModal(rowIndex) {
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
 
     // NOWE: Pobranie tekstu proweniencji z kolumny Y (indeks 24)
-    const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v) : "";
-console.log("Pobrana proweniencja:", provText);
+    const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v).trim() : "";
+console.log("Dane proweniencji dla tego rekordu:", provText);
 
     // NOWE: Definicja sekcji wizualizacji (domyślnie ukryta)
     const provenanceSection = `
@@ -1272,6 +1274,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
