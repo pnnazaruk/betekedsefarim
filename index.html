@@ -164,39 +164,7 @@
 }
         
         #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
-        #modalWindow { 
-    background: #fff; 
-    width: 90%; 
-    max-width: 800px; /* Domyślnie na mniejszych ekranach */
-    max-height: 90%; 
-    overflow-y: auto; 
-    padding: 30px; 
-    position: relative; 
-    border: 2px solid #1a1a1a; 
-    transition: max-width 0.3s ease; /* Płynne rozszerzanie */
-}
-/* POWIĘKSZENIE DLA KOMPUTERÓW */
-@media (min-width: 1024px) {
-    #modalWindow {
-        max-width: 1100px; /* Rozszerzamy okno do 1100px */
-        width: 85%;
-    }
-}
-
-/* POPRAWKA DLA GRAFU - upewnij się, że te ID są w Twoim CSS */
-#provenance-graph-space {
-    width: 100%;
-    height: 300px; /* Domyślnie dla telefonów */
-    background: #fdfdfd;
-    border: 1px solid #eee;
-    margin-top: 10px;
-}
-
-@media (min-width: 1024px) {
-    #provenance-graph-space {
-        height: 550px; /* Większy graf na komputerze */
-    }
-}
+        #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
@@ -1285,29 +1253,17 @@ const ProvenanceModule = {
             lastNodeId = nodeId;
         });
 
-const options = {
-    physics: { 
-        enabled: true, 
-        solver: 'repulsion', 
-        repulsion: { 
-            nodeDistance: 250,      // Większy odstęp między pudełkami
-            centralGravity: 0.1,    // Słabsze ściąganie do środka (rozpiętość na boki)
-            springLength: 200,      // Dłuższe połączenia
-            damping: 0.08           // Płynniejsze zatrzymywanie się animacji
-        } 
-    },
-    interaction: { 
-        dragNodes: true, 
-        zoomView: true, 
-        dragView: true 
+        const options = {
+            physics: { 
+                enabled: true, 
+                solver: 'repulsion', 
+                repulsion: { nodeDistance: 200, centralGravity: 0.2 } 
+            },
+            interaction: { dragNodes: true, zoomView: true, dragView: true }
+        };
+
+        this.instance = new vis.Network(container, { nodes, edges }, options);
     }
 };
         init();
     </script></body></html>
-
-
-
-
-
-
-
