@@ -39,7 +39,10 @@
             padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
             cursor: pointer; z-index: 3500; font-size: 13px;
         }
-
+#provenance-graph canvas {
+    touch-action: pan-x !important;
+}
+        
         #network-graph {
         height: 600px; /* Stała wysokość na desktopie */
         width: 100%;
@@ -437,6 +440,30 @@ body.stats-mode #dashboard-view {
         }
 async function init() {
     try {
+        // --- NOWA LOGIKA: Pobieranie współrzędnych ---
+        const sheetId = '1S-e8-y9hA8BAnpG1Bof9vVdEonS66Y0_5YI6OidKkF0';
+        const urlLocs = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=Lokalizacje`;
+        
+        try {
+            const resLocs = await fetch(urlLocs);
+            const textLocs = await resLocs.text();
+            // Wykorzystujemy Twoją metodę substring/indexOf dla spójności
+            const jsonLocs = JSON.parse(textLocs.substring(textLocs.indexOf("{"), textLocs.lastIndexOf("}") + 1));
+            
+            jsonLocs.table.rows.forEach(row => {
+                if (row.c && row.c[0] && row.c[1]) {
+                    const name = getVal(row.c[0]).trim();
+                    const coords = getVal(row.c[1]).split(',').map(Number);
+                    locationCoordinates[name] = coords;
+                }
+            });
+            console.log("Załadowano lokalizacje:", Object.keys(locationCoordinates).length);
+        } catch (locError) {
+            console.error("Błąd pobierania lokalizacji, wizualizacja proweniencji może nie działać:", locError);
+        }
+        // --- KONIEC NOWEJ LOGIKI ---
+
+        // Twoja obecna logika pobierania głównych danych
         let r = await fetch(url);
         let t = await r.text();
         let json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
@@ -614,25 +641,127 @@ async function init() {
                 setTimeout(() => btn.innerText = "KOPIUJ / COPY", 2000);
             });
         }
+function renderProvenanceGraph(text) {
+    const container = document.getElementById('provenance-graph');
+    const section = document.getElementById('provenance-section');
+    
+    if (!text || text === '-' || text.trim() === "") {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
 
-        function openModal(rowIndex) {
-            const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
-            if(!r) return;
-            let h = ""; let link = getVal(r.c[16]);
-            for(let i=0; i<=22; i++) { 
-                if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue; 
-                let val = getVal(r.c[i]);
-                if (val.startsWith('http')) {
-                    h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
-                } else {
-                    h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
-                }
-            }
-            const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
-            document.getElementById('modalContent').innerHTML = `<div class="modal-body"><div class="modal-img-col"><img src="${getVal(r.c[23])}">${link ? `<a href="${link}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a>` : ''}</div><div class="modal-data-col">${h}${copySection}</div></div>`;
-            document.getElementById('modalOverlay').style.display = 'flex';
-            const url = new URL(window.location); url.searchParams.set('id', rowIndex); window.history.replaceState({}, '', url);
+    const nodes = new vis.DataSet();
+    const edges = new vis.DataSet();
+    const steps = text.split(/(?=[>|])|(?<=[>|])/g);
+    let nodeIndex = 0;
+    let lastNodeId = null;
+
+    steps.forEach((step) => {
+        const s = step.trim();
+        if (s === '>' || s === '|') return;
+        
+        const match = s.match(/^(.*?):\s*(.*?)\s*\((.*?)\)$/) || [null, s, "", ""];
+        const person = match[1] ? match[1].trim() : s;
+        const city = match[2] ? match[2].trim() : "";
+        const action = match[3] ? match[3].trim() : "";
+
+        let nodeColor = '#d2e3f9'; 
+        if (action.match(/Grabież|Loot/i)) nodeColor = '#ff9999'; 
+        if (action.match(/Dar|Donation/i)) nodeColor = '#99ff99'; 
+        if (action.match(/Druk/i)) nodeColor = '#e0e0e0';
+
+        const nodeId = nodeIndex++;
+        nodes.add({
+            id: nodeId,
+            label: `${person}\n${city}`,
+            shape: 'box',
+            color: { background: nodeColor, border: '#666' },
+            font: { size: 12 },
+            x: nodeId * 220,
+            y: 0
+        });
+
+        if (lastNodeId !== null) {
+            const separator = steps[steps.indexOf(step) - 1];
+            const isDirect = separator === '>';
+            edges.add({
+                from: lastNodeId,
+                to: nodeId,
+                arrows: isDirect ? 'to' : '',
+                dashes: !isDirect,
+                color: { color: isDirect ? '#2B7CE9' : '#cccccc' }
+            });
         }
+        lastNodeId = nodeId;
+    });
+
+    new vis.Network(container, { nodes, edges }, {
+        physics: false,
+        interaction: { dragNodes: false, dragView: true, zoomView: true }
+    });
+}
+        
+function openModal(rowIndex) {
+    const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
+    if(!r) return;
+    
+    let h = ""; 
+    let link = getVal(r.c[16]);
+    
+    // Twój oryginalny cykl generujący pola danych
+    for(let i=0; i<=22; i++) { 
+        if(!colLabels[i] || [8,19,20,21,22].includes(i)) continue; 
+        let val = getVal(r.c[i]);
+        if (val.startsWith('http')) {
+            h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
+        } else {
+            h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
+        }
+    }
+    
+    const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
+
+    // NOWE: Pobranie tekstu proweniencji z kolumny Y (indeks 24)
+    const provText = r.c[24] ? getVal(r.c[24]) : "";
+
+    // NOWE: Definicja sekcji wizualizacji (domyślnie ukryta)
+    const provenanceSection = `
+        <div id="provenance-section" style="margin-top:20px; border-top:1px solid #eee; padding-top:15px; display:none; width: 100%;">
+            <span class="label" style="display:block; margin-bottom:10px; font-weight:bold; color:#c73848;">PROWENIENCJA / PROVENANCE</span>
+            <div id="provenance-graph" style="width: 100%; height: 250px; background: #fafafa; border: 1px solid #ddd; border-radius: 4px; cursor: grab; touch-action: pan-y;"></div>
+        </div>
+    `;
+
+    // Składanie całości - dodajemy provenanceSection na końcu modal-data-col
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-body">
+            <div class="modal-img-col">
+                <img src="${getVal(r.c[23])}">
+                ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
+            </div>
+            <div class="modal-data-col">
+                ${h}
+                ${copySection}
+                ${provenanceSection} 
+            </div>
+        </div>
+    `;
+
+    document.getElementById('modalOverlay').style.display = 'flex';
+    
+    // Aktualizacja URL
+    const url = new URL(window.location); 
+    url.searchParams.set('id', rowIndex); 
+    window.history.replaceState({}, '', url);
+
+    // NOWE: Wywołanie rysowania grafu
+    if (provText && provText !== "-" && provText.trim() !== "") {
+        setTimeout(() => {
+            renderProvenanceGraph(provText);
+        }, 200);
+    }
+}
 
         function closeModalManual() { document.getElementById('modalOverlay').style.display = 'none'; const url = new URL(window.location); url.searchParams.delete('id'); window.history.replaceState({}, '', url); }
         function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalManual(); }
@@ -920,6 +1049,7 @@ options: {
             renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
         }
         let networkInstance = null;
+        let locationCoordinates = {};
 function renderNetworkGraph(data, mode = 'author') {
             const container = document.getElementById('network-graph');
     if (networkInstance !== null) {
@@ -1105,6 +1235,7 @@ const options = {
             
         init();
     </script></body></html>
+
 
 
 
