@@ -1175,75 +1175,83 @@ const options = {
 const ProvenanceModule = {
     instance: null,
 
-    init: function(text, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container || !text || text === "-") return;
+init: function(text, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !text || text === "-") return;
 
-        // Resetowanie poprzedniego grafu
-        if (this.instance) {
-            this.instance.destroy();
-            this.instance = null;
-        }
+    if (this.instance) { this.instance.destroy(); this.instance = null; }
 
-        const nodes = new vis.DataSet();
-        const edges = new vis.DataSet();
+    const nodes = new vis.DataSet();
+    const edges = new vis.DataSet();
+    
+    // Rozbijamy tekst na części, zachowując separatory
+    const parts = text.split(/([>|])/g).map(p => p.trim()).filter(p => p !== "");
+    
+    let lastNodeId = null;
+    let nodeIndex = 0;
+
+    parts.forEach((part, index) => {
+        // Pomijamy same separatory w tej pętli
+        if (part === ">" || part === "|") return;
+
+        const actionMatch = part.match(/\(([^)]+)\)$/);
+        const action = actionMatch ? actionMatch[1] : "Własność";
+        const cleanContent = part.replace(/\s*\([^)]+\)$/, "").trim();
         
-        // Rozbijanie tekstu na etapy (obsługa > oraz |)
-        const steps = text.split(/(?=[>|])|(?<=[>|])/g).map(s => s.trim()).filter(s => s !== "");
-        
-        let nodeIndex = 0;
-        let lastNodeId = null;
+        let color = "#2B7CE9";
+        if (action.match(/Grabież|Loot/i)) color = "#c73848";
+        if (action.match(/Dar|Donation/i)) color = "#28a745";
 
-        steps.forEach((step) => {
-            if (step === ">" || step === "|") return;
+        const nodeId = nodeIndex++;
+        nodes.add({
+            id: nodeId,
+            label: cleanContent.replace(/:/g, '\n'),
+            shape: 'box',
+            margin: 10,
+            color: { background: '#fff', border: color },
+            font: { size: 12, multi: true, align: 'center' },
+            borderWidth: 2
+        });
 
-            // Wyciąganie akcji z nawiasu np. (Grabież/ Loot)
-            const actionMatch = step.match(/\(([^)]+)\)$/);
-            const action = actionMatch ? actionMatch[1] : "Własność";
-            const cleanContent = step.replace(/\s*\([^)]+\)$/, "").trim();
-            
-            // Stylistyka w zależności od akcji
-            let color = "#2B7CE9"; // Niebieski domyślny
-            if (action.match(/Grabież|Loot/i)) color = "#c73848"; // Czerwony
-            if (action.match(/Dar|Donation/i)) color = "#28a745"; // Zielony
+        if (lastNodeId !== null) {
+            // SPRAWDZAMY POPRZEDNI SEPARATOR
+            const prevSeparator = parts[index - 1];
 
-            const nodeId = nodeIndex++;
-            nodes.add({
-                id: nodeId,
-                label: cleanContent.replace(/:/g, '\n'), // Zamiana dwukropków na nową linię dla czytelności
-                shape: 'box',
-                margin: 10,
-                color: { background: '#fff', border: color },
-                font: { size: 12, multi: true, align: 'center' },
-                borderWidth: 2
-            });
-
-            if (lastNodeId !== null) {
-                // Szukamy separatora przed tym krokiem
-                const sepIndex = steps.indexOf(step) - 1;
-                const isDirectSuccession = steps[sepIndex] === ">";
-
+            if (prevSeparator === ">") {
+                // Rysujemy strzałkę tylko przy ">"
                 edges.add({
                     from: lastNodeId,
                     to: nodeId,
                     label: action,
                     arrows: 'to',
-                    dashes: !isDirectSuccession, // Linia przerywana dla "|"
-                    color: { color: color, opacity: 0.6 },
+                    color: { color: color, opacity: 0.8 },
                     font: { size: 10, background: '#ffffff' }
                 });
+            } else if (prevSeparator === "|") {
+                // Przy "|" nie rysujemy strzałki przekazania, 
+                // lub możemy narysować cienką linię bez strzałki (powiązanie)
+                edges.add({
+                    from: lastNodeId,
+                    to: nodeId,
+                    arrows: '',
+                    dashes: true,
+                    color: { color: '#ccc', opacity: 0.4 },
+                    label: "" // Brak akcji, to ten sam etap
+                });
             }
-            lastNodeId = nodeId;
-        });
+        }
+        lastNodeId = nodeId;
+    });
 
-        const options = {
-            physics: { enabled: true, solver: 'repulsion', repulsion: { nodeDistance: 150 } },
-            interaction: { dragNodes: true, zoomView: true, dragView: true }
-        };
+    const options = {
+        physics: { enabled: true, solver: 'repulsion', repulsion: { nodeDistance: 150 } },
+        interaction: { dragNodes: true, zoomView: true, dragView: true }
+    };
 
-        this.instance = new vis.Network(container, { nodes, edges }, options);
-    }
+    this.instance = new vis.Network(container, { nodes, edges }, options);
+}
 };       
         init();
     </script></body></html>
+
 
