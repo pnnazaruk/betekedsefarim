@@ -46,12 +46,21 @@
     border-top: 2px solid #1a1a1a;
     width: 100%;
 }
+
+/* To jest Twój główny styl dla kontenera grafu */
 #provenance-graph-space {
     width: 100%;
-    height: 300px; /* Stała wysokość */
+    height: 300px; /* Domyślnie dla telefonów */
     background: #fdfdfd;
     border: 1px solid #eee;
     margin-top: 10px;
+}
+
+/* Dla urządzeń stacjonarnych nadpisujemy wysokość używając ID */
+@media (min-width: 1024px) {
+    #provenance-graph-space {
+        height: 600px; /* Większy rozmiar na komputerze */
+    }
 }
 .prov-label {
     font-size: 11px;
@@ -658,12 +667,12 @@ function openModal(rowIndex) {
     // 4. Przygotowanie sekcji dodatkowych
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
     
-    const provenanceHTML = `
-        <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
-            <span class="prov-label" style="font-weight:bold; font-size:12px;">PROWENIENCJA / PROVENANCE</span>
-            <div id="provenance-graph-space" style="width:100%; height:300px; margin-top:10px;"></div>
-        </div>
-    `;
+const provenanceHTML = `
+    <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
+        <span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span>
+        <div id="provenance-graph-space" class="dynamic-graph-height"></div>
+    </div>
+`;
 
     // 5. Renderowanie całości do okna modalnego (TYLKO RAZ)
     document.getElementById('modalContent').innerHTML = `
@@ -1248,7 +1257,7 @@ const ProvenanceModule = {
             physics: { 
                 enabled: true, 
                 solver: 'repulsion', 
-                repulsion: { nodeDistance: 150, centralGravity: 0.2 } 
+                repulsion: { nodeDistance: 200, centralGravity: 0.2 } 
             },
             interaction: { dragNodes: true, zoomView: true, dragView: true }
         };
@@ -1258,6 +1267,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
