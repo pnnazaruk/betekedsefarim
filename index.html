@@ -1175,83 +1175,91 @@ const options = {
 const ProvenanceModule = {
     instance: null,
 
-init: function(text, containerId) {
-    const container = document.getElementById(containerId);
-    if (!container || !text || text === "-") return;
+    init: function(text, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container || !text || text === "-") return;
 
-    if (this.instance) { this.instance.destroy(); this.instance = null; }
+        if (this.instance) { this.instance.destroy(); this.instance = null; }
 
-    const nodes = new vis.DataSet();
-    const edges = new vis.DataSet();
-    
-    // Rozbijamy tekst na części, zachowując separatory
-    const parts = text.split(/([>|])/g).map(p => p.trim()).filter(p => p !== "");
-    
-    let lastNodeId = null;
-    let nodeIndex = 0;
-
-    parts.forEach((part, index) => {
-        // Pomijamy same separatory w tej pętli
-        if (part === ">" || part === "|") return;
-
-        const actionMatch = part.match(/\(([^)]+)\)$/);
-        const action = actionMatch ? actionMatch[1] : "Własność";
-        const cleanContent = part.replace(/\s*\([^)]+\)$/, "").trim();
+        const nodes = new vis.DataSet();
+        const edges = new vis.DataSet();
         
-        let color = "#2B7CE9";
-        if (action.match(/Grabież|Loot/i)) color = "#c73848";
-        if (action.match(/Dar|Donation/i)) color = "#28a745";
+        // Rozbijamy tekst na części, zachowując separatory > i |
+        const parts = text.split(/([>|])/g).map(p => p.trim()).filter(p => p !== "");
+        
+        let lastNodeId = null;
+        let nodeIndex = 0;
 
-        const nodeId = nodeIndex++;
-        nodes.add({
-            id: nodeId,
-            label: cleanContent.replace(/:/g, '\n'),
-            shape: 'box',
-            margin: 10,
-            color: { background: '#fff', border: color },
-            font: { size: 12, multi: true, align: 'center' },
-            borderWidth: 2
+        parts.forEach((part, index) => {
+            // Pomijamy znaki separatorów w tej fazie pętli
+            if (part === ">" || part === "|") return;
+
+            // 1. WYDOBYWANIE AKCJI (tylko jeśli jest w nawiasie)
+            const actionMatch = part.match(/\(([^)]+)\)$/);
+            const action = actionMatch ? actionMatch[1] : ""; // Puste zamiast "Własność"
+            const cleanContent = part.replace(/\s*\([^)]+\)$/, "").trim();
+            
+            // 2. KOLORYSTYKA (tylko na podstawie słów kluczowych)
+            let borderColor = "#2B7CE9"; // Domyślny niebieski
+            if (action.match(/Grabież|Loot/i)) borderColor = "#c73848"; // Czerwony
+            if (action.match(/Dar|Donation/i)) borderColor = "#28a745"; // Zielony
+
+            const nodeId = nodeIndex++;
+            
+            // 3. DODAWANIE WĘZŁA
+            nodes.add({
+                id: nodeId,
+                label: cleanContent.replace(/:/g, '\n'),
+                shape: 'box',
+                margin: 10,
+                color: { background: '#fff', border: borderColor },
+                font: { size: 12, multi: true, align: 'center' },
+                borderWidth: 2
+            });
+
+            // 4. TWORZENIE RELACJI (ŁĄCZENIE Z POPRZEDNIM WĘZŁEM)
+            if (lastNodeId !== null) {
+                const prevSeparator = parts[index - 1];
+
+                if (prevSeparator === ">") {
+                    // Strzałka przekazania - używa koloru akcji z aktualnego węzła
+                    edges.add({
+                        from: lastNodeId,
+                        to: nodeId,
+                        label: action, // Podpis na strzałce (np. Dar)
+                        arrows: 'to',
+                        color: { color: borderColor, opacity: 0.8 },
+                        font: { size: 10, background: '#ffffff', strokeWidth: 0 }
+                    });
+                } else if (prevSeparator === "|") {
+                    // Linia pomocnicza (ten sam właściciel/kontekst)
+                    edges.add({
+                        from: lastNodeId,
+                        to: nodeId,
+                        arrows: '',
+                        dashes: true,
+                        color: { color: '#ccc', opacity: 0.4 },
+                        label: "" 
+                    });
+                }
+            }
+            lastNodeId = nodeId;
         });
 
-        if (lastNodeId !== null) {
-            // SPRAWDZAMY POPRZEDNI SEPARATOR
-            const prevSeparator = parts[index - 1];
+        const options = {
+            physics: { 
+                enabled: true, 
+                solver: 'repulsion', 
+                repulsion: { nodeDistance: 150, centralGravity: 0.2 } 
+            },
+            interaction: { dragNodes: true, zoomView: true, dragView: true }
+        };
 
-            if (prevSeparator === ">") {
-                // Rysujemy strzałkę tylko przy ">"
-                edges.add({
-                    from: lastNodeId,
-                    to: nodeId,
-                    label: action,
-                    arrows: 'to',
-                    color: { color: color, opacity: 0.8 },
-                    font: { size: 10, background: '#ffffff' }
-                });
-            } else if (prevSeparator === "|") {
-                // Przy "|" nie rysujemy strzałki przekazania, 
-                // lub możemy narysować cienką linię bez strzałki (powiązanie)
-                edges.add({
-                    from: lastNodeId,
-                    to: nodeId,
-                    arrows: '',
-                    dashes: true,
-                    color: { color: '#ccc', opacity: 0.4 },
-                    label: "" // Brak akcji, to ten sam etap
-                });
-            }
-        }
-        lastNodeId = nodeId;
-    });
-
-    const options = {
-        physics: { enabled: true, solver: 'repulsion', repulsion: { nodeDistance: 150 } },
-        interaction: { dragNodes: true, zoomView: true, dragView: true }
-    };
-
-    this.instance = new vis.Network(container, { nodes, edges }, options);
-}
-};       
+        this.instance = new vis.Network(container, { nodes, edges }, options);
+    }
+};      
         init();
     </script></body></html>
+
 
 
