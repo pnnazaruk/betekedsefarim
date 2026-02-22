@@ -1237,10 +1237,27 @@ const ProvenanceModule = {
 
             const nodeId = nodeIndex++;
             
-            // Pobieramy opis dla tego konkretnego węzła
+            // Pobieramy opis
             let currentTooltip = detailsArray[nodeCounter] || "";
-            if (currentTooltip === "0!") currentTooltip = ""; 
 
+            // Tworzymy bazowy obiekt węzła
+            const nodeData = {
+                id: nodeId,
+                label: cleanContent.replace(/:/g, '\n'),
+                shape: 'box',
+                shapeProperties: { borderRadius: 0 },
+                margin: 10,
+                color: { background: '#fff', border: nodeColor },
+                font: { size: 12, multi: true, align: 'center' },
+                borderWidth: 2
+            };
+
+            // DODAJEMY TITLE TYLKO JEŚLI NIE JEST "0!" I NIE JEST PUSTY
+            if (currentTooltip !== "0!" && currentTooltip.trim() !== "") {
+                nodeData.title = currentTooltip;
+            }
+
+            nodes.add(nodeData);
             nodes.add({
                 id: nodeId,
                 label: cleanContent.replace(/:/g, '\n'),
@@ -1315,4 +1332,5 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
