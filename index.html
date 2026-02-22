@@ -1253,14 +1253,27 @@ const ProvenanceModule = {
             lastNodeId = nodeId;
         });
 
-        const options = {
-            physics: { 
-                enabled: true, 
-                solver: 'repulsion', 
-                repulsion: { nodeDistance: 200, centralGravity: 0.2 } 
-            },
-            interaction: { dragNodes: true, zoomView: true, dragView: true, hover: true, selectConnectedEdges: false }
-            nodes: {
+const options = {
+    physics: { 
+        enabled: true, 
+        solver: 'repulsion', 
+        repulsion: { 
+            nodeDistance: 250, 
+            centralGravity: 0.1,
+            springLength: 200,
+            damping: 0.08
+        } 
+    },
+    // KLUCZOWE ZMIANY PONIŻEJ:
+    interaction: { 
+        dragNodes: true, 
+        zoomView: true, 
+        dragView: true,
+        hover: true,
+        // Wyłączamy zmianę kolorów przy zaznaczaniu
+        selectConnectedEdges: false 
+    },
+    nodes: {
         chosen: {
             // Zapobiega zmianie koloru ramki po kliknięciu
             node: function(values, id, selected, hovering) {
@@ -1278,11 +1291,12 @@ const ProvenanceModule = {
             }
         }
     }
-        };
+};
 
         this.instance = new vis.Network(container, { nodes, edges }, options);
     }
 };
         init();
     </script></body></html>
+
 
