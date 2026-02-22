@@ -1237,10 +1237,10 @@ const ProvenanceModule = {
 
             const nodeId = nodeIndex++;
             
-            // Pobieramy opis
+            // 1. Pobieramy opis z tablicy
             let currentTooltip = detailsArray[nodeCounter] || "";
 
-            // Tworzymy bazowy obiekt węzła
+            // 2. Przygotowujemy obiekt węzła BEZ dymka
             const nodeData = {
                 id: nodeId,
                 label: cleanContent.replace(/:/g, '\n'),
@@ -1252,24 +1252,15 @@ const ProvenanceModule = {
                 borderWidth: 2
             };
 
-            // DODAJEMY TITLE TYLKO JEŚLI NIE JEST "0!" I NIE JEST PUSTY
+            // 3. KLUCZOWY WARUNEK: Jeśli to nie jest "0!" i nie jest puste, dodaj dymek
             if (currentTooltip !== "0!" && currentTooltip.trim() !== "") {
                 nodeData.title = currentTooltip;
             }
 
+            // 4. Dodajemy gotowy obiekt do zbioru węzłów
             nodes.add(nodeData);
-            nodes.add({
-                id: nodeId,
-                label: cleanContent.replace(/:/g, '\n'),
-                title: currentTooltip, // To tworzy dymek
-                shape: 'box',
-                shapeProperties: { borderRadius: 0 }, // Ostre kąty
-                margin: 10,
-                color: { background: '#fff', border: nodeColor },
-                font: { size: 12, multi: true, align: 'center' },
-                borderWidth: 2
-            });
 
+            // --- Logika połączeń (edges) pozostaje bez zmian ---
             if (lastNodeId !== null) {
                 const prevSeparator = parts[index - 1];
                 if (prevSeparator === ">") {
@@ -1332,5 +1323,3 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
-
-
