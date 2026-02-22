@@ -286,22 +286,31 @@ body.stats-mode #dashboard-view {
         .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
         #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
         .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    /* KROK 3: Stylizacja dymka (tooltipa) proweniencji */
-        div.vis-tooltip {
-            position: absolute;
-            visibility: hidden;
-            padding: 10px;
-            white-space: normal;
-            max-width: 250px;
-            font-family: "SBL Hebrew", "Segoe UI", serif;
-            font-size: 13px;
-            background-color: rgba(26, 26, 26, 0.95); /* Ciemne tło z lekką przezroczystością */
-            color: #ffffff;
-            border-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            z-index: 10000; /* Musi być wyższy niż modal (5000) */
-            border: 1px solid #444;
-        }
+/* Styl dla okienka Popover (zamiast dymka) */
+#graph-popover {
+    position: absolute;
+    display: none;
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 2px solid #1a1a1a;
+    padding: 12px;
+    font-size: 13px;
+    max-width: 280px;
+    z-index: 10000;
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.1);
+    font-family: "SBL Hebrew", "Segoe UI", serif;
+}
+#graph-popover .pop-close {
+    display: block;
+    text-align: right;
+    font-size: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 3px;
+}
     </style></head><body>
 
     <header id="main-header">
@@ -686,10 +695,11 @@ function openModal(rowIndex) {
 const provenanceHTML = `
     <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
         <span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span>
-        <div id="provenance-graph-space" class="dynamic-graph-height"></div>
+        <div id="provenance-graph-space" class="dynamic-graph-height" style="position: relative;">
+            <div id="graph-popover"></div> </div>
     </div>
 `;
-
+    
     // 5. Renderowanie całości do okna modalnego (TYLKO RAZ)
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
@@ -1318,8 +1328,36 @@ const ProvenanceModule = {
             }
         };
 
-        this.instance = new vis.Network(container, { nodes, edges }, options);
+this.instance = new vis.Network(container, { nodes, edges }, options);
+
+        const popover = document.getElementById('graph-popover');
+        
+        this.instance.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                const nodeData = nodes.get(nodeId);
+                if (nodeData.title) {
+                    popover.innerHTML = `<div class="pop-close">Zamknij / Close ✕</div>${nodeData.title}`;
+                    popover.style.display = 'block';
+                    popover.style.left = params.pointer.dom.x + 10 + "px";
+                    popover.style.top = params.pointer.dom.y + 10 + "px";
+                } else {
+                    popover.style.display = 'none';
+                }
+            } else {
+                popover.style.display = 'none';
+            }
+        });
+
+        this.instance.on("dragStart", () => { popover.style.display = 'none'; });
+        
+        // Obsługa kliknięcia w krzyżyk "Zamknij"
+        popover.onclick = (e) => {
+            if (e.target.classList.contains('pop-close')) {
+                popover.style.display = 'none';
+            }
+        };
     }
 };
-        init();
     </script></body></html>
+
