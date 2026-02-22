@@ -1259,7 +1259,25 @@ const ProvenanceModule = {
                 solver: 'repulsion', 
                 repulsion: { nodeDistance: 200, centralGravity: 0.2 } 
             },
-            interaction: { dragNodes: true, zoomView: true, dragView: true }
+            interaction: { dragNodes: true, zoomView: true, dragView: true, hover: true, selectConnectedEdges: false }
+            nodes: {
+        chosen: {
+            // Zapobiega zmianie koloru ramki po kliknięciu
+            node: function(values, id, selected, hovering) {
+                values.borderWidth = 3; // Możesz lekko pogrubić ramkę zamiast zmieniać kolor
+            }
+        }
+    },
+    edges: {
+        hoverWidth: 1.5,
+        selectionWidth: 0, // Zapobiega pogrubianiu/zmianie linii przy kliknięciu
+        chosen: {
+            // To sprawi, że linia NIE zmieni koloru na szary/niebieski po kliknięciu
+            edge: function(values, id, selected, hovering) {
+                // Pozostawia oryginalny kolor linii
+            }
+        }
+    }
         };
 
         this.instance = new vis.Network(container, { nodes, edges }, options);
@@ -1267,3 +1285,4 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
