@@ -1213,11 +1213,14 @@ const ProvenanceModule = {
 
             const nodeId = nodeIndex++;
             
-            // 3. DODAWANIE WĘZŁA
+// 3. DODAWANIE WĘZŁA
             nodes.add({
                 id: nodeId,
                 label: cleanContent.replace(/:/g, '\n'),
                 shape: 'box',
+                shapeProperties: {
+                    borderRadius: 0 // 0 = kąty ostre, idealny prostokąt
+                },
                 margin: 10,
                 color: { background: '#fff', border: nodeColor },
                 font: { size: 12, multi: true, align: 'center' },
@@ -1245,7 +1248,7 @@ const ProvenanceModule = {
                         to: nodeId,
                         arrows: '',
                         dashes: true,
-                        color: { color: '#ccc', opacity: 0.4 },
+                        color: { color: '#c2c0c0', opacity: 0.4 },
                         label: "" 
                     });
                 }
@@ -1281,13 +1284,17 @@ const options = {
             }
         }
     },
-    edges: {
-        hoverWidth: 1.5,
-        selectionWidth: 0, // Zapobiega pogrubianiu/zmianie linii przy kliknięciu
+edges: {
+        hoverWidth: 0,      // Zmienione na 0, aby linia nie grubła przy najechaniu
+        selectionWidth: 0,  // Zapobiega pogrubianiu przy kliknięciu
         chosen: {
-            // To sprawi, że linia NIE zmieni koloru na szary/niebieski po kliknięciu
+            // Funkcja dla samej linii
             edge: function(values, id, selected, hovering) {
-                // Pozostawia oryginalny kolor linii
+                // Nie dodajemy żadnych instrukcji, więc wartości pozostają bez zmian
+            },
+            // Funkcja dla napisu (Dar/Grabież) - musi być po przecinku wewnątrz chosen
+            label: function(values, id, selected, hovering) {
+                // Nie zmieniamy wartości size ani fontu
             }
         }
     }
@@ -1298,5 +1305,6 @@ const options = {
 };
         init();
     </script></body></html>
+
 
 
