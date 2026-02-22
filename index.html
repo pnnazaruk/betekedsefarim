@@ -705,7 +705,7 @@ const provenanceHTML = `
         // Krótkie opóźnienie, by DOM zdążył się "osadzić" przed rysowaniem vis.js
         setTimeout(() => {
             if (typeof ProvenanceModule !== 'undefined') {
-                ProvenanceModule.init(provText, 'provenance-graph-space');
+                ProvenanceModule.init(provText, provDetails, 'provenance-graph-space');
             } else {
                 console.error("ProvenanceModule nie został znaleziony!");
             }
@@ -1185,12 +1185,14 @@ const options = {
 const ProvenanceModule = {
     instance: null,
 
-    // ZMIANA: Dodajemy parametr detailsText
     init: function(text, detailsText, containerId) {
         const container = document.getElementById(containerId);
         if (!container || !text || text === "-") return;
 
-        if (this.instance) { this.instance.destroy(); this.instance = null; }
+        if (this.instance) { 
+            this.instance.destroy(); 
+            this.instance = null; 
+        }
 
         const nodes = new vis.DataSet();
         const edges = new vis.DataSet();
@@ -1307,8 +1309,8 @@ const ProvenanceModule = {
         this.instance = new vis.Network(container, { nodes, edges }, options);
     }
 };
-        init();
     </script></body></html>
+
 
 
 
