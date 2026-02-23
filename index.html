@@ -678,6 +678,7 @@ function openModal(rowIndex) {
 
     // Funkcja pomocnicza do znalezienia tytułu po ID (bezpieczna)
     const getTitleById = (id) => {
+        // Tutaj id będzie już pojedynczym numerem (np. "18")
         const foundRow = rawRows.find(row => row.c[0] && row.c[0].v == id);
         if (foundRow && foundRow.c[1]) return foundRow.c[1].v;
         return "ID " + id;
@@ -701,22 +702,27 @@ function openModal(rowIndex) {
         }
     }
 
-    // 3. Przygotowanie sekcji Współoprawne (Tytuł bez podkreślenia)
+    // 3. Przygotowanie sekcji Współoprawne - POPRAWIONA LOGIKA ROZBIJANIA
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        const boundIds = boundWithRaw.split(',').map(id => id.trim());
+        // Kluczowa zmiana: splituje po przecinku LUB pionowej kresce [,|]
+        const boundIds = boundWithRaw.split(/[,|]/).map(id => id.trim()).filter(Boolean);
+        
+        // Teraz boundIds to tablica pojedynczych numerów, np. ["178", "18", "80"]
         const boundLinks = boundIds.map(id => {
-            const bookTitle = getTitleById(id); 
+            const bookTitle = getTitleById(id); // Szuka każdego numeru z osobna
             return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
                         ${bookTitle}
                     </a>`;
         }).join('');
 
-        boundWithSection = `
-            <div class="detail-box">
-                <span class="label">Współoprawne / Bound with</span>
-                <span>${boundLinks}</span>
-            </div>
-        `;
+        if (boundLinks) {
+            boundWithSection = `
+                <div class="detail-box">
+                    <span class="label">Współoprawne / Bound with</span>
+                    <span>${boundLinks}</span>
+                </div>
+            `;
+        }
     }
 
     // 4. Logika wstawiania pod sygnaturę
@@ -1371,3 +1377,4 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
