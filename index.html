@@ -673,17 +673,16 @@ async function init() {
 function openModal(rowIndex) {
     // 1. Znalezienie danych wiersza
     if (!rawRows) return;
-    const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
+    const r = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == String(rowIndex).trim());
     if (!r) return;
 
-    // Funkcja pomocnicza - "Pancerna" wersja
+    // Funkcja pomocnicza - "Pancerna" wersja (obsługuje wiele ID i typy danych)
     const getTitleById = (id) => {
         if (!rawRows || id === undefined || id === null) return "ID " + id;
         const searchId = String(id).trim();
         if (!searchId) return "";
         const foundRow = rawRows.find(row => {
             if (!row || !row.c || !row.c[0]) return false;
-            // Porównujemy jako Stringi, ignorując formatowanie Excela
             return String(row.c[0].v).trim() === searchId;
         });
         if (foundRow && foundRow.c[1] && foundRow.c[1].v) return foundRow.c[1].v;
@@ -711,7 +710,6 @@ function openModal(rowIndex) {
     // 3. Przygotowanie sekcji Współoprawne
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         try {
-            // Rozdzielamy ID, czyścimy spacje i ignorujemy puste przecinki
             const boundIds = boundWithRaw.split(',').map(s => s.trim()).filter(Boolean);
             const boundLinks = boundIds.map(id => {
                 const bookTitle = getTitleById(id);
@@ -719,26 +717,34 @@ function openModal(rowIndex) {
             }).join('');
 
             if (boundLinks) {
-                boundWithSection = `<div class="detail-box bound-with-container"><span class="label">Współoprawne / Bound with</span><div style="display: block;">${boundLinks}</div></div>`;
+                boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><div style="display: block;">${boundLinks}</div></div>`;
             }
         } catch (e) {
             console.error("Błąd współoprawnych:", e);
         }
     }
 
-    // 4. Logika wstawiania pod sygnaturę (Ulepszony Regex)
-    let finalDetailsHtml = h;
+    // 4. Logika wstawiania pod sygnaturę (Metoda bezpiecznego wstrzykiwania)
+    let finalDetailsHtml = "";
     const callNumberLabel = "Obecna Sygnatura / Current Call number"; 
     
     if (boundWithSection) {
-        // Regex szuka dokładnie bloku z sygnaturą i wstawia pod nim naszą sekcję
-        const regex = new RegExp(`(<div class="detail-box">\\s*<span class="label">${callNumberLabel}</span>.*?</div>)`, 'is');
-        if (regex.test(h)) {
-            finalDetailsHtml = h.replace(regex, `$1${boundWithSection}`);
-        } else {
-            // Jeśli nie znaleziono sygnatury (np. inna nazwa etykiety), dodaj na końcu
-            finalDetailsHtml = h + boundWithSection;
+        // Dzielimy dotychczasowy HTML na bloki i szukamy sygnatury
+        let parts = h.split('</div>');
+        let injected = false;
+        for (let j = 0; j < parts.length; j++) {
+            if (parts[j].trim() === "") continue;
+            let currentPart = parts[j] + '</div>';
+            finalDetailsHtml += currentPart;
+            
+            if (currentPart.includes(callNumberLabel) && !injected) {
+                finalDetailsHtml += boundWithSection;
+                injected = true;
+            }
         }
+        if (!injected) finalDetailsHtml = h + boundWithSection;
+    } else {
+        finalDetailsHtml = h;
     }
 
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
@@ -1380,6 +1386,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
