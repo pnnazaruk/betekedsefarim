@@ -671,19 +671,29 @@ async function init() {
         }
 
 function openModal(rowIndex) {
+    // 1. Znalezienie danych wiersza
     if (!rawRows) return;
-    const r = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == String(rowIndex).trim());
+    const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
     if (!r) return;
 
+    // Funkcja pomocnicza do znalezienia tytułu po ID (bezpieczna)
+    const getTitleById = (id) => {
+        const foundRow = rawRows.find(row => row.c[0] && row.c[0].v == id);
+        if (foundRow && foundRow.c[1]) return foundRow.c[1].v;
+        return "ID " + id;
+    };
+
+    const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
     let link = getVal(r.c[16]);
+    let boundWithSection = "";
 
-    // 1. BUDOWANIE GŁÓWNYCH DANYCH (0-22)
+    // 2. Pętla generująca szczegóły (kolumny 0-22)
     for (let i = 0; i <= 22; i++) {
         if (!colLabels[i] || [8, 19, 20, 21, 22].includes(i)) continue;
         let val = getVal(r.c[i]);
         if (!val || val === "---") continue;
-        
+
         if (val.startsWith('http')) {
             h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
         } else {
@@ -691,59 +701,47 @@ function openModal(rowIndex) {
         }
     }
 
-    // 2. BUDOWANIE SEKCJI WSPÓŁOPRAWNE (Z CAŁKOWITĄ IZOLACJĄ BŁĘDÓW)
-    let boundSectionHtml = "";
-    try {
-        // Pobieramy surową wartość z kolumny AA (26)
-        let rawValue = (r.c[26] && r.c[26].v) ? String(r.c[26].v) : "";
-        
-        if (rawValue && rawValue !== "-" && rawValue !== "0") {
-            // Rozdzielamy po kresce |, ale też na wszelki wypadek czyścimy z dziwnych znaków
-            let ids = rawValue.split('|').map(s => s.trim()).filter(s => s.length > 0);
-            
-            if (ids.length > 0) {
-                let linksArray = [];
-                for (let j = 0; j < ids.length; j++) {
-                    let currentId = ids[j];
-                    let title = "ID " + currentId;
-                    
-                    // Szukamy tytułu bezpośrednio w rawRows
-                    let found = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() === currentId);
-                    if (found && found.c[1] && found.c[1].v) {
-                        title = found.c[1].v;
-                    }
-                    
-                    linksArray.push(`<a href="./?id=${currentId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 3px;">${title}</a>`);
-                }
-                
-                boundSectionHtml = `
-                    <div class="detail-box" id="bound-with-container" style="background-color: #fdfdfd; border-left: 3px solid #1a1a1a;">
-                        <span class="label">Współoprawne / Bound with</span>
-                        <div style="display: block; margin-top: 5px;">${linksArray.join('')}</div>
-                    </div>`;
-            }
-        }
-    } catch (err) {
-        console.error("Błąd sekcji współoprawnych:", err);
+    // 3. Przygotowanie sekcji Współoprawne (Tytuł bez podkreślenia)
+    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
+        const boundIds = boundWithRaw.split(',').map(id => id.trim());
+        const boundLinks = boundIds.map(id => {
+            const bookTitle = getTitleById(id); 
+            return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
+                        ${bookTitle}
+                    </a>`;
+        }).join('');
+
+        boundWithSection = `
+            <div class="detail-box">
+                <span class="label">Współoprawne / Bound with</span>
+                <span>${boundLinks}</span>
+            </div>
+        `;
     }
 
-    // 3. ŁĄCZENIE TREŚCI
-    // Wstawiamy współoprawne pod sygnaturę, jeśli istnieje, lub na końcu
-    let finalHtml = h;
-    const sigLabel = "Obecna Sygnatura";
+    // 4. Logika wstawiania pod sygnaturę
+    let finalDetailsHtml = h;
+    const callNumberLabel = "Obecna Sygnatura / Current Call number"; 
     
-    if (boundSectionHtml !== "") {
-        if (h.includes(sigLabel)) {
-            // Szukamy zamknięcia div-a, w którym jest sygnatura
-            let parts = h.split(sigLabel);
-            let afterSig = parts[1].indexOf('</div>') + 6;
-            finalHtml = parts[0] + sigLabel + parts[1].substring(0, afterSig) + boundSectionHtml + parts[1].substring(afterSig);
+    if (boundWithSection) {
+        const regex = new RegExp(`(<div class="detail-box">\\s*<span class="label">${callNumberLabel}</span>.*?</div>)`, 's');
+        if (regex.test(h)) {
+            finalDetailsHtml = h.replace(regex, `$1${boundWithSection}`);
         } else {
-            finalHtml = h + boundSectionHtml;
+            finalDetailsHtml = h + boundWithSection;
         }
     }
 
-    // 4. WYŚWIETLENIE MODALA
+    const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
+
+    const provenanceHTML = `
+        <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
+            <span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span>
+            <div id="provenance-graph-space" class="dynamic-graph-height"></div>
+        </div>
+    `;
+
+    // 5. Renderowanie do HTML
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
@@ -751,31 +749,33 @@ function openModal(rowIndex) {
                 ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
             </div>
             <div class="modal-data-col">
-                ${finalHtml} 
-                <div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>
-                <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
-                    <span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span>
-                    <div id="provenance-graph-space" class="dynamic-graph-height"></div>
-                </div>
+                ${finalDetailsHtml} 
+                ${copySection}
+                ${provenanceHTML}
             </div>
         </div>
     `;
 
+    // 6. Pokazanie modala i aktualizacja URL
     document.getElementById('modalOverlay').style.display = 'flex';
-    
-    // Aktualizacja URL
     const url = new URL(window.location); 
     url.searchParams.set('id', rowIndex); 
     window.history.replaceState({}, '', url);
 
-    // Obsługa grafu proweniencji
+    // 7. Obsługa grafu proweniencji
     const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v).trim() : "";
     const provDetails = (r.c[25] && r.c[25].v) ? String(r.c[25].v).trim() : "";
+
     if (provText && provText !== "-") {
         document.getElementById('provenance-container').style.display = 'block';
-        setTimeout(() => { if (typeof ProvenanceModule !== 'undefined') ProvenanceModule.init(provText, provDetails, 'provenance-graph-space'); }, 300);
+        setTimeout(() => {
+            if (typeof ProvenanceModule !== 'undefined') {
+                ProvenanceModule.init(provText, provDetails, 'provenance-graph-space');
+            }
+        }, 300);
     }
 }
+
         function closeModalManual() { document.getElementById('modalOverlay').style.display = 'none'; const url = new URL(window.location); url.searchParams.delete('id'); window.history.replaceState({}, '', url); }
         function closeModal(e) { if(e.target.id === 'modalOverlay') closeModalManual(); }
         function syncStateToURL() { const url = new URL(window.location); if (document.getElementById('search').value) url.searchParams.set('q', document.getElementById('search').value); else url.searchParams.delete('q'); window.history.replaceState({}, '', url); }
@@ -1371,12 +1371,3 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
