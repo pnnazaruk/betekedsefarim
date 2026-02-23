@@ -305,13 +305,12 @@ body.stats-mode #dashboard-view {
         /* Styl dla linków współoprawnych */
 .bound-with-link {
     font-weight: normal;
-    color: #1a1a1a;
-    transition: text-shadow 0.2s ease-in-out;
+    color: #1a1a1a; /* Wymuszenie czarnego koloru */
 }
 
 .bound-with-link:hover {
-    font-weight: normal; /* Zostawiamy normalną wagę! */
-    text-shadow: 0.5px 0 0 #1a1a1a, -0.5px 0 0 #1a1a1a; /* Symulacja pogrubienia */
+    font-weight: bold;
+    color: #1a1a1a; /* Pozostaje czarny przy najechaniu */
 }
     </style></head><body>
 
@@ -1372,16 +1371,3 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
-
-
