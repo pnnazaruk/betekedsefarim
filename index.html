@@ -677,21 +677,25 @@ function openModal(rowIndex) {
     if (!r) return;
 
     // Funkcja pomocnicza do znalezienia tytułu po ID (bezpieczna)
-    const getTitleById = (id) => {
-        if (!rawRows || !id) return "ID " + id;
-        
-        // Czyścimy ID ze spacji i zmieniamy na string
-        const cleanId = String(id).trim();
-        
-        const foundRow = rawRows.find(row => 
-            row.c[0] && String(row.c[0].v).trim() === cleanId
-        );
-        
-        if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
-            return foundRow.c[1].v;
-        }
-        return "ID " + cleanId;
-    };
+const getTitleById = (id) => {
+    if (!rawRows || id === undefined || id === null) return "ID " + id;
+    
+    // Zamieniamy poszukiwane ID na czysty tekst bez spacji
+    const searchId = String(id).trim();
+    if (!searchId) return "";
+
+    const foundRow = rawRows.find(row => {
+        if (!row.c || !row.c[0]) return false;
+        // Zamieniamy ID z tabeli na tekst i porównujemy
+        const tableId = String(row.c[0].v).trim();
+        return tableId === searchId;
+    });
+
+    if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
+        return foundRow.c[1].v;
+    }
+    return "ID " + searchId;
+};
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
@@ -712,25 +716,31 @@ function openModal(rowIndex) {
     }
 
     // 3. Przygotowanie sekcji Współoprawne (Tytuł bez podkreślenia)
+let boundWithSection = "";
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        const boundIds = boundWithRaw.split(',')
-                                     .map(id => id.trim())
-                                     .filter(Boolean); // Bezpiecznik dla pustych ID
+        try {
+            // Rozdzielamy po przecinku, czyścimy każdą wartość
+            const boundIds = boundWithRaw.split(',')
+                                         .map(s => s.trim())
+                                         .filter(Boolean);
 
-        const boundLinks = boundIds.map(id => {
-            const bookTitle = getTitleById(id); 
-            return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
-                        ${bookTitle}
-                    </a>`;
-        }).join('');
+            const boundLinks = boundIds.map(id => {
+                const bookTitle = getTitleById(id);
+                return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
+                            ${bookTitle}
+                        </a>`;
+            }).join('');
 
-        if (boundLinks) {
-            boundWithSection = `
-                <div class="detail-box">
-                    <span class="label">Współoprawne / Bound with</span>
-                    <span>${boundLinks}</span>
-                </div>
-            `;
+            if (boundLinks) {
+                boundWithSection = `
+                    <div class="detail-box">
+                        <span class="label">Współoprawne / Bound with</span>
+                        <div style="display: block;">${boundLinks}</div>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            console.error("Błąd generowania sekcji współoprawnych:", e);
         }
     }
 
@@ -1390,5 +1400,6 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
