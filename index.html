@@ -304,13 +304,19 @@ body.stats-mode #dashboard-view {
         }
         /* Styl dla linków współoprawnych */
 .bound-with-link {
-    font-weight: normal;
-    color: #1a1a1a; /* Wymuszenie czarnego koloru */
+    font-weight: 500; /* Stała średnia waga, by uniknąć skakania */
+    color: #1a1a1a;
+    text-decoration: none;
+    -webkit-font-smoothing: antialiased; /* Wygładzanie dla Chrome/Safari */
+    -moz-osx-font-smoothing: grayscale;   /* Wygładzanie dla Firefox */
+    transition: text-shadow 0.2s ease;   /* Płynne "pogrubienie" */
 }
 
 .bound-with-link:hover {
-    font-weight: bold;
-    color: #1a1a1a; /* Pozostaje czarny przy najechaniu */
+    font-weight: 500; /* Waga zostaje ta sama! */
+    /* Nakładamy bardzo delikatny "cień", który wygląda jak pogrubienie */
+    text-shadow: 0.4px 0 0 #1a1a1a, -0.1px 0 0 #1a1a1a;
+    color: #000; /* Opcjonalnie: głęboka czerń przy najechaniu */
 }
     </style></head><body>
 
@@ -1371,6 +1377,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
