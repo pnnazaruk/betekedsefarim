@@ -683,6 +683,7 @@ function openModal(rowIndex) {
         if (!searchId) return "";
         const foundRow = rawRows.find(row => {
             if (!row || !row.c || !row.c[0]) return false;
+            // Porównujemy jako Stringi, ignorując formatowanie Excela
             return String(row.c[0].v).trim() === searchId;
         });
         if (foundRow && foundRow.c[1] && foundRow.c[1].v) return foundRow.c[1].v;
@@ -707,9 +708,10 @@ function openModal(rowIndex) {
         }
     }
 
-    // 3. Przygotowanie sekcji Współoprawne (Odporna na błędy)
+    // 3. Przygotowanie sekcji Współoprawne
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         try {
+            // Rozdzielamy ID, czyścimy spacje i ignorujemy puste przecinki
             const boundIds = boundWithRaw.split(',').map(s => s.trim()).filter(Boolean);
             const boundLinks = boundIds.map(id => {
                 const bookTitle = getTitleById(id);
@@ -717,22 +719,24 @@ function openModal(rowIndex) {
             }).join('');
 
             if (boundLinks) {
-                boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><div style="display: block;">${boundLinks}</div></div>`;
+                boundWithSection = `<div class="detail-box bound-with-container"><span class="label">Współoprawne / Bound with</span><div style="display: block;">${boundLinks}</div></div>`;
             }
         } catch (e) {
             console.error("Błąd współoprawnych:", e);
         }
     }
 
-    // 4. Logika wstawiania pod sygnaturę
+    // 4. Logika wstawiania pod sygnaturę (Ulepszony Regex)
     let finalDetailsHtml = h;
     const callNumberLabel = "Obecna Sygnatura / Current Call number"; 
     
     if (boundWithSection) {
-        const regex = new RegExp(`(<div class="detail-box">\\s*<span class="label">${callNumberLabel}</span>.*?</div>)`, 's');
+        // Regex szuka dokładnie bloku z sygnaturą i wstawia pod nim naszą sekcję
+        const regex = new RegExp(`(<div class="detail-box">\\s*<span class="label">${callNumberLabel}</span>.*?</div>)`, 'is');
         if (regex.test(h)) {
             finalDetailsHtml = h.replace(regex, `$1${boundWithSection}`);
         } else {
+            // Jeśli nie znaleziono sygnatury (np. inna nazwa etykiety), dodaj na końcu
             finalDetailsHtml = h + boundWithSection;
         }
     }
@@ -1376,6 +1380,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
