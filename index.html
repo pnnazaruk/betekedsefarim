@@ -675,12 +675,24 @@ function openModal(rowIndex) {
     const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
     if (!r) return;
 
+    // --- CAŁKOWICIE ODPORNA FUNKCJA POBIERANIA TYTUŁU ---
     const getTitleById = (id) => {
-        if (!id) return "";
-        const searchId = String(id).trim();
-        const foundRow = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == searchId);
-        if (foundRow && foundRow.c[1]) return foundRow.c[1].v;
-        return "ID " + searchId;
+        try {
+            const searchId = String(id).trim();
+            if (!searchId) return "";
+            
+            // Szukamy wiersza, wymuszając porównanie tekstowe
+            const foundRow = rawRows.find(row => 
+                row && row.c && row.c[0] && String(row.c[0].v).trim() === searchId
+            );
+
+            if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
+                return foundRow.c[1].v;
+            }
+        } catch (err) {
+            console.log("Błąd wyszukiwania ID:", id);
+        }
+        return "ID " + id; // Fallback: jeśli nie ma tytułu, pokaż samo ID
     };
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
@@ -688,7 +700,7 @@ function openModal(rowIndex) {
     let link = getVal(r.c[16]);
     let boundWithSection = "";
 
-    // 2. Pętla szczegółów
+    // 2. Pętla szczegółów (standardowa)
     for (let i = 0; i <= 22; i++) {
         if (!colLabels[i] || [8, 19, 20, 21, 22].includes(i)) continue;
         let val = getVal(r.c[i]);
@@ -703,10 +715,10 @@ function openModal(rowIndex) {
 
     // 3. SEKCJA WSPÓŁOPRAWNE - TYLKO SEPARATOR |
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        // Rozdzielamy wyłącznie po pionowej kresce
         const boundIds = boundWithRaw.split('|');
         let linksHtml = "";
 
+        // Budujemy linki jeden po drugim
         for (let j = 0; j < boundIds.length; j++) {
             const cleanId = boundIds[j].trim();
             if (cleanId) {
@@ -724,30 +736,33 @@ function openModal(rowIndex) {
         }
     }
 
-    // 4. Logika wstawiania (Najprostsza możliwa)
+    // 4. LOGIKA WSTAWIANIA - BEZ REGEX (Najbezpieczniejsza)
     let finalDetailsHtml = "";
-    const callNumberLabel = "Obecna Sygnatura / Current Call number"; 
-    
+    const callNumberLabel = "Obecna Sygnatura"; 
+
     if (boundWithSection) {
-        if (h.includes(callNumberLabel)) {
-            // Zamieniamy etykietę na "etykieta + sekcja współoprawnych"
-            // Używamy prostego split/join zamiast Regex
-            const parts = h.split('</div>');
-            for(let k = 0; k < parts.length; k++) {
-                if (parts[k].includes(callNumberLabel)) {
-                    finalDetailsHtml += parts[k] + '</div>' + boundWithSection;
-                } else if (parts[k].trim() !== "") {
-                    finalDetailsHtml += parts[k] + '</div>';
-                }
+        // Rozbijamy h na tablicę wierszy i szukamy sygnatury
+        const parts = h.split('</div>');
+        let inserted = false;
+        
+        for (let k = 0; k < parts.length; k++) {
+            if (parts[k].trim() === "") continue;
+            let currentPart = parts[k] + '</div>';
+            finalDetailsHtml += currentPart;
+            
+            // Jeśli ten fragment zawiera sygnaturę, doklej współoprawne zaraz za nim
+            if (currentPart.includes(callNumberLabel) && !inserted) {
+                finalDetailsHtml += boundWithSection;
+                inserted = true;
             }
-        } else {
-            finalDetailsHtml = h + boundWithSection;
         }
+        // Jeśli nie znalazło etykiety w pętli, dodaj na końcu
+        if (!inserted) finalDetailsHtml = h + boundWithSection;
     } else {
         finalDetailsHtml = h;
     }
 
-    // 5. Renderowanie finałowe
+    // 5. RENDEROWANIE
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
@@ -1372,6 +1387,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
