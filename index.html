@@ -672,40 +672,18 @@ async function init() {
 
 function openModal(rowIndex) {
     if (!rawRows) return;
-    const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
+    const r = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == String(rowIndex).trim());
     if (!r) return;
 
-    // --- CAŁKOWICIE ODPORNA FUNKCJA POBIERANIA TYTUŁU ---
-    const getTitleById = (id) => {
-        try {
-            const searchId = String(id).trim();
-            if (!searchId) return "";
-            
-            // Szukamy wiersza, wymuszając porównanie tekstowe
-            const foundRow = rawRows.find(row => 
-                row && row.c && row.c[0] && String(row.c[0].v).trim() === searchId
-            );
-
-            if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
-                return foundRow.c[1].v;
-            }
-        } catch (err) {
-            console.log("Błąd wyszukiwania ID:", id);
-        }
-        return "ID " + id; // Fallback: jeśli nie ma tytułu, pokaż samo ID
-    };
-
-    const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
     let link = getVal(r.c[16]);
-    let boundWithSection = "";
 
-    // 2. Pętla szczegółów (standardowa)
+    // 1. BUDOWANIE GŁÓWNYCH DANYCH (0-22)
     for (let i = 0; i <= 22; i++) {
         if (!colLabels[i] || [8, 19, 20, 21, 22].includes(i)) continue;
         let val = getVal(r.c[i]);
         if (!val || val === "---") continue;
-
+        
         if (val.startsWith('http')) {
             h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
         } else {
@@ -713,56 +691,59 @@ function openModal(rowIndex) {
         }
     }
 
-    // 3. SEKCJA WSPÓŁOPRAWNE - TYLKO SEPARATOR |
-    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        const boundIds = boundWithRaw.split('|');
-        let linksHtml = "";
-
-        // Budujemy linki jeden po drugim
-        for (let j = 0; j < boundIds.length; j++) {
-            const cleanId = boundIds[j].trim();
-            if (cleanId) {
-                const bookTitle = getTitleById(cleanId);
-                linksHtml += `<a href="./?id=${cleanId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 2px;">${bookTitle}</a>`;
-            }
-        }
-
-        if (linksHtml) {
-            boundWithSection = `
-                <div class="detail-box">
-                    <span class="label">Współoprawne / Bound with</span>
-                    <div style="display: block;">${linksHtml}</div>
-                </div>`;
-        }
-    }
-
-    // 4. LOGIKA WSTAWIANIA - BEZ REGEX (Najbezpieczniejsza)
-    let finalDetailsHtml = "";
-    const callNumberLabel = "Obecna Sygnatura"; 
-
-    if (boundWithSection) {
-        // Rozbijamy h na tablicę wierszy i szukamy sygnatury
-        const parts = h.split('</div>');
-        let inserted = false;
+    // 2. BUDOWANIE SEKCJI WSPÓŁOPRAWNE (Z CAŁKOWITĄ IZOLACJĄ BŁĘDÓW)
+    let boundSectionHtml = "";
+    try {
+        // Pobieramy surową wartość z kolumny AA (26)
+        let rawValue = (r.c[26] && r.c[26].v) ? String(r.c[26].v) : "";
         
-        for (let k = 0; k < parts.length; k++) {
-            if (parts[k].trim() === "") continue;
-            let currentPart = parts[k] + '</div>';
-            finalDetailsHtml += currentPart;
+        if (rawValue && rawValue !== "-" && rawValue !== "0") {
+            // Rozdzielamy po kresce |, ale też na wszelki wypadek czyścimy z dziwnych znaków
+            let ids = rawValue.split('|').map(s => s.trim()).filter(s => s.length > 0);
             
-            // Jeśli ten fragment zawiera sygnaturę, doklej współoprawne zaraz za nim
-            if (currentPart.includes(callNumberLabel) && !inserted) {
-                finalDetailsHtml += boundWithSection;
-                inserted = true;
+            if (ids.length > 0) {
+                let linksArray = [];
+                for (let j = 0; j < ids.length; j++) {
+                    let currentId = ids[j];
+                    let title = "ID " + currentId;
+                    
+                    // Szukamy tytułu bezpośrednio w rawRows
+                    let found = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() === currentId);
+                    if (found && found.c[1] && found.c[1].v) {
+                        title = found.c[1].v;
+                    }
+                    
+                    linksArray.push(`<a href="./?id=${currentId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 3px;">${title}</a>`);
+                }
+                
+                boundSectionHtml = `
+                    <div class="detail-box" id="bound-with-container" style="background-color: #fdfdfd; border-left: 3px solid #1a1a1a;">
+                        <span class="label">Współoprawne / Bound with</span>
+                        <div style="display: block; margin-top: 5px;">${linksArray.join('')}</div>
+                    </div>`;
             }
         }
-        // Jeśli nie znalazło etykiety w pętli, dodaj na końcu
-        if (!inserted) finalDetailsHtml = h + boundWithSection;
-    } else {
-        finalDetailsHtml = h;
+    } catch (err) {
+        console.error("Błąd sekcji współoprawnych:", err);
     }
 
-    // 5. RENDEROWANIE
+    // 3. ŁĄCZENIE TREŚCI
+    // Wstawiamy współoprawne pod sygnaturę, jeśli istnieje, lub na końcu
+    let finalHtml = h;
+    const sigLabel = "Obecna Sygnatura";
+    
+    if (boundSectionHtml !== "") {
+        if (h.includes(sigLabel)) {
+            // Szukamy zamknięcia div-a, w którym jest sygnatura
+            let parts = h.split(sigLabel);
+            let afterSig = parts[1].indexOf('</div>') + 6;
+            finalHtml = parts[0] + sigLabel + parts[1].substring(0, afterSig) + boundSectionHtml + parts[1].substring(afterSig);
+        } else {
+            finalHtml = h + boundSectionHtml;
+        }
+    }
+
+    // 4. WYŚWIETLENIE MODALA
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
@@ -770,7 +751,7 @@ function openModal(rowIndex) {
                 ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
             </div>
             <div class="modal-data-col">
-                ${finalDetailsHtml} 
+                ${finalHtml} 
                 <div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>
                 <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
                     <span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span>
@@ -781,10 +762,13 @@ function openModal(rowIndex) {
     `;
 
     document.getElementById('modalOverlay').style.display = 'flex';
+    
+    // Aktualizacja URL
     const url = new URL(window.location); 
     url.searchParams.set('id', rowIndex); 
     window.history.replaceState({}, '', url);
 
+    // Obsługa grafu proweniencji
     const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v).trim() : "";
     const provDetails = (r.c[25] && r.c[25].v) ? String(r.c[25].v).trim() : "";
     if (provText && provText !== "-") {
@@ -1387,6 +1371,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
