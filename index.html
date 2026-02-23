@@ -673,8 +673,8 @@ let boundWithSection = "";
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         const boundIds = boundWithRaw.split(',').map(id => id.trim());
         const boundLinks = boundIds.map(id => {
-            return `<a href="?id=${id}" style="color: #c73848; text-decoration: underline; font-weight: bold; margin-right: 8px;">ID ${id}</a>`;
-        }).join(' ');
+            return `<a href="./?id=${id}" style="color: #c73848; text-decoration: underline; font-weight: bold; margin-right: 8px;">ID ${id}</a>`;
+}).join(' ');
 
         boundWithSection = `
             <div class="detail-box">
@@ -1341,6 +1341,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
