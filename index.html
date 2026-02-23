@@ -677,21 +677,21 @@ function openModal(rowIndex) {
     if (!r) return;
 
     // Funkcja pomocnicza do znalezienia tytułu po ID (bezpieczna)
-const getTitleById = (id) => {
-    if (!rawRows || !id) return "ID " + id;
-    
-    // Czyścimy ID ze spacji i zmieniamy na string
-    const cleanId = String(id).trim();
-    
-    const foundRow = rawRows.find(row => 
-        row.c[0] && String(row.c[0].v).trim() === cleanId
-    );
-    
-    if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
-        return foundRow.c[1].v;
-    }
-    return "ID " + cleanId;
-};
+    const getTitleById = (id) => {
+        if (!rawRows || !id) return "ID " + id;
+        
+        // Czyścimy ID ze spacji i zmieniamy na string
+        const cleanId = String(id).trim();
+        
+        const foundRow = rawRows.find(row => 
+            row.c[0] && String(row.c[0].v).trim() === cleanId
+        );
+        
+        if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
+            return foundRow.c[1].v;
+        }
+        return "ID " + cleanId;
+    };
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
@@ -712,10 +712,10 @@ const getTitleById = (id) => {
     }
 
     // 3. Przygotowanie sekcji Współoprawne (Tytuł bez podkreślenia)
-if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
+    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         const boundIds = boundWithRaw.split(',')
                                      .map(id => id.trim())
-                                     .filter(Boolean); // To jest kluczowy "bezpiecznik"
+                                     .filter(Boolean); // Bezpiecznik dla pustych ID
 
         const boundLinks = boundIds.map(id => {
             const bookTitle = getTitleById(id); 
@@ -724,7 +724,6 @@ if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
                     </a>`;
         }).join('');
 
-        // Dodatkowe sprawdzenie, czy faktycznie powstały jakieś linki
         if (boundLinks) {
             boundWithSection = `
                 <div class="detail-box">
@@ -744,6 +743,7 @@ if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         if (regex.test(h)) {
             finalDetailsHtml = h.replace(regex, `$1${boundWithSection}`);
         } else {
+            // Jeśli nie znajdzie sygnatury, doda na końcu listy
             finalDetailsHtml = h + boundWithSection;
         }
     }
@@ -759,6 +759,7 @@ if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
 
     // 5. Renderowanie do HTML
     document.getElementById('modalContent').innerHTML = `
+        <button class="close-modal" onclick="closeModalManual()">×</button>
         <div class="modal-body">
             <div class="modal-img-col">
                 <img src="${getVal(r.c[23])}" style="max-width:100%;" onerror="this.src='https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png'">
@@ -774,6 +775,8 @@ if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
 
     // 6. Pokazanie modala i aktualizacja URL
     document.getElementById('modalOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Blokada przewijania tła
+    
     const url = new URL(window.location); 
     url.searchParams.set('id', rowIndex); 
     window.history.replaceState({}, '', url);
@@ -1387,4 +1390,5 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
