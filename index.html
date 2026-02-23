@@ -677,11 +677,21 @@ function openModal(rowIndex) {
     if (!r) return;
 
     // Funkcja pomocnicza do znalezienia tytułu po ID (bezpieczna)
-    const getTitleById = (id) => {
-        const foundRow = rawRows.find(row => row.c[0] && row.c[0].v == id);
-        if (foundRow && foundRow.c[1]) return foundRow.c[1].v;
-        return "ID " + id;
-    };
+const getTitleById = (id) => {
+    if (!rawRows || !id) return "ID " + id;
+    
+    // Czyścimy ID ze spacji i zmieniamy na string
+    const cleanId = String(id).trim();
+    
+    const foundRow = rawRows.find(row => 
+        row.c[0] && String(row.c[0].v).trim() === cleanId
+    );
+    
+    if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
+        return foundRow.c[1].v;
+    }
+    return "ID " + cleanId;
+};
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
@@ -702,8 +712,11 @@ function openModal(rowIndex) {
     }
 
     // 3. Przygotowanie sekcji Współoprawne (Tytuł bez podkreślenia)
-    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        const boundIds = boundWithRaw.split(',').map(id => id.trim());
+if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
+        const boundIds = boundWithRaw.split(',')
+                                     .map(id => id.trim())
+                                     .filter(Boolean); // To jest kluczowy "bezpiecznik"
+
         const boundLinks = boundIds.map(id => {
             const bookTitle = getTitleById(id); 
             return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
@@ -711,12 +724,15 @@ function openModal(rowIndex) {
                     </a>`;
         }).join('');
 
-        boundWithSection = `
-            <div class="detail-box">
-                <span class="label">Współoprawne / Bound with</span>
-                <span>${boundLinks}</span>
-            </div>
-        `;
+        // Dodatkowe sprawdzenie, czy faktycznie powstały jakieś linki
+        if (boundLinks) {
+            boundWithSection = `
+                <div class="detail-box">
+                    <span class="label">Współoprawne / Bound with</span>
+                    <span>${boundLinks}</span>
+                </div>
+            `;
+        }
     }
 
     // 4. Logika wstawiania pod sygnaturę
@@ -1371,3 +1387,4 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
