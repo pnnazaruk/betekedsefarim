@@ -286,7 +286,7 @@ body.stats-mode #dashboard-view {
         .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
         #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
         .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    /* KROK 3: Stylizacja dymka (tooltipa) proweniencji */
+    /*Stylizacja dymka (tooltipa) proweniencji */
         div.vis-tooltip {
             position: absolute;
             visibility: hidden;
@@ -302,6 +302,14 @@ body.stats-mode #dashboard-view {
             z-index: 10000; /* Musi być wyższy niż modal (5000) */
             border: 1px solid #444;
         }
+        /* Styl dla linków współoprawnych */
+.bound-with-link {
+    font-weight: normal; /* Domyślnie cienki */
+}
+
+.bound-with-link:hover {
+    font-weight: bold;   /* Pogrubienie po najechaniu */
+}
     </style></head><body>
 
     <header id="main-header">
@@ -696,7 +704,7 @@ function openModal(rowIndex) {
         const boundIds = boundWithRaw.split(',').map(id => id.trim());
         const boundLinks = boundIds.map(id => {
             const bookTitle = getTitleById(id); 
-            return `<a href="./?id=${id}" style="color: #c73848; text-decoration: none; font-weight: bold; display: block; margin-bottom: 5px;">
+            return `<a href="./?id=${id}" class="bound-with-link" style="color: #c73848; text-decoration: none; display: block; margin-bottom: 5px;">
                         ${bookTitle}
                     </a>`;
         }).join('');
@@ -1361,6 +1369,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
