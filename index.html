@@ -675,17 +675,21 @@ function openModal(rowIndex) {
     const r = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == String(rowIndex).trim());
     if (!r) return;
 
+    // ULEPSZONA FUNKCJA: Odporna na brakujące rekordy
     const getTitleById = (id) => {
-        if (!rawRows || !id) return "ID " + id;
+        if (!rawRows || id === undefined || id === null) return "ID " + id;
         const searchId = String(id).trim();
+        if (!searchId) return "";
+        
+        // Szukamy wiersza o danym ID
         const foundRow = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() === searchId);
+        
         if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
-            return foundRow.c[1].v;
+            return foundRow.c[1].v; // Zwraca tytuł
         }
-        return "ID " + searchId;
+        return "ID " + searchId + " (Nie znaleziono tytułu)"; // Informacja o błędzie zamiast pustki
     };
 
-    // Pobranie danych z kolumny 26 (AA)
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
     let link = getVal(r.c[16]);
@@ -703,24 +707,28 @@ function openModal(rowIndex) {
         }
     }
 
-    // 3. SEKCJA WSPÓŁOPRAWNE - NOWA LOGIKA
+    // 3. SEKCJA WSPÓŁOPRAWNE - Pancerne przetwarzanie wielu ID
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        // Dzielimy po przecinku, kresce lub średniku
+        // Obsługa separatorów: przecinek, kreska pionowa, średnik
         const boundIds = boundWithRaw.split(/[,|;]/).map(s => s.trim()).filter(Boolean);
         let linksHtml = "";
 
-        // Przetwarzamy każde ID osobno w pętli for, aby uniknąć błędów mapowania
         for (let j = 0; j < boundIds.length; j++) {
-            const currentId = boundIds[j];
-            const bookTitle = getTitleById(currentId);
-            linksHtml += `<a href="./?id=${currentId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 2px;">
-                            ${bookTitle}
-                          </a>`;
+            try {
+                const currentId = boundIds[j];
+                const bookTitle = getTitleById(currentId);
+                
+                linksHtml += `<a href="./?id=${currentId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 2px;">
+                                <strong>[ID ${currentId}]</strong> ${bookTitle}
+                              </a>`;
+            } catch (err) {
+                console.error("Błąd przy ID " + boundIds[j], err);
+            }
         }
 
         if (linksHtml) {
             boundWithSection = `
-                <div class="detail-box">
+                <div class="detail-box" style="background-color: #fcfcfc; border: 1px dashed #ccc;">
                     <span class="label">Współoprawne / Bound with</span>
                     <div style="display: block; margin-top: 5px;">${linksHtml}</div>
                 </div>`;
@@ -738,7 +746,8 @@ function openModal(rowIndex) {
             if (parts[j].trim() === "") continue;
             let currentPart = parts[j] + '</div>';
             finalDetailsHtml += currentPart;
-            if (currentPart.includes(callNumberLabel) && !injected) {
+            // Sprawdzamy czy etykieta sygnatury jest w tym kawałku kodu
+            if (currentPart.indexOf(callNumberLabel) !== -1 && !injected) {
                 finalDetailsHtml += boundWithSection;
                 injected = true;
             }
@@ -748,7 +757,7 @@ function openModal(rowIndex) {
         finalDetailsHtml = h;
     }
 
-    // 5. Renderowanie finałowe
+    // 5. Renderowanie
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
@@ -1374,6 +1383,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
