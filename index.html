@@ -665,6 +665,12 @@ function openModal(rowIndex) {
     const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
     if (!r) return;
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
+// Pomocnicza funkcja do znalezienia tytułu po ID
+const getTitleById = (id) => {
+    const foundRow = rawRows.find(row => row.c[0] && row.c[0].v == id);
+    if (foundRow && foundRow.c[1]) return foundRow.c[1].v;
+    return "ID " + id; // Fallback, jeśli nie znajdzie tytułu
+};
     
     // 2. Przygotowanie zmiennych pomocniczych
     let h = ""; 
@@ -698,7 +704,24 @@ let boundWithSection = "";
             h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val || "---"}</span></div>`;
         }
     }
+let boundWithSection = "";
+    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
+        const boundIds = boundWithRaw.split(',').map(id => id.trim());
+        const boundLinks = boundIds.map(id => {
+            const bookTitle = getTitleById(id); 
+            // Wersja bez podkreślenia (zgodnie z Twoją prośbą)
+            return `<a href="./?id=${id}" style="color: #c73848; text-decoration: none; font-weight: bold; display: block; margin-bottom: 5px;">
+                        ${bookTitle}
+                    </a>`;
+        }).join('');
 
+        boundWithSection = `
+            <div class="detail-box">
+                <span class="label">Współoprawne / Bound with</span>
+                <span>${boundLinks}</span>
+            </div>
+        `;
+    }
     // 4. Przygotowanie sekcji dodatkowych
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
 
@@ -1358,6 +1381,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
