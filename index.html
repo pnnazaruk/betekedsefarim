@@ -304,11 +304,13 @@ body.stats-mode #dashboard-view {
         }
         /* Styl dla linków współoprawnych */
 .bound-with-link {
-    font-weight: normal; /* Domyślnie cienki */
+    font-weight: normal;
+    color: #1a1a1a; /* Wymuszenie czarnego koloru */
 }
 
 .bound-with-link:hover {
-    font-weight: bold;   /* Pogrubienie po najechaniu */
+    font-weight: bold;
+    color: #1a1a1a; /* Pozostaje czarny przy najechaniu */
 }
     </style></head><body>
 
@@ -704,7 +706,7 @@ function openModal(rowIndex) {
         const boundIds = boundWithRaw.split(',').map(id => id.trim());
         const boundLinks = boundIds.map(id => {
             const bookTitle = getTitleById(id); 
-            return `<a href="./?id=${id}" class="bound-with-link" style="color: #c73848; text-decoration: none; display: block; margin-bottom: 5px;">
+            return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
                         ${bookTitle}
                     </a>`;
         }).join('');
@@ -1369,6 +1371,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
