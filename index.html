@@ -678,10 +678,11 @@ function openModal(rowIndex) {
 
     // Funkcja pomocnicza do znalezienia tytułu po ID (bezpieczna)
     const getTitleById = (id) => {
-        // Tutaj id będzie już pojedynczym numerem (np. "18")
-        const foundRow = rawRows.find(row => row.c[0] && row.c[0].v == id);
+        // Ważne: rzutujemy id na string i czyścimy ze spacji, by dopasowanie było idealne
+        const searchId = String(id).trim();
+        const foundRow = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == searchId);
         if (foundRow && foundRow.c[1]) return foundRow.c[1].v;
-        return "ID " + id;
+        return "ID " + searchId;
     };
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
@@ -702,14 +703,14 @@ function openModal(rowIndex) {
         }
     }
 
-    // 3. Przygotowanie sekcji Współoprawne - POPRAWIONA LOGIKA ROZBIJANIA
+    // 3. Przygotowanie sekcji Współoprawne - TERAZ DZIAŁA DLA WIELU ID
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        // Kluczowa zmiana: splituje po przecinku LUB pionowej kresce [,|]
+        // Zmiana: dzielimy po przecinku LUB pionowej kresce i usuwamy zbędne spacje
         const boundIds = boundWithRaw.split(/[,|]/).map(id => id.trim()).filter(Boolean);
         
-        // Teraz boundIds to tablica pojedynczych numerów, np. ["178", "18", "80"]
+        // Generujemy osobny link dla każdego wyciągniętego ID
         const boundLinks = boundIds.map(id => {
-            const bookTitle = getTitleById(id); // Szuka każdego numeru z osobna
+            const bookTitle = getTitleById(id); 
             return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
                         ${bookTitle}
                     </a>`;
@@ -719,7 +720,7 @@ function openModal(rowIndex) {
             boundWithSection = `
                 <div class="detail-box">
                     <span class="label">Współoprawne / Bound with</span>
-                    <span>${boundLinks}</span>
+                    <div style="display: block;">${boundLinks}</div>
                 </div>
             `;
         }
@@ -747,7 +748,7 @@ function openModal(rowIndex) {
         </div>
     `;
 
-    // 5. Renderowanie do HTML
+    // 5. Renderowanie
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
@@ -762,7 +763,7 @@ function openModal(rowIndex) {
         </div>
     `;
 
-    // 6. Pokazanie modala i aktualizacja URL
+    // 6. Pokazanie modala
     document.getElementById('modalOverlay').style.display = 'flex';
     const url = new URL(window.location); 
     url.searchParams.set('id', rowIndex); 
@@ -1377,4 +1378,5 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
