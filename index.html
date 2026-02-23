@@ -304,19 +304,14 @@ body.stats-mode #dashboard-view {
         }
         /* Styl dla linków współoprawnych */
 .bound-with-link {
-    font-weight: 500; /* Stała średnia waga, by uniknąć skakania */
+    font-weight: normal;
     color: #1a1a1a;
-    text-decoration: none;
-    -webkit-font-smoothing: antialiased; /* Wygładzanie dla Chrome/Safari */
-    -moz-osx-font-smoothing: grayscale;   /* Wygładzanie dla Firefox */
-    transition: text-shadow 0.2s ease;   /* Płynne "pogrubienie" */
+    transition: text-shadow 0.2s ease-in-out;
 }
 
 .bound-with-link:hover {
-    font-weight: 500; /* Waga zostaje ta sama! */
-    /* Nakładamy bardzo delikatny "cień", który wygląda jak pogrubienie */
-    text-shadow: 0.4px 0 0 #1a1a1a, -0.1px 0 0 #1a1a1a;
-    color: #000; /* Opcjonalnie: głęboka czerń przy najechaniu */
+    font-weight: normal; /* Zostawiamy normalną wagę! */
+    text-shadow: 0.5px 0 0 #1a1a1a, -0.5px 0 0 #1a1a1a; /* Symulacja pogrubienia */
 }
     </style></head><body>
 
@@ -1377,6 +1372,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
