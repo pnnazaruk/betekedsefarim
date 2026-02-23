@@ -675,22 +675,19 @@ function openModal(rowIndex) {
     const r = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() == String(rowIndex).trim());
     if (!r) return;
 
-    // ULEPSZONA FUNKCJA: Odporna na brakujące rekordy
     const getTitleById = (id) => {
-        if (!rawRows || id === undefined || id === null) return "ID " + id;
+        if (!rawRows) return "ID " + id;
         const searchId = String(id).trim();
-        if (!searchId) return "";
-        
-        // Szukamy wiersza o danym ID
         const foundRow = rawRows.find(row => row.c[0] && String(row.c[0].v).trim() === searchId);
-        
-        if (foundRow && foundRow.c[1] && foundRow.c[1].v) {
-            return foundRow.c[1].v; // Zwraca tytuł
-        }
-        return "ID " + searchId + " (Nie znaleziono tytułu)"; // Informacja o błędzie zamiast pustki
+        return (foundRow && foundRow.c[1] && foundRow.c[1].v) ? foundRow.c[1].v : "ID " + searchId;
     };
 
-    const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
+    // POBIERANIE DANYCH - Wymuszamy tekst i sprawdzamy kolumnę 26 (AA)
+    let boundWithRaw = "";
+    if (r.c[26] && r.c[26].v) {
+        boundWithRaw = String(r.c[26].v).trim();
+    }
+
     let h = ""; 
     let link = getVal(r.c[16]);
     let boundWithSection = "";
@@ -707,52 +704,39 @@ function openModal(rowIndex) {
         }
     }
 
-    // 3. SEKCJA WSPÓŁOPRAWNE - Pancerne przetwarzanie wielu ID
-    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-        // Obsługa separatorów: przecinek, kreska pionowa, średnik
-        const boundIds = boundWithRaw.split(/[,|;]/).map(s => s.trim()).filter(Boolean);
+    // 3. SEKCJA WSPÓŁOPRAWNE - Uproszczona i pancerna
+    // Jeśli w komórce jest jakikolwiek tekst (dłuższy niż 1 znak) i nie jest to kreska/zero
+    if (boundWithRaw && boundWithRaw.length > 1 && boundWithRaw !== "-" && boundWithRaw !== "0") {
+        
+        // Dzielimy tekst na części. Obsługujemy: |, przecinek, spacje
+        const parts = boundWithRaw.split(/[|,]/);
         let linksHtml = "";
 
-        for (let j = 0; j < boundIds.length; j++) {
-            try {
-                const currentId = boundIds[j];
-                const bookTitle = getTitleById(currentId);
-                
-                linksHtml += `<a href="./?id=${currentId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 2px;">
-                                <strong>[ID ${currentId}]</strong> ${bookTitle}
-                              </a>`;
-            } catch (err) {
-                console.error("Błąd przy ID " + boundIds[j], err);
+        for (let j = 0; j < parts.length; j++) {
+            const cleanId = parts[j].trim();
+            if (cleanId) {
+                const title = getTitleById(cleanId);
+                linksHtml += `<a href="./?id=${cleanId}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px; border-bottom: 1px solid #eee;">${title}</a>`;
             }
         }
 
         if (linksHtml) {
-            boundWithSection = `
-                <div class="detail-box" style="background-color: #fcfcfc; border: 1px dashed #ccc;">
-                    <span class="label">Współoprawne / Bound with</span>
-                    <div style="display: block; margin-top: 5px;">${linksHtml}</div>
-                </div>`;
+            boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><div style="display: block;">${linksHtml}</div></div>`;
         }
     }
 
-    // 4. Wstawianie pod sygnaturę
+    // 4. LOGIKA WSTAWIANIA - Zmieniona na prostsze doklejanie
     let finalDetailsHtml = "";
-    const callNumberLabel = "Obecna Sygnatura / Current Call number"; 
+    const callNumberLabel = "Obecna Sygnatura"; // Uproszczone szukanie po fragmencie nazwy
     
     if (boundWithSection) {
-        let parts = h.split('</div>');
-        let injected = false;
-        for (let j = 0; j < parts.length; j++) {
-            if (parts[j].trim() === "") continue;
-            let currentPart = parts[j] + '</div>';
-            finalDetailsHtml += currentPart;
-            // Sprawdzamy czy etykieta sygnatury jest w tym kawałku kodu
-            if (currentPart.indexOf(callNumberLabel) !== -1 && !injected) {
-                finalDetailsHtml += boundWithSection;
-                injected = true;
-            }
+        // Jeśli znajdziemy pudełko z napisem "Sygnatura", wstawiamy sekcję zaraz za nim
+        if (h.includes(callNumberLabel)) {
+            finalDetailsHtml = h.replace(/(<div class="detail-box">.*?Sygnatura.*?<\/div>)/i, `$1${boundWithSection}`);
+        } else {
+            // Jeśli nie znajdzie sygnatury, po prostu dodaj na końcu listy
+            finalDetailsHtml = h + boundWithSection;
         }
-        if (!injected) finalDetailsHtml = h + boundWithSection;
     } else {
         finalDetailsHtml = h;
     }
@@ -1383,6 +1367,7 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
 
 
