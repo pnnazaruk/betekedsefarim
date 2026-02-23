@@ -664,11 +664,26 @@ function openModal(rowIndex) {
     // 1. Znalezienie danych wiersza
     const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
     if (!r) return;
-
+    const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
+    
     // 2. Przygotowanie zmiennych pomocniczych
     let h = ""; 
     let link = getVal(r.c[16]);
+let boundWithSection = "";
+    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
+        const boundIds = boundWithRaw.split(',').map(id => id.trim());
+        const boundLinks = boundIds.map(id => {
+            return `<a href="?iq=${id}" style="color: #c73848; text-decoration: underline; font-weight: bold; margin-right: 8px;">ID ${id}</a>`;
+        }).join(' ');
 
+        boundWithSection = `
+            <div class="detail-box">
+                <span class="label">Współoprawne / Bound with</span>
+                <div style="margin-top: 5px;">${boundLinks}</div>
+            </div>
+        `;
+    }
+    
     // 3. Pętla generująca szczegóły (kolumny 0-22 z wyłączeniami)
     for (let i = 0; i <= 22; i++) {
         if (!colLabels[i] || [8, 19, 20, 21, 22].includes(i)) continue;
@@ -690,7 +705,7 @@ const provenanceHTML = `
     </div>
 `;
 
-    // 5. Renderowanie całości do okna modalnego (TYLKO RAZ)
+// 5. Renderowanie całości do okna modalnego (TYLKO RAZ)
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
@@ -699,6 +714,9 @@ const provenanceHTML = `
             </div>
             <div class="modal-data-col">
                 ${h}
+                
+                ${boundWithSection}
+                
                 ${copySection}
                 ${provenanceHTML}
             </div>
@@ -1323,4 +1341,5 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
 
