@@ -1599,36 +1599,48 @@ function openLightbox(src) {
 }
 // Obsługa klawiatury dla całego dokumentu
 document.addEventListener('keydown', function(e) {
+    const lightbox = document.getElementById('lightbox-overlay');
+    const modal = document.getElementById('modalOverlay');
+    const isLightboxOpen = lightbox && lightbox.style.display === 'flex';
+    const isModalOpen = modal && modal.style.display === 'flex';
+
     // 1. Obsługa klawisza ESC
     if (e.key === "Escape") {
-        const lightbox = document.getElementById('lightbox-overlay');
-        const modal = document.getElementById('modalOverlay');
-        
-        // Najpierw zamykamy lightbox, jeśli jest widoczny
-        if (lightbox && lightbox.style.display === 'flex') {
+        if (isLightboxOpen) {
             lightbox.style.display = 'none';
-        } 
-        // Jeśli lightbox zamknięty, zamykamy główny modal
-        else if (modal && modal.style.display === 'flex') {
+        } else if (isModalOpen) {
             closeModal();
         }
     }
 
-    // 2. Obsługa strzałek (tylko gdy modal jest otwarty)
-    const modal = document.getElementById('modalOverlay');
-    if (modal && modal.style.display === 'flex') {
-        if (e.key === "ArrowRight") {
+    // 2. Obsługa strzałek (tylko gdy cokolwiek jest otwarte)
+    if (isModalOpen) {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            const direction = e.key === "ArrowRight" ? 1 : -1;
             const nextBtn = document.querySelector('.photo-next-btn');
-            if (nextBtn) nextBtn.click();
-        }
-        if (e.key === "ArrowLeft") {
             const prevBtn = document.querySelector('.photo-prev-btn');
-            if (prevBtn) prevBtn.click();
+
+            // "Klikamy" w przycisk pod spodem, żeby przesunąć slider
+            if (direction === 1 && nextBtn) nextBtn.click();
+            if (direction === -1 && prevBtn) prevBtn.click();
+
+            // SZLIF: Jeśli lightbox jest otwarty, musimy mu podmienić zdjęcie na to nowe
+            if (isLightboxOpen) {
+                const container = document.querySelector('.photo-slider-container');
+                if (container) {
+                    const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
+                    const slides = container.querySelectorAll('.photo-slider-wrapper img');
+                    if (slides[currentIdx]) {
+                        document.getElementById('lightbox-img').src = slides[currentIdx].src;
+                    }
+                }
+            }
         }
     }
 });
         init();
     </script></body></html>
+
 
 
 
