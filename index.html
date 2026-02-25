@@ -796,9 +796,14 @@ if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
             // Dodajemy data-current-slide="0"
 galleryHTML = `
     <div class="photo-slider-container" data-current-slide="0">
-        ...
+        ${images.length > 1 ? `
+            <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
+            <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
+        ` : ''}
         <div class="photo-slider-wrapper">
-            ${images.map(imgUrl => `<img src="${imgUrl}" ...>`).join('')}
+            ${images.map(imgUrl => `
+                <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" alt="Dodatkowe zdjęcie">
+            `).join('')}
         </div>
     </div>
 `;
@@ -1506,13 +1511,16 @@ const ProvenanceModule = {
 let currentSlide = 0;
 
 function moveSlide(direction, btnElement) {
+    // Szukamy kontenera o nowej nazwie
     const container = btnElement.closest('.photo-slider-container');
-    // ZMIEŃ 'slider-wrapper' na 'photo-slider-wrapper'
     const wrapper = container.querySelector('.photo-slider-wrapper');
     const slides = wrapper.querySelectorAll('img');
-    
+    const totalSlides = slides.length;
+
+    if (totalSlides <= 1) return;
+
     let currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
-    currentIdx = (currentIdx + direction + slides.length) % slides.length;
+    currentIdx = (currentIdx + direction + totalSlides) % totalSlides;
     
     container.setAttribute('data-current-slide', currentIdx);
     wrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
@@ -1539,6 +1547,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
