@@ -158,7 +158,32 @@
     font-size: 40px;
     cursor: pointer;
 }
+/* Strzałki wewnątrz Lightboxa (powiększenia) */
+.lightbox-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    font-size: 40px;
+    padding: 20px;
+    cursor: pointer;
+    z-index: 10001;
+    transition: background 0.3s;
+    user-select: none;
+}
 
+.lightbox-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-prev { left: 10px; }
+.lightbox-next { right: 10px; }
+
+/* Ukrycie strzałek, gdy jest tylko jedno zdjęcie */
+.hide-nav { display: none !important; }
+        
 /* Ukrywanie paska przewijania (opcjonalne, dla estetyki) */
 .mini-gallery::-webkit-scrollbar {
     height: 4px;
@@ -1585,17 +1610,67 @@ function openLightbox(src) {
         overlay.id = 'lightbox-overlay';
         overlay.innerHTML = `
             <span class="lightbox-close">&times;</span>
+            <button class="lightbox-btn lightbox-prev" id="lb-prev">&#10094;</button>
+            <button class="lightbox-btn lightbox-next" id="lb-next">&#10095;</button>
             <img id="lightbox-img" src="">
         `;
         document.body.appendChild(overlay);
         
-        // Zamknij po kliknięciu w tło lub krzyżyk
+        // Kliknięcie w tło zamyka, ale kliknięcie w przyciski/zdjęcie nie
         overlay.onclick = function(e) {
-            if (e.target.id !== 'lightbox-img') overlay.style.display = 'none';
+            if (e.target.id === 'lightbox-overlay' || e.target.className === 'lightbox-close') {
+                overlay.style.display = 'none';
+            }
+        };
+
+        // Obsługa myszki dla strzałek w Lightboxie
+        document.getElementById('lb-next').onclick = function(e) {
+            e.stopPropagation();
+            const nextBtn = document.querySelector('.photo-next-btn');
+            if (nextBtn) {
+                nextBtn.click();
+                syncLightbox();
+            }
+        };
+
+        document.getElementById('lb-prev').onclick = function(e) {
+            e.stopPropagation();
+            const prevBtn = document.querySelector('.photo-prev-btn');
+            if (prevBtn) {
+                prevBtn.click();
+                syncLightbox();
+            }
         };
     }
+    
     document.getElementById('lightbox-img').src = src;
     overlay.style.display = 'flex';
+    syncLightbox(); // Sprawdź czy pokazać strzałki
+}
+
+// Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
+function syncLightbox() {
+    const container = document.querySelector('.photo-slider-container');
+    const lbImg = document.getElementById('lightbox-img');
+    const lbPrev = document.getElementById('lb-prev');
+    const lbNext = document.getElementById('lb-next');
+
+    if (container && lbImg) {
+        const slides = container.querySelectorAll('.photo-slider-wrapper img');
+        const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
+        
+        // Aktualizuj obrazek
+        lbImg.src = slides[currentIdx].src;
+
+        // Ukryj strzałki jeśli jest tylko 1 zdjęcie
+        if (slides.length <= 1) {
+            lbPrev.classList.add('hide-nav');
+            lbNext.classList.add('hide-nav');
+        } else {
+            lbPrev.classList.remove('hide-nav');
+            lbNext.classList.remove('hide-nav');
+        }
+    }
 }
 // Obsługa klawiatury dla całego dokumentu
 document.addEventListener('keydown', function(e) {
@@ -1605,7 +1680,7 @@ document.addEventListener('keydown', function(e) {
     const isModalOpen = modal && modal.style.display === 'flex';
 
     // 1. Obsługa klawisza ESC
-    if (e.key === "Escape") {
+if (e.key === "Escape") {
         if (isLightboxOpen) {
             lightbox.style.display = 'none';
         } else if (isModalOpen) {
@@ -1640,6 +1715,7 @@ document.addEventListener('keydown', function(e) {
 });
         init();
     </script></body></html>
+
 
 
 
