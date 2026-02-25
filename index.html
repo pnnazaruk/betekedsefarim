@@ -1599,28 +1599,37 @@ function openLightbox(src) {
 }
 // Obsługa klawiatury dla całego dokumentu
 document.addEventListener('keydown', function(e) {
-    // 1. Zamykanie okna modalnego lub lightboxa klawiszem ESC
+    // 1. Obsługa klawisza ESC
     if (e.key === "Escape") {
         const lightbox = document.getElementById('lightbox-overlay');
+        const modal = document.getElementById('modalOverlay');
+        
+        // Najpierw zamykamy lightbox, jeśli jest widoczny
         if (lightbox && lightbox.style.display === 'flex') {
             lightbox.style.display = 'none';
-        } else {
-            closeModal(); // Zamyka główne okno modalne
+        } 
+        // Jeśli lightbox zamknięty, zamykamy główny modal
+        else if (modal && modal.style.display === 'flex') {
+            closeModal();
         }
     }
 
-    // 2. Przesuwanie zdjęć w sliderze strzałkami LEWO/PRAWO
-    // Działa tylko gdy modal jest otwarty
-    if (document.getElementById('modalOverlay').style.display === 'flex') {
-        const nextBtn = document.querySelector('.photo-next-btn');
-        const prevBtn = document.querySelector('.photo-prev-btn');
-        
-        if (e.key === "ArrowRight" && nextBtn) nextBtn.click();
-        if (e.key === "ArrowLeft" && prevBtn) prevBtn.click();
+    // 2. Obsługa strzałek (tylko gdy modal jest otwarty)
+    const modal = document.getElementById('modalOverlay');
+    if (modal && modal.style.display === 'flex') {
+        if (e.key === "ArrowRight") {
+            const nextBtn = document.querySelector('.photo-next-btn');
+            if (nextBtn) nextBtn.click();
+        }
+        if (e.key === "ArrowLeft") {
+            const prevBtn = document.querySelector('.photo-prev-btn');
+            if (prevBtn) prevBtn.click();
+        }
     }
 });
         init();
     </script></body></html>
+
 
 
 
