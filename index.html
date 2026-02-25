@@ -81,20 +81,22 @@
     @media (max-width: 768px) {
         #network-graph { height: 400px; } /* Niższy graf na telefonach */
     }
-
-/* Kontener slidera */
+        
+/* --- LEKKI SLIDER BEZ RAMEK --- */
 .slider-container {
     position: relative;
     width: 100%;
     margin: 15px 0;
     overflow: hidden;
-    background: transparent; /* Brak tła */
-    border: none; /* Brak ramek */
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
 }
 
 .slider-wrapper {
     display: flex;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: transparent !important;
 }
 
 .slider-wrapper img {
@@ -104,7 +106,10 @@
     max-height: 400px;
     object-fit: contain;
     cursor: zoom-in;
-    background: transparent;
+    background: transparent !important;
+    border: none !important;      /* Usuwa ramkę zdjęcia */
+    outline: none !important;     /* Usuwa obrys */
+    box-shadow: none !important;  /* Usuwa ewentualny cień */
 }
 
 /* Styl strzałek - bardziej dyskretne */
@@ -413,6 +418,39 @@ body.stats-mode #dashboard-view {
 .bound-with-link:hover {
     font-weight: bold;
     color: #1a1a1a; /* Pozostaje czarny przy najechaniu */
+}
+/* Przywrócenie poprawnego wyglądu osi czasu */
+.timeline-item {
+    position: relative;
+    width: 50%;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    clear: both;
+}
+
+.timeline-item.left {
+    float: left;
+    text-align: right;
+    border-right: 2px solid #1a1a1a;
+}
+
+.timeline-item.right {
+    float: right;
+    text-align: left;
+    border-left: 2px solid #1a1a1a;
+    margin-left: -2px; /* Nakładanie granic, by tworzyły jedną linię */
+}
+
+/* Styl dla dat */
+.timeline-item .date-gregorian {
+    font-weight: bold;
+    display: block;
+}
+
+.timeline-item .date-hebrew {
+    font-style: italic;
+    color: #555;
+    display: block;
 }
     </style></head><body>
 
@@ -1510,7 +1548,6 @@ const ProvenanceModule = {
 let currentSlide = 0;
 
 function moveSlide(direction, btnElement) {
-    // Znajdujemy wrapper wewnątrz tego konkretnego kontenera, w którym kliknięto przycisk
     const container = btnElement.closest('.slider-container');
     const wrapper = container.querySelector('.slider-wrapper');
     const slides = wrapper.querySelectorAll('img');
@@ -1518,12 +1555,16 @@ function moveSlide(direction, btnElement) {
 
     if (totalSlides <= 1) return;
 
-    // Aktualizacja indeksu
-    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
+    // Pobieramy aktualny stan przesunięcia z atrybutu data (aby każdy modal był niezależny)
+    let currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
     
-    // Przesunięcie
-    const offset = currentSlide * 100;
-    wrapper.style.transform = `translateX(-${offset}%)`;
+    currentIdx = (currentIdx + direction + totalSlides) % totalSlides;
+    
+    // Zapisujemy nowy stan
+    container.setAttribute('data-current-slide', currentIdx);
+    
+    // Przesuwamy
+    wrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
 }
         // Funkcja tworząca Lightbox przy pierwszym kliknięciu
 function openLightbox(src) {
@@ -1547,6 +1588,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
