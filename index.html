@@ -108,7 +108,7 @@
 }
 
 /* Styl strzałek - bardziej dyskretne */
-.slider-btn {
+.photo-slider-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -127,7 +127,7 @@
     transition: background 0.2s;
 }
 
-.slider-btn:hover { 
+.photo-slider-btn:hover { 
     background: rgba(0, 0, 0, 0.8); 
 }
 
@@ -795,7 +795,7 @@ if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
         if (images.length > 0) {
             // Dodajemy data-current-slide="0"
 galleryHTML = `
-    <div class="slider-container" data-current-slide="0">
+    <div class="photo-slider-container" data-current-slide="0">
         ...
         <div class="photo-slider-wrapper">
             ${images.map(imgUrl => `<img src="${imgUrl}" ...>`).join('')}
@@ -1506,7 +1506,7 @@ const ProvenanceModule = {
 let currentSlide = 0;
 
 function moveSlide(direction, btnElement) {
-    const container = btnElement.closest('.slider-container');
+    const container = btnElement.closest('.photo-slider-container');
     // ZMIEŃ 'slider-wrapper' na 'photo-slider-wrapper'
     const wrapper = container.querySelector('.photo-slider-wrapper');
     const slides = wrapper.querySelectorAll('img');
@@ -1539,6 +1539,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
