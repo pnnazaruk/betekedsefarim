@@ -82,31 +82,74 @@
         #network-graph { height: 400px; } /* Niższy graf na telefonach */
     }
 
-/* Kontener galerii */
-.mini-gallery {
-    margin-top: 15px;
+/* Kontener slidera */
+.slider-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px; /* Dopasuj do szerokości kolumny */
+    margin: 10px auto;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.slider-wrapper {
     display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 5px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Styl dla miniatury w galerii */
-.gallery-item {
-    flex: 0 0 80px; /* Szerokość miniatury */
-    height: 80px;
-    object-fit: cover;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+.slider-wrapper img {
+    width: 100%;
+    flex-shrink: 0;
+    cursor: zoom-in;
+    object-fit: contain;
+    height: 250px; /* Stała wysokość dla spójności */
+}
+
+/* Strzałki */
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(26, 26, 26, 0.7);
+    color: white;
+    border: none;
+    padding: 10px 12px;
     cursor: pointer;
-    scroll-snap-align: start;
-    transition: transform 0.2s;
+    z-index: 10;
+    border-radius: 50%;
+    font-size: 14px;
+    transition: background 0.3s;
 }
 
-.gallery-item:hover {
-    transform: scale(1.05);
-    border-color: #1a1a1a;
+.slider-btn:hover { background: #1a1a1a; }
+.prev-btn { left: 5px; }
+.next-btn { right: 5px; }
+
+/* Lightbox (Pop-up zdjęcia) */
+#lightbox-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+#lightbox-img {
+    max-width: 90%;
+    max-height: 90%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px; right: 30px;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
 }
 
 /* Ukrywanie paska przewijania (opcjonalne, dla estetyki) */
@@ -734,22 +777,23 @@ function openModal(rowIndex) {
         return "ID " + id;
     };
 
-    // --- NOWA LOGIKA: PRZYGOTOWANIE GALERII (Kolumna AB / Indeks 27) ---
+// --- NOWA LOGIKA: PRZYGOTOWANIE SLIDERA 
     const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
     let galleryHTML = "";
-    
+    currentSlide = 0; // Resetujemy stan przy każdym otwarciu modala
+
     if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
         const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
         if (images.length > 0) {
             galleryHTML = `
-                <div class="mini-gallery-container" style="margin-top: 20px;">
-                    <span class="label" style="font-size: 10px; margin-bottom: 8px; display: block; letter-spacing: 0.5px;">WIĘCEJ ZDJĘĆ / MORE IMAGES</span>
-                    <div class="mini-gallery" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;">
+                <div class="slider-container">
+                    ${images.length > 1 ? `
+                        <button class="slider-btn prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
+                        <button class="slider-btn next-btn" onclick="moveSlide(1, this)">&#10095;</button>
+                    ` : ''}
+                    <div class="slider-wrapper">
                         ${images.map(imgUrl => `
-                            <img src="${imgUrl}" 
-                                 style="flex: 0 0 100px; height: 100px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; scroll-snap-align: start;" 
-                                 onclick="window.open('${imgUrl}', '_blank')"
-                                 onerror="this.style.display='none'">
+                            <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" alt="Dodatkowe zdjęcie">
                         `).join('')}
                     </div>
                 </div>
@@ -1454,6 +1498,27 @@ const ProvenanceModule = {
         this.instance = new vis.Network(container, { nodes, edges }, options);
     }
 };
+        // Funkcja tworząca Lightbox przy pierwszym kliknięciu
+function openLightbox(src) {
+    let overlay = document.getElementById('lightbox-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'lightbox-overlay';
+        overlay.innerHTML = `
+            <span class="lightbox-close">&times;</span>
+            <img id="lightbox-img" src="">
+        `;
+        document.body.appendChild(overlay);
+        
+        // Zamknij po kliknięciu w tło lub krzyżyk
+        overlay.onclick = function(e) {
+            if (e.target.id !== 'lightbox-img') overlay.style.display = 'none';
+        };
+    }
+    document.getElementById('lightbox-img').src = src;
+    overlay.style.display = 'flex';
+}
         init();
     </script></body></html>
+
 
