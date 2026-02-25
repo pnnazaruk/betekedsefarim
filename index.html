@@ -81,44 +81,6 @@
     @media (max-width: 768px) {
         #network-graph { height: 400px; } /* Niższy graf na telefonach */
     }
-        
-/* --- POPRAWKA OSI CZASU (Przywrócenie lewej i prawej strony) --- */
-.timeline-container {
-    position: relative;
-    max-width: 1000px;
-    margin: 40px auto;
-    padding: 20px 0;
-}
-
-.timeline-container::after {
-    content: '';
-    position: absolute;
-    width: 2px;
-    background: #1a1a1a;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    margin-left: -1px;
-}
-
-.timeline-item {
-    padding: 10px 40px;
-    position: relative;
-    background: inherit;
-    width: 50%;
-    box-sizing: border-box;
-    clear: both; /* Kluczowe dla osi czasu */
-}
-
-.timeline-item.left {
-    float: left;
-    text-align: right;
-}
-
-.timeline-item.right {
-    float: right;
-    text-align: left;
-}
 
 /* --- LEKKI SLIDER (Bez ramki, tła i cieni) --- */
 .slider-container {
@@ -130,22 +92,19 @@
     border: none !important;
 }
 
-.slider-wrapper {
+.photo-slider-wrapper {
     display: flex;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.slider-wrapper img {
+.photo-slider-wrapper img {
     width: 100%;
     flex-shrink: 0;
     height: auto;
     max-height: 400px;
     object-fit: contain;
     cursor: zoom-in;
-    border: none !important;      /* Usuwa ramkę zdjęcia */
-    outline: none !important;     /* Usuwa niebieski obrys */
-    box-shadow: none !important;  /* Usuwa cienie */
-    background: transparent !important;
+    border: none !important;
+    outline: none !important;
 }
 
 /* Styl strzałek - bardziej dyskretne */
@@ -835,19 +794,14 @@ if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
         const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
         if (images.length > 0) {
             // Dodajemy data-current-slide="0"
-            galleryHTML = `
-                <div class="slider-container" data-current-slide="0">
-                    ${images.length > 1 ? `
-                        <button class="slider-btn prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
-                        <button class="slider-btn next-btn" onclick="moveSlide(1, this)">&#10095;</button>
-                    ` : ''}
-                    <div class="slider-wrapper">
-                        ${images.map(imgUrl => `
-                            <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" alt="Dodatkowe zdjęcie">
-                        `).join('')}
-                    </div>
-                </div>
-            `;
+galleryHTML = `
+    <div class="slider-container" data-current-slide="0">
+        ...
+        <div class="photo-slider-wrapper">
+            ${images.map(imgUrl => `<img src="${imgUrl}" ...>`).join('')}
+        </div>
+    </div>
+`;
         }
     }
     // ---------------------------------------------------------------
@@ -1553,7 +1507,8 @@ let currentSlide = 0;
 
 function moveSlide(direction, btnElement) {
     const container = btnElement.closest('.slider-container');
-    const wrapper = container.querySelector('.slider-wrapper');
+    // ZMIEŃ 'slider-wrapper' na 'photo-slider-wrapper'
+    const wrapper = container.querySelector('.photo-slider-wrapper');
     const slides = wrapper.querySelectorAll('img');
     
     let currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
@@ -1584,6 +1539,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
