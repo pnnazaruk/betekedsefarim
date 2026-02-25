@@ -269,7 +269,19 @@
         .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
         .modal-body { display: flex; gap: 30px; flex-wrap: wrap; }
         .modal-img-col { flex: 0 0 200px; text-align: center; }
-        .modal-img-col img { width: 100%; max-height: 300px; object-fit: contain; border: 1px solid #1a1a1a; margin-bottom: 15px; }
+       .modal-img-col img { 
+    width: 100%; 
+    max-height: 300px; 
+    object-fit: contain; 
+    border: none; 
+    margin-bottom: 15px; 
+    cursor: zoom-in; 
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.modal-img-col img:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
         .modal-data-col { flex: 1; min-width: 300px; }
         .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
         .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
@@ -871,27 +883,31 @@ galleryHTML = `
     // 5. Renderowanie do HTML (Z uwzględnieniem RWD dla galerii)
     const isMobile = window.innerWidth <= 768;
 
-    document.getElementById('modalContent').innerHTML = `
-        <div class="modal-body">
-            <div class="modal-img-col">
-                <img src="${getVal(r.c[23])}" style="max-width:100%;" onerror="this.src='https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png'">
-                ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
-                
-                <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">
-                    ${galleryHTML}
-                </div>
-            </div>
-            <div class="modal-data-col">
-                ${finalDetailsHtml} 
-                ${copySection}
-                ${provenanceHTML}
-                
-                <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">
-                    ${galleryHTML}
-                </div>
+document.getElementById('modalContent').innerHTML = `
+    <div class="modal-body">
+        <div class="modal-img-col">
+            <img src="${getVal(r.c[23])}" 
+                 onclick="openLightbox(this.src)"
+                 style="max-width:100%; cursor: zoom-in;" 
+                 onerror="this.src='https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png'">
+            
+            ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
+            
+            <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">
+                ${galleryHTML}
             </div>
         </div>
-    `;
+        <div class="modal-data-col">
+            ${finalDetailsHtml} 
+            ${copySection}
+            ${provenanceHTML}
+            
+            <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">
+                ${galleryHTML}
+            </div>
+        </div>
+    </div>
+`;
 
     // 6. Pokazanie modala i aktualizacja URL
     document.getElementById('modalOverlay').style.display = 'flex';
@@ -1546,6 +1562,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
