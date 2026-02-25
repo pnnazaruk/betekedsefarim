@@ -95,6 +95,7 @@
 .photo-slider-wrapper {
     display: flex;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-100%); /* -100% to drugie zdjęcie, -200% to trzecie itd.
 }
 .photo-slider-wrapper img {
     width: 100%;
@@ -792,7 +793,7 @@ if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
         if (images.length > 0) {
             // Dodajemy data-current-slide="0"
 galleryHTML = `
-    <div class="photo-slider-container" data-current-slide="0">
+    <div class="photo-slider-container" data-current-slide="1">
         ${images.length > 1 ? `
             <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
             <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
@@ -1544,6 +1545,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
