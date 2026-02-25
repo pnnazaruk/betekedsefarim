@@ -82,7 +82,45 @@
         #network-graph { height: 400px; } /* Niższy graf na telefonach */
     }
         
-/* --- LEKKI SLIDER BEZ RAMEK --- */
+/* --- POPRAWKA OSI CZASU (Przywrócenie lewej i prawej strony) --- */
+.timeline-container {
+    position: relative;
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 20px 0;
+}
+
+.timeline-container::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    background: #1a1a1a;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -1px;
+}
+
+.timeline-item {
+    padding: 10px 40px;
+    position: relative;
+    background: inherit;
+    width: 50%;
+    box-sizing: border-box;
+    clear: both; /* Kluczowe dla osi czasu */
+}
+
+.timeline-item.left {
+    float: left;
+    text-align: right;
+}
+
+.timeline-item.right {
+    float: right;
+    text-align: left;
+}
+
+/* --- LEKKI SLIDER (Bez ramki, tła i cieni) --- */
 .slider-container {
     position: relative;
     width: 100%;
@@ -90,13 +128,11 @@
     overflow: hidden;
     background: transparent !important;
     border: none !important;
-    outline: none !important;
 }
 
 .slider-wrapper {
     display: flex;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    background: transparent !important;
 }
 
 .slider-wrapper img {
@@ -106,10 +142,10 @@
     max-height: 400px;
     object-fit: contain;
     cursor: zoom-in;
-    background: transparent !important;
     border: none !important;      /* Usuwa ramkę zdjęcia */
-    outline: none !important;     /* Usuwa obrys */
-    box-shadow: none !important;  /* Usuwa ewentualny cień */
+    outline: none !important;     /* Usuwa niebieski obrys */
+    box-shadow: none !important;  /* Usuwa cienie */
+    background: transparent !important;
 }
 
 /* Styl strzałek - bardziej dyskretne */
@@ -418,39 +454,6 @@ body.stats-mode #dashboard-view {
 .bound-with-link:hover {
     font-weight: bold;
     color: #1a1a1a; /* Pozostaje czarny przy najechaniu */
-}
-/* Przywrócenie poprawnego wyglądu osi czasu */
-.timeline-item {
-    position: relative;
-    width: 50%;
-    padding: 10px 20px;
-    box-sizing: border-box;
-    clear: both;
-}
-
-.timeline-item.left {
-    float: left;
-    text-align: right;
-    border-right: 2px solid #1a1a1a;
-}
-
-.timeline-item.right {
-    float: right;
-    text-align: left;
-    border-left: 2px solid #1a1a1a;
-    margin-left: -2px; /* Nakładanie granic, by tworzyły jedną linię */
-}
-
-/* Styl dla dat */
-.timeline-item .date-gregorian {
-    font-weight: bold;
-    display: block;
-}
-
-.timeline-item .date-hebrew {
-    font-style: italic;
-    color: #555;
-    display: block;
 }
     </style></head><body>
 
@@ -828,11 +831,12 @@ function openModal(rowIndex) {
     let galleryHTML = "";
     currentSlide = 0; // Resetujemy stan przy każdym otwarciu modala
 
-    if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
+if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
         const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
         if (images.length > 0) {
+            // Dodajemy data-current-slide="0"
             galleryHTML = `
-                <div class="slider-container">
+                <div class="slider-container" data-current-slide="0">
                     ${images.length > 1 ? `
                         <button class="slider-btn prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
                         <button class="slider-btn next-btn" onclick="moveSlide(1, this)">&#10095;</button>
@@ -1551,19 +1555,11 @@ function moveSlide(direction, btnElement) {
     const container = btnElement.closest('.slider-container');
     const wrapper = container.querySelector('.slider-wrapper');
     const slides = wrapper.querySelectorAll('img');
-    const totalSlides = slides.length;
-
-    if (totalSlides <= 1) return;
-
-    // Pobieramy aktualny stan przesunięcia z atrybutu data (aby każdy modal był niezależny)
+    
     let currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
+    currentIdx = (currentIdx + direction + slides.length) % slides.length;
     
-    currentIdx = (currentIdx + direction + totalSlides) % totalSlides;
-    
-    // Zapisujemy nowy stan
     container.setAttribute('data-current-slide', currentIdx);
-    
-    // Przesuwamy
     wrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
 }
         // Funkcja tworząca Lightbox przy pierwszym kliknięciu
@@ -1588,6 +1584,7 @@ function openLightbox(src) {
 }
         init();
     </script></body></html>
+
 
 
 
