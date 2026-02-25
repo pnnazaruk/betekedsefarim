@@ -82,6 +82,57 @@
         #network-graph { height: 400px; } /* Niższy graf na telefonach */
     }
 
+/* Kontener galerii */
+.mini-gallery {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 5px;
+}
+
+/* Styl dla miniatury w galerii */
+.gallery-item {
+    flex: 0 0 80px; /* Szerokość miniatury */
+    height: 80px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: transform 0.2s;
+}
+
+.gallery-item:hover {
+    transform: scale(1.05);
+    border-color: #1a1a1a;
+}
+
+/* Ukrywanie paska przewijania (opcjonalne, dla estetyki) */
+.mini-gallery::-webkit-scrollbar {
+    height: 4px;
+}
+.mini-gallery::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+/* Responsywność dla urządzeń mobilnych */
+@media (max-width: 768px) {
+    .mobile-gallery-container {
+        order: 10; /* Przesuwa na sam dół wewnątrz flex-col */
+        width: 100%;
+        margin-top: 20px;
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+    }
+    .gallery-item {
+        flex: 0 0 120px; /* Nieco większe na mobile dla łatwiejszego klikania */
+        height: 120px;
+    }
+}
+
         #sidebar { 
             width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
             padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
@@ -683,6 +734,30 @@ function openModal(rowIndex) {
         return "ID " + id;
     };
 
+    // --- NOWA LOGIKA: PRZYGOTOWANIE GALERII (Kolumna AB / Indeks 27) ---
+    const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
+    let galleryHTML = "";
+    
+    if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
+        const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
+        if (images.length > 0) {
+            galleryHTML = `
+                <div class="mini-gallery-container" style="margin-top: 20px;">
+                    <span class="label" style="font-size: 10px; margin-bottom: 8px; display: block; letter-spacing: 0.5px;">WIĘCEJ ZDJĘĆ / MORE IMAGES</span>
+                    <div class="mini-gallery" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;">
+                        ${images.map(imgUrl => `
+                            <img src="${imgUrl}" 
+                                 style="flex: 0 0 100px; height: 100px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; scroll-snap-align: start;" 
+                                 onclick="window.open('${imgUrl}', '_blank')"
+                                 onerror="this.style.display='none'">
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+    // ---------------------------------------------------------------
+
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
     let link = getVal(r.c[16]);
@@ -741,17 +816,27 @@ function openModal(rowIndex) {
         </div>
     `;
 
-    // 5. Renderowanie do HTML
+    // 5. Renderowanie do HTML (Z uwzględnieniem RWD dla galerii)
+    const isMobile = window.innerWidth <= 768;
+
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
                 <img src="${getVal(r.c[23])}" style="max-width:100%;" onerror="this.src='https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png'">
                 ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
+                
+                <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">
+                    ${galleryHTML}
+                </div>
             </div>
             <div class="modal-data-col">
                 ${finalDetailsHtml} 
                 ${copySection}
                 ${provenanceHTML}
+                
+                <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">
+                    ${galleryHTML}
+                </div>
             </div>
         </div>
     `;
@@ -1371,3 +1456,4 @@ const ProvenanceModule = {
 };
         init();
     </script></body></html>
+
