@@ -875,7 +875,7 @@ galleryHTML = `
         ` : ''}
         <div class="photo-slider-wrapper">
 ${images.map(imgUrl => `
-    <img src="${imgUrl}" onclick="openLightbox(this.src, false)" ...>
+    <img src="${imgUrl}" onclick="openLightbox(this.src, true)" alt="Dodatkowe zdjęcie">
 `).join('')}
         </div>
     </div>
@@ -954,9 +954,9 @@ for (let i = 0; i <= 22; i++) {
 document.getElementById('modalContent').innerHTML = `
     <div class="modal-body">
         <div class="modal-img-col">
-            <img src="${getVal(r.c[23])}" 
-                 onclick="openLightbox(this.src, true)"
-                 style="max-width:100%; cursor: zoom-in;" 
+<img src="${getVal(r.c[23])}" 
+     onclick="openLightbox(this.src, false)" 
+     style="max-width:100%; cursor: zoom-in;" ...>
                  onerror="this.src='https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png'">
             
             ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
@@ -1609,66 +1609,82 @@ function moveSlide(direction, btnElement) {
     wrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
 }
         // Funkcja tworząca Lightbox przy pierwszym kliknięciu
-function openLightbox(src, isMain) {
+function openLightbox(src, fromGallery) {
     let overlay = document.getElementById('lightbox-overlay');
     if (!overlay) {
-        // ... (Twój kod tworzenia overlay, lb-next, lb-prev - zostaw go bez zmian) ...
+        overlay = document.createElement('div');
+        overlay.id = 'lightbox-overlay';
+        overlay.innerHTML = `
+            <span class="lightbox-close">&times;</span>
+            <button class="lightbox-btn lightbox-prev" id="lb-prev">&#10094;</button>
+            <button class="lightbox-btn lightbox-next" id="lb-next">&#10095;</button>
+            <img id="lightbox-img" src="">
+        `;
+        document.body.appendChild(overlay);
+        
+        overlay.onclick = function(e) {
+            if (e.target.id === 'lightbox-overlay' || e.target.className === 'lightbox-close') {
+                overlay.style.display = 'none';
+            }
+        };
+
+        document.getElementById('lb-next').onclick = function(e) {
+            e.stopPropagation();
+            const nextBtn = document.querySelector('.photo-next-btn');
+            if (nextBtn) { nextBtn.click(); syncLightbox(); }
+        };
+
+        document.getElementById('lb-prev').onclick = function(e) {
+            e.stopPropagation();
+            const prevBtn = document.querySelector('.photo-prev-btn');
+            if (prevBtn) { prevBtn.click(); syncLightbox(); }
+        };
     }
 
     const imgElement = document.getElementById('lightbox-img');
-    const container = document.querySelector('.photo-slider-container');
-
-    // 1. Ustawiamy obrazek, który został kliknięty
     imgElement.src = src;
+    overlay.style.display = 'flex';
 
-    if (isMain) {
-        // SCENARIUSZ: MINIATURA X
-        imgElement.setAttribute('data-is-main', 'true');
-        document.getElementById('lb-prev').style.display = 'none';
-        document.getElementById('lb-next').style.display = 'none';
-    } else {
-        // SCENARIUSZ: SLIDER AB
-        imgElement.setAttribute('data-is-main', 'false');
-        
-        // Magia: Szukamy numeru tego zdjęcia w sliderze, żeby zsynchronizować strzałki
+    if (fromGallery) {
+        // Jeśli kliknięto w galerię, ustawiamy slider pod spodem na tym zdjęciu
+        const container = document.querySelector('.photo-slider-container');
         if (container) {
             const slides = Array.from(container.querySelectorAll('.photo-slider-wrapper img'));
-            const foundIndex = slides.findIndex(img => img.src === src);
-            
-            if (foundIndex !== -1) {
-                // Ustawiamy slider na tym zdjęciu
-                container.setAttribute('data-current-slide', foundIndex);
+            const clickedIdx = slides.findIndex(img => img.src === src);
+            if (clickedIdx !== -1) {
+                container.setAttribute('data-current-slide', clickedIdx);
                 const wrapper = container.querySelector('.photo-slider-wrapper');
-                if (wrapper) wrapper.style.transform = `translateX(-${foundIndex * 100}%)`;
+                if (wrapper) wrapper.style.transform = `translateX(-${clickedIdx * 100}%)`;
             }
         }
-        
-        // Włączamy strzałki i odświeżamy ich stan
-        if (window.syncLightbox) syncLightbox();
+        imgElement.setAttribute('data-mode', 'gallery');
+        syncLightbox(); 
+    } else {
+        // Jeśli kliknięto w miniaturę główną, blokujemy nawigację
+        imgElement.setAttribute('data-mode', 'main');
+        document.getElementById('lb-prev').style.display = 'none';
+        document.getElementById('lb-next').style.display = 'none';
     }
-
-    overlay.style.display = 'flex';
 }
 
 // Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
 function syncLightbox() {
     const lbImg = document.getElementById('lightbox-img');
-    if (!lbImg || lbImg.getAttribute('data-is-main') === 'true') return; // STOP jeśli to miniatura X
+    if (!lbImg || lbImg.getAttribute('data-mode') === 'main') return; // STOP
 
     const container = document.querySelector('.photo-slider-container');
-    if (container) {
+    const lbPrev = document.getElementById('lb-prev');
+    const lbNext = document.getElementById('lb-next');
+
+    if (container && lbImg) {
         const slides = container.querySelectorAll('.photo-slider-wrapper img');
         const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
         
-        if (slides[currentIdx]) {
-            lbImg.src = slides[currentIdx].src;
-        }
+        if (slides[currentIdx]) lbImg.src = slides[currentIdx].src;
 
-        const lbPrev = document.getElementById('lb-prev');
-        const lbNext = document.getElementById('lb-next');
-        const show = slides.length > 1 ? 'block' : 'none';
-        if (lbPrev) lbPrev.style.display = show;
-        if (lbNext) lbNext.style.display = show;
+        const showBtns = slides.length > 1 ? 'block' : 'none';
+        if (lbPrev) lbPrev.style.display = showBtns;
+        if (lbNext) lbNext.style.display = showBtns;
     }
 }
 // Obsługa klawiatury dla całego dokumentu
@@ -1714,6 +1730,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
