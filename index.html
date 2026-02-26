@@ -876,7 +876,7 @@ galleryHTML = `
         ` : ''}
         <div class="photo-slider-wrapper">
             ${images.map(imgUrl => `
-                <img src="${imgUrl}" onclick="openLightbox('${imgUrl}')" alt="Dodatkowe zdjęcie">
+                <img src="${imgUrl}" onclick="openLightbox('${index + 1}')" alt="Dodatkowe zdjęcie">
             `).join('')}
         </div>
     </div>
@@ -956,7 +956,7 @@ document.getElementById('modalContent').innerHTML = `
     <div class="modal-body">
         <div class="modal-img-col">
             <img src="${getVal(r.c[23])}" 
-                 onclick="openLightbox(this.src)"
+                 onclick="openLightbox(0)"
                  style="max-width:100%; cursor: zoom-in;" 
                  onerror="this.src='https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png'">
             
@@ -1610,8 +1610,10 @@ function moveSlide(direction, btnElement) {
     wrapper.style.transform = `translateX(-${currentIdx * 100}%)`;
 }
         // Funkcja tworząca Lightbox przy pierwszym kliknięciu
-function openLightbox(src) {
+function openLightbox(input) {
     let overlay = document.getElementById('lightbox-overlay');
+    
+    // --- SEKCJA INICJALIZACJI (Zostaje bez zmian, aby zachować funkcje) ---
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'lightbox-overlay';
@@ -1623,14 +1625,12 @@ function openLightbox(src) {
         `;
         document.body.appendChild(overlay);
         
-        // Kliknięcie w tło zamyka, ale kliknięcie w przyciski/zdjęcie nie
         overlay.onclick = function(e) {
             if (e.target.id === 'lightbox-overlay' || e.target.className === 'lightbox-close') {
                 overlay.style.display = 'none';
             }
         };
 
-        // Obsługa myszki dla strzałek w Lightboxie
         document.getElementById('lb-next').onclick = function(e) {
             e.stopPropagation();
             const nextBtn = document.querySelector('.photo-next-btn');
@@ -1650,9 +1650,32 @@ function openLightbox(src) {
         };
     }
     
-    document.getElementById('lightbox-img').src = src;
+    // --- NOWA LOGIKA: ROZPOZNAWANIE KLIKNIĘCIA ---
+    const container = document.querySelector('.photo-slider-container');
+
+    if (typeof input === 'number' && container) {
+        // Jeśli przekazaliśmy numer (np. 0 z miniaturki), 
+        // wymuszamy na sliderze pod spodem powrót do tego zdjęcia.
+        const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
+        const diff = input - currentIdx;
+        
+        if (diff !== 0) {
+            // Używamy Twojej funkcji moveSlide, aby przesunąć slider na właściwe zdjęcie
+            moveSlide(diff, container.querySelector('.photo-slider-btn'));
+        }
+    } else if (typeof input === 'string') {
+        // Jeśli przekazano URL (stary sposób), ustawiamy go bezpośrednio
+        document.getElementById('lightbox-img').src = input;
+    }
+
+    // --- FINALIZACJA ---
     overlay.style.display = 'flex';
-    syncLightbox(); // Sprawdź czy pokazać strzałki
+    
+    // Wywołujemy Twoje syncLightbox(), które ustawi właściwy obrazek 
+    // na podstawie aktualnego stanu slidera i pokaże/ukryje strzałki.
+    if (typeof syncLightbox === 'function') {
+        syncLightbox();
+    }
 }
 
 // Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
@@ -1722,6 +1745,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
