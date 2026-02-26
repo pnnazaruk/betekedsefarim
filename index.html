@@ -1689,19 +1689,28 @@ function syncLightbox() {
     const lbNext = document.getElementById('lb-next');
 
     if (container && lbImg) {
+        // --- KLUCZOWY DODATEK: BEZPIECZNIK ---
+        // Jeśli aktualnie w Lightboxie wyświetlamy miniaturę (data-is-main="true"),
+        // przerywamy funkcję, aby slider nie podmienił nam obrazka.
+        if (lbImg.getAttribute('data-is-main') === 'true') return;
+
         const slides = container.querySelectorAll('.photo-slider-wrapper img');
         const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
         
-        // Aktualizuj obrazek
-        lbImg.src = slides[currentIdx].src;
+        // Aktualizuj obrazek na podstawie tego, co pokazuje slider pod spodem
+        if (slides[currentIdx]) {
+            lbImg.src = slides[currentIdx].src;
+        }
 
-        // Ukryj strzałki jeśli jest tylko 1 zdjęcie
-        if (slides.length <= 1) {
-            lbPrev.classList.add('hide-nav');
-            lbNext.classList.add('hide-nav');
-        } else {
-            lbPrev.classList.remove('hide-nav');
-            lbNext.classList.remove('hide-nav');
+        // Zarządzanie widocznością strzałek
+        if (lbPrev && lbNext) {
+            if (slides.length <= 1) {
+                lbPrev.style.display = 'none';
+                lbNext.style.display = 'none';
+            } else {
+                lbPrev.style.display = 'block';
+                lbNext.style.display = 'block';
+            }
         }
     }
 }
@@ -1748,6 +1757,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
