@@ -1613,7 +1613,7 @@ function moveSlide(direction, btnElement) {
 function openLightbox(input) {
     let overlay = document.getElementById('lightbox-overlay');
     
-    // --- SEKCJA INICJALIZACJI (Zostaje bez zmian, aby zachować funkcje) ---
+    // Inicjalizacja overlay (zostaje Twoja oryginalna logika)
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'lightbox-overlay';
@@ -1631,48 +1631,44 @@ function openLightbox(input) {
             }
         };
 
+        // Twoje strzałki lb-next i lb-prev zostają bez zmian
         document.getElementById('lb-next').onclick = function(e) {
             e.stopPropagation();
             const nextBtn = document.querySelector('.photo-next-btn');
-            if (nextBtn) {
-                nextBtn.click();
-                syncLightbox();
-            }
+            if (nextBtn) { nextBtn.click(); syncLightbox(); }
         };
-
         document.getElementById('lb-prev').onclick = function(e) {
             e.stopPropagation();
             const prevBtn = document.querySelector('.photo-prev-btn');
-            if (prevBtn) {
-                prevBtn.click();
-                syncLightbox();
-            }
+            if (prevBtn) { prevBtn.click(); syncLightbox(); }
         };
     }
-    
-    // --- NOWA LOGIKA: ROZPOZNAWANIE KLIKNIĘCIA ---
-    const container = document.querySelector('.photo-slider-container');
 
-    if (typeof input === 'number' && container) {
-        // Jeśli przekazaliśmy numer (np. 0 z miniaturki), 
-        // wymuszamy na sliderze pod spodem powrót do tego zdjęcia.
-        const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
-        const diff = input - currentIdx;
-        
-        if (diff !== 0) {
-            // Używamy Twojej funkcji moveSlide, aby przesunąć slider na właściwe zdjęcie
-            moveSlide(diff, container.querySelector('.photo-slider-btn'));
+    const imgElement = document.getElementById('lightbox-img');
+
+    // --- KLUCZOWA ZMIANA LOGIKI ---
+    if (typeof input === 'number') {
+        if (input === 0) {
+            // KLIKNIĘTO MINIATURĘ (Kolumna X)
+            // Pobieramy src bezpośrednio z głównego obrazka w modalu
+            const mainImg = document.querySelector('.modal-img-col > img');
+            imgElement.src = mainImg ? mainImg.src : "";
+        } else {
+            // KLIKNIĘTO ZDJĘCIE W GALERII (Kolumna AB)
+            // Pobieramy src z odpowiedniego obrazka w sliderze
+            const galleryImages = document.querySelectorAll('.photo-slider-wrapper img');
+            if (galleryImages[input - 1]) {
+                imgElement.src = galleryImages[input - 1].src;
+            }
         }
-    } else if (typeof input === 'string') {
-        // Jeśli przekazano URL (stary sposób), ustawiamy go bezpośrednio
-        document.getElementById('lightbox-img').src = input;
+    } else {
+        // Jeśli przekazano URL jako string (zapasowo)
+        imgElement.src = input;
     }
 
-    // --- FINALIZACJA ---
     overlay.style.display = 'flex';
     
-    // Wywołujemy Twoje syncLightbox(), które ustawi właściwy obrazek 
-    // na podstawie aktualnego stanu slidera i pokaże/ukryje strzałki.
+    // Wywołujemy Twoją funkcję do pokazywania/ukrywania strzałek
     if (typeof syncLightbox === 'function') {
         syncLightbox();
     }
@@ -1745,30 +1741,3 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
