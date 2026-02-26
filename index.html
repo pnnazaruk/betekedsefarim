@@ -867,19 +867,19 @@ currentSlide = 0;
 if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
     const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
     if (images.length > 0) {
-        galleryHTML = `
-            <div class="photo-slider-container" data-current-slide="0">
-                ${images.length > 1 ? `
-                    <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
-                    <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
-                ` : ''}
-                <div class="photo-slider-wrapper">
-                    ${images.map((imgUrl, index) => `
-                        <img src="${imgUrl}" onclick="openLightbox(${index +1})" alt="Dodatkowe zdjęcie">
-                    `).join('')}
-                </div>
-            </div>
-        `;
+galleryHTML = `
+    <div class="photo-slider-container" data-current-slide="0">
+        ${images.length > 1 ? `
+            <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
+            <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
+        ` : ''}
+        <div class="photo-slider-wrapper">
+            ${images.map((imgUrl, index) => `
+                <img src="${imgUrl}" onclick="openLightbox(${index + 1})" alt="Dodatkowe zdjęcie">
+            `).join('')}
+        </div>
+    </div>
+`;
     }
 }
     // ---------------------------------------------------------------
@@ -1612,6 +1612,7 @@ function moveSlide(direction, btnElement) {
 function openLightbox(input) {
     let overlay = document.getElementById('lightbox-overlay');
     
+    // Inicjalizacja (jeśli nie istnieje)
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'lightbox-overlay';
@@ -1645,46 +1646,39 @@ function openLightbox(input) {
     const imgElement = document.getElementById('lightbox-img');
     const lbPrev = document.getElementById('lb-prev');
     const lbNext = document.getElementById('lb-next');
+    const container = document.querySelector('.photo-slider-container');
+
+    if (!imgElement) return;
 
     if (typeof input === 'number') {
         if (input === 0) {
-            // SCENARIUSZ A: KLIKNIĘTO MINIATURKĘ (Kolumna X)
+            // KLIKNIĘTO MINIATURĘ (X)
             const mainImg = document.querySelector('.modal-img-col > img');
-            if (mainImg) {
-                imgElement.src = mainImg.src;
-                // Ważne: Dodajemy atrybut, żeby syncLightbox wiedział, że ma nie nadpisywać miniatury
-                imgElement.setAttribute('data-is-main', 'true');
-            }
+            if (mainImg) imgElement.src = mainImg.src;
+            imgElement.setAttribute('data-is-main', 'true'); // Blokada synchronizacji
 
             if (lbPrev) lbPrev.style.display = 'none';
             if (lbNext) lbNext.style.display = 'none';
-            
         } else {
-            // SCENARIUSZ B: KLIKNIĘTO ZDJĘCIE W GALERII (Kolumna AB)
-            // Usuwamy flagę miniatury, bo teraz jesteśmy w trybie slidera
-            imgElement.setAttribute('data-is-main', 'false');
+            // KLIKNIĘTO SLIDER (AB)
+            imgElement.setAttribute('data-is-main', 'false'); // Wyłączenie blokady
 
-            const container = document.querySelector('.photo-slider-container');
-            const galleryImages = document.querySelectorAll('.photo-slider-wrapper img');
-            
-            // POPRAWKA: Zamiast input - 1, pobieramy aktualny indeks bezpośrednio ze slidera
-            // To rozwiąże problem przesunięcia o jedno zdjęcie.
-const targetIdx = input - 1; 
-
-    if (container && galleryImages[targetIdx]) {
-        container.setAttribute('data-current-slide', targetIdx);
-        const wrapper = container.querySelector('.photo-slider-wrapper');
-        if (wrapper) {
-            wrapper.style.transform = `translateX(-${targetIdx * 100}%)`;
-        }
-        imgElement.src = galleryImages[targetIdx].src;
-    }
-
-    imgElement.setAttribute('data-is-main', 'false');
-
-            if (window.syncLightbox) {
-                syncLightbox();
+            // Pobieramy aktualne zdjęcie ze slidera na podstawie jego stanu
+            if (container) {
+                const slides = container.querySelectorAll('.photo-slider-wrapper img');
+                const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
+                if (slides[currentIdx]) {
+                    imgElement.src = slides[currentIdx].src;
+                }
             }
+
+            if (lbPrev && lbNext) {
+                lbPrev.style.display = 'block';
+                lbNext.style.display = 'block';
+            }
+            
+            // Synchronizujemy strzałki
+            if (typeof syncLightbox === 'function') syncLightbox();
         }
     } else if (typeof input === 'string') {
         imgElement.src = input;
@@ -1697,10 +1691,12 @@ const targetIdx = input - 1;
 function syncLightbox() {
     const lbImg = document.getElementById('lightbox-img');
     const container = document.querySelector('.photo-slider-container');
-    
+    const lbPrev = document.getElementById('lb-prev');
+    const lbNext = document.getElementById('lb-next');
+
     if (!lbImg || !container) return;
 
-    // Jeśli to miniatura główna (indeks 0 z kolumny X), nie pozwól sliderowi jej nadpisać
+    // BEZPIECZNIK: Jeśli to miniatura główna (X), nic nie zmieniaj
     if (lbImg.getAttribute('data-is-main') === 'true') return;
 
     const slides = container.querySelectorAll('.photo-slider-wrapper img');
@@ -1710,7 +1706,6 @@ function syncLightbox() {
         lbImg.src = slides[currentIdx].src;
     }
 
-    // 4. Zarządzanie strzałkami dla slidera
     if (lbPrev && lbNext) {
         const show = slides.length > 1 ? 'block' : 'none';
         lbPrev.style.display = show;
@@ -1760,6 +1755,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
