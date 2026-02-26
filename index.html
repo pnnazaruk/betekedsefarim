@@ -1691,27 +1691,35 @@ function openLightbox(input) {
 
 // Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
 function syncLightbox() {
-    const container = document.querySelector('.photo-slider-container');
     const lbImg = document.getElementById('lightbox-img');
+    const container = document.querySelector('.photo-slider-container');
     const lbPrev = document.getElementById('lb-prev');
     const lbNext = document.getElementById('lb-next');
 
-    if (container && lbImg) {
-        // BEZPIECZNIK: Jeśli to miniatura główna, nie dotykaj obrazka!
-        if (lbImg.getAttribute('data-is-main') === 'true') return;
+    // 1. Sprawdzamy, czy elementy istnieją
+    if (!lbImg || !container) return;
 
-        const slides = container.querySelectorAll('.photo-slider-wrapper img');
-        const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
-        
-        if (slides[currentIdx]) {
-            lbImg.src = slides[currentIdx].src;
-        }
+    // 2. BEZPIECZNIK: Jeśli to miniatura główna (Kolumna X), nie dotykaj obrazka!
+    if (lbImg.getAttribute('data-is-main') === 'true') {
+        // Upewniamy się, że przy miniaturze strzałki są schowane
+        if (lbPrev) lbPrev.style.display = 'none';
+        if (lbNext) lbNext.style.display = 'none';
+        return; 
+    }
 
-        if (lbPrev && lbNext) {
-            const show = slides.length > 1 ? 'block' : 'none';
-            lbPrev.style.display = show;
-            lbNext.style.display = show;
-        }
+    // 3. LOGIKA DLA SLIDERA (Kolumna AB)
+    const slides = container.querySelectorAll('.photo-slider-wrapper img');
+    const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
+    
+    if (slides[currentIdx]) {
+        lbImg.src = slides[currentIdx].src;
+    }
+
+    // 4. Zarządzanie strzałkami dla slidera
+    if (lbPrev && lbNext) {
+        const show = slides.length > 1 ? 'block' : 'none';
+        lbPrev.style.display = show;
+        lbNext.style.display = show;
     }
 }
 // Obsługa klawiatury dla całego dokumentu
@@ -1757,6 +1765,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
