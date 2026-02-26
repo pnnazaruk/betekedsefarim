@@ -1669,14 +1669,18 @@ function openLightbox(input) {
             
             // POPRAWKA: Zamiast input - 1, pobieramy aktualny indeks bezpośrednio ze slidera
             // To rozwiąże problem przesunięcia o jedno zdjęcie.
-            const currentIdx = container ? parseInt(container.getAttribute('data-current-slide') || "0") : (input - 1);
+const targetIdx = input - 1; 
 
-            if (galleryImages[currentIdx]) {
-                imgElement.src = galleryImages[currentIdx].src;
-            }
+    if (container && galleryImages[targetIdx]) {
+        container.setAttribute('data-current-slide', targetIdx);
+        const wrapper = container.querySelector('.photo-slider-wrapper');
+        if (wrapper) {
+            wrapper.style.transform = `translateX(-${targetIdx * 100}%)`;
+        }
+        imgElement.src = galleryImages[targetIdx].src;
+    }
 
-            if (lbPrev) lbPrev.style.display = 'block';
-            if (lbNext) lbNext.style.display = 'block';
+    imgElement.setAttribute('data-is-main', 'false');
 
             if (window.syncLightbox) {
                 syncLightbox();
@@ -1693,21 +1697,12 @@ function openLightbox(input) {
 function syncLightbox() {
     const lbImg = document.getElementById('lightbox-img');
     const container = document.querySelector('.photo-slider-container');
-    const lbPrev = document.getElementById('lb-prev');
-    const lbNext = document.getElementById('lb-next');
-
-    // 1. Sprawdzamy, czy elementy istnieją
+    
     if (!lbImg || !container) return;
 
-    // 2. BEZPIECZNIK: Jeśli to miniatura główna (Kolumna X), nie dotykaj obrazka!
-    if (lbImg.getAttribute('data-is-main') === 'true') {
-        // Upewniamy się, że przy miniaturze strzałki są schowane
-        if (lbPrev) lbPrev.style.display = 'none';
-        if (lbNext) lbNext.style.display = 'none';
-        return; 
-    }
+    // Jeśli to miniatura główna (indeks 0 z kolumny X), nie pozwól sliderowi jej nadpisać
+    if (lbImg.getAttribute('data-is-main') === 'true') return;
 
-    // 3. LOGIKA DLA SLIDERA (Kolumna AB)
     const slides = container.querySelectorAll('.photo-slider-wrapper img');
     const currentIdx = parseInt(container.getAttribute('data-current-slide') || "0");
     
@@ -1765,6 +1760,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
