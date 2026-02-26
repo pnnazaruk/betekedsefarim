@@ -1644,20 +1644,34 @@ function openLightbox(input) {
     }
 
     const imgElement = document.getElementById('lightbox-img');
+    const lbPrev = document.getElementById('lb-prev');
+    const lbNext = document.getElementById('lb-next');
 
     // LOGIKA WYBORU ZDJĘCIA
     if (typeof input === 'number') {
         if (input === 0) {
-            // KLIKNIĘTO MINIATURKĘ (Kolumna X)
+            // SCENARIUSZ A: KLIKNIĘTO MINIATURKĘ (Kolumna X)
             const mainImg = document.querySelector('.modal-img-col > img');
             if (mainImg) imgElement.src = mainImg.src;
+
+            // Całkowicie ignorujemy slider i ukrywamy strzałki
+            if (lbPrev) lbPrev.style.display = 'none';
+            if (lbNext) lbNext.style.display = 'none';
             
-            // USUNIĘTO resetowanie slidera - teraz tło zostanie tam, gdzie było
         } else {
-            // KLIKNIĘTO ZDJĘCIE W GALERII (Kolumna AB)
+            // SCENARIUSZ B: KLIKNIĘTO ZDJĘCIE W GALERII (Kolumna AB)
             const galleryImages = document.querySelectorAll('.photo-slider-wrapper img');
             if (galleryImages[input - 1]) {
                 imgElement.src = galleryImages[input - 1].src;
+            }
+
+            // Włączamy strzałki z powrotem (na wypadek gdyby wcześniej była otwarta miniatura)
+            if (lbPrev) lbPrev.style.display = 'block';
+            if (lbNext) lbNext.style.display = 'block';
+
+            // Synchronizujemy z mechanizmem slidera pod spodem
+            if (window.syncLightbox) {
+                syncLightbox();
             }
         }
     } else if (typeof input === 'string') {
@@ -1665,19 +1679,6 @@ function openLightbox(input) {
     }
 
     overlay.style.display = 'flex';
-    
-    // KLUCZOWA ZMIANA:
-    // Wywołujemy syncLightbox TYLKO jeśli nie kliknęliśmy miniatury (0).
-    // Dzięki temu syncLightbox nie nadpisze adresu miniatury adresem ze slidera.
-    if (input !== 0 && window.syncLightbox) {
-        syncLightbox();
-    } else {
-        // Jeśli to miniatura, tylko ukrywamy strzałki (bo miniatura nie jest częścią slidera)
-        const lbPrev = document.getElementById('lb-prev');
-        const lbNext = document.getElementById('lb-next');
-        if (lbPrev) lbPrev.style.display = 'none';
-        if (lbNext) lbNext.style.display = 'none';
-    }
 }
 
 // Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
@@ -1747,6 +1748,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
