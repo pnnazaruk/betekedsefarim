@@ -915,7 +915,7 @@ const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
                 let hebrewVal = getVal(r.c[22]); // Pobieramy wartość hebrajską z kolumny W
                 if (hebrewVal && hebrewVal !== "---" && hebrewVal !== "-") {
                     // Doklejamy hebrajską nazwę pod spodem z wyrównaniem do prawej (RTL)
-                    displayVal += `<br><span style="direction: rtl; unicode-bidi: bidi-override; display: block; margin-top: 3px; font-size: 1.1em; color: #333; text-align: left;">${hebrewVal}</span>`;
+                    displayVal += `<br><span style="direction: rtl; unicode-bidi: bidi-override; display: block; margin-top: 3px; font-size: 1em; color: #333; text-align: left;">${hebrewVal}</span>`;
                 }
             }
             
@@ -1744,6 +1744,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
