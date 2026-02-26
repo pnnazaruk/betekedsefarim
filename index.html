@@ -613,8 +613,8 @@ body.stats-mode #dashboard-view {
     <div style="padding: 15px; background: #fff; border-bottom: 1px solid #000; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
         <label style="font-size: 14px; font-weight: bold;">Analizuj / Analyze:</label>
         <select id="graph-mode" style="padding: 5px; border: 1px solid #000; background: #fff; cursor: pointer;">
-            <option value="author">10 najczęstszych autorów / Most frequent 10 authors</option>
-            <option value="printer">5 najczętszych drukarzy / Most frequent 5 printers</option>
+            <option value="author">10 najczęstszych autorów / Top 10 most frequent authors</option>
+            <option value="printer">5 najczętszych drukarzy / Top 5 most frequent printers</option>
         </select>
 
         <button onclick="updateGraph()" class="graph-btn">Generuj / Generate</button>
@@ -1722,6 +1722,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
