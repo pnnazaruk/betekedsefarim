@@ -875,7 +875,7 @@ if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
                 ` : ''}
                 <div class="photo-slider-wrapper">
                     ${images.map((imgUrl, index) => `
-                        <img src="${imgUrl}" onclick="openLightbox(${imgUrl})" alt="Dodatkowe zdjęcie">
+                        <img src="${imgUrl}" onclick="openLightbox(${index +1})" alt="Dodatkowe zdjęcie">
                     `).join('')}
                 </div>
             </div>
@@ -1757,6 +1757,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
