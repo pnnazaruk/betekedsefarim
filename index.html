@@ -860,29 +860,28 @@ function openModal(rowIndex) {
     };
 
 // --- NOWA LOGIKA: PRZYGOTOWANIE SLIDERA 
-    const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
-    let galleryHTML = "";
-    currentSlide = 0; // Resetujemy stan przy każdym otwarciu modala
+const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
+let galleryHTML = "";
+currentSlide = 0; 
 
 if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
-        const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
-        if (images.length > 0) {
-            // Dodajemy data-current-slide="0"
-galleryHTML = `
-    <div class="photo-slider-container" data-current-slide="1">
-        ${images.length > 1 ? `
-            <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
-            <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
-        ` : ''}
-        <div class="photo-slider-wrapper">
-            ${images.map(imgUrl => `
-                <img src="${imgUrl}" onclick="openLightbox('${index + 1}')" alt="Dodatkowe zdjęcie">
-            `).join('')}
-        </div>
-    </div>
-`;
-        }
+    const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
+    if (images.length > 0) {
+        galleryHTML = `
+            <div class="photo-slider-container" data-current-slide="0">
+                ${images.length > 1 ? `
+                    <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
+                    <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
+                ` : ''}
+                <div class="photo-slider-wrapper">
+                    ${images.map((imgUrl, index) => `
+                        <img src="${imgUrl}" onclick="openLightbox(${index + 1})" alt="Dodatkowe zdjęcie">
+                    `).join('')}
+                </div>
+            </div>
+        `;
     }
+}
     // ---------------------------------------------------------------
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
@@ -1613,7 +1612,7 @@ function moveSlide(direction, btnElement) {
 function openLightbox(input) {
     let overlay = document.getElementById('lightbox-overlay');
     
-    // Inicjalizacja overlay (zostaje Twoja oryginalna logika)
+    // Inicjalizacja (jeśli nie istnieje)
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'lightbox-overlay';
@@ -1631,47 +1630,42 @@ function openLightbox(input) {
             }
         };
 
-        // Twoje strzałki lb-next i lb-prev zostają bez zmian
         document.getElementById('lb-next').onclick = function(e) {
             e.stopPropagation();
             const nextBtn = document.querySelector('.photo-next-btn');
-            if (nextBtn) { nextBtn.click(); syncLightbox(); }
+            if (nextBtn) { nextBtn.click(); setTimeout(syncLightbox, 50); }
         };
+
         document.getElementById('lb-prev').onclick = function(e) {
             e.stopPropagation();
             const prevBtn = document.querySelector('.photo-prev-btn');
-            if (prevBtn) { prevBtn.click(); syncLightbox(); }
+            if (prevBtn) { prevBtn.click(); setTimeout(syncLightbox, 50); }
         };
     }
 
     const imgElement = document.getElementById('lightbox-img');
 
-    // --- KLUCZOWA ZMIANA LOGIKI ---
+    // LOGIKA WYBORU ZDJĘCIA
     if (typeof input === 'number') {
         if (input === 0) {
-            // KLIKNIĘTO MINIATURĘ (Kolumna X)
-            // Pobieramy src bezpośrednio z głównego obrazka w modalu
+            // Zdjęcie z kolumny X (miniaturka)
             const mainImg = document.querySelector('.modal-img-col > img');
-            imgElement.src = mainImg ? mainImg.src : "";
+            if (mainImg) imgElement.src = mainImg.src;
         } else {
-            // KLIKNIĘTO ZDJĘCIE W GALERII (Kolumna AB)
-            // Pobieramy src z odpowiedniego obrazka w sliderze
+            // Zdjęcie z galerii (kolumna AB)
             const galleryImages = document.querySelectorAll('.photo-slider-wrapper img');
             if (galleryImages[input - 1]) {
                 imgElement.src = galleryImages[input - 1].src;
             }
         }
-    } else {
-        // Jeśli przekazano URL jako string (zapasowo)
+    } else if (typeof input === 'string') {
         imgElement.src = input;
     }
 
     overlay.style.display = 'flex';
     
-    // Wywołujemy Twoją funkcję do pokazywania/ukrywania strzałek
-    if (typeof syncLightbox === 'function') {
-        syncLightbox();
-    }
+    // Wywołujemy syncLightbox jeśli istnieje
+    if (window.syncLightbox) syncLightbox();
 }
 
 // Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
@@ -1741,3 +1735,4 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
