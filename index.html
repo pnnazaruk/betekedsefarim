@@ -1612,7 +1612,7 @@ function moveSlide(direction, btnElement) {
 function openLightbox(input) {
     let overlay = document.getElementById('lightbox-overlay');
     
-    // Inicjalizacja (jeśli nie istnieje) - Twoja oryginalna logika
+    // Inicjalizacja overlay (Twoja oryginalna logika bez zmian)
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'lightbox-overlay';
@@ -1644,7 +1644,6 @@ function openLightbox(input) {
     }
 
     const imgElement = document.getElementById('lightbox-img');
-    const container = document.querySelector('.photo-slider-container'); // Potrzebne do synchronizacji
 
     // LOGIKA WYBORU ZDJĘCIA
     if (typeof input === 'number') {
@@ -1652,25 +1651,13 @@ function openLightbox(input) {
             // KLIKNIĘTO MINIATURKĘ (Kolumna X)
             const mainImg = document.querySelector('.modal-img-col > img');
             if (mainImg) imgElement.src = mainImg.src;
-
-            // KLUCZOWY DODATEK: Jeśli slider jest przesunięty, wróć go na start (indeks 0)
-            if (container) {
-                container.setAttribute('data-current-slide', '0');
-                const wrapper = container.querySelector('.photo-slider-wrapper');
-                if (wrapper) wrapper.style.transform = `translateX(0%)`;
-            }
+            
+            // USUNIĘTO resetowanie slidera - teraz tło zostanie tam, gdzie było
         } else {
             // KLIKNIĘTO ZDJĘCIE W GALERII (Kolumna AB)
             const galleryImages = document.querySelectorAll('.photo-slider-wrapper img');
             if (galleryImages[input - 1]) {
                 imgElement.src = galleryImages[input - 1].src;
-            }
-            
-            // Opcjonalnie: zsynchronizuj slider pod spodem z tym co kliknąłeś
-            if (container) {
-                container.setAttribute('data-current-slide', (input - 1).toString());
-                const wrapper = container.querySelector('.photo-slider-wrapper');
-                if (wrapper) wrapper.style.transform = `translateX(-${(input - 1) * 100}%)`;
             }
         }
     } else if (typeof input === 'string') {
@@ -1679,9 +1666,18 @@ function openLightbox(input) {
 
     overlay.style.display = 'flex';
     
-    // Teraz syncLightbox nie nadpisze miniatury zdjęciem ze slidera, 
-    // bo slider też został przestawiony na 0
-    if (window.syncLightbox) syncLightbox();
+    // KLUCZOWA ZMIANA:
+    // Wywołujemy syncLightbox TYLKO jeśli nie kliknęliśmy miniatury (0).
+    // Dzięki temu syncLightbox nie nadpisze adresu miniatury adresem ze slidera.
+    if (input !== 0 && window.syncLightbox) {
+        syncLightbox();
+    } else {
+        // Jeśli to miniatura, tylko ukrywamy strzałki (bo miniatura nie jest częścią slidera)
+        const lbPrev = document.getElementById('lb-prev');
+        const lbNext = document.getElementById('lb-next');
+        if (lbPrev) lbPrev.style.display = 'none';
+        if (lbNext) lbNext.style.display = 'none';
+    }
 }
 
 // Pomocnicza funkcja synchronizująca obraz i widoczność strzałek
@@ -1751,5 +1747,6 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
