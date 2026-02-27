@@ -634,6 +634,12 @@ body.stats-mode #dashboard-view {
         PL: Przeciągnij, aby przesunąć. Użyj rolki, by przybliżyć. | EN: Drag to move. Use scroll to zoom.
     </div>
 </div>
+                    <div class="chart-card">
+    <div class="chart-header">Częstotliwość występowania pieczęci JChL / Frequency of JChL Stamps</div>
+    <div id="chart-stamps-container" style="height: 400px; padding: 10px;">
+        <canvas id="stampsChart"></canvas>
+    </div>
+</div>
                 </div>
             </div>
         </main>
@@ -1294,7 +1300,49 @@ options: {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
-            renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
+            renderNetworkGraph(data); // 
+            
+const stampsCounts = {};
+data.forEach(r => {
+    let val = getVal(r.c[28]); // Kolumna AC
+    if (val && val !== "-" && val !== "---") {
+        // Rozbijamy, bo w jednej komórce może być np. "typ 1b, typ 10"
+        val.split(',').forEach(s => {
+            let stamp = s.trim();
+            if (stamp) stampsCounts[stamp] = (stampsCounts[stamp] || 0) + 1;
+        });
+    }
+});
+
+const sortedStamps = Object.entries(stampsCounts).sort((a,b) => b[1] - a[1]);
+const stampsLabels = sortedStamps.map(d => d[0]);
+const stampsValues = sortedStamps.map(d => d[1]);
+
+if (window.stampsChart) window.stampsChart.destroy();
+window.stampsChart = new Chart(document.getElementById('stampsChart'), {
+    type: 'bar',
+    data: {
+        labels: stampsLabels,
+        datasets: [{
+            label: 'Liczba wystąpień / Count',
+            data: stampsValues,
+            backgroundColor: '#c73848', // Czerwień pasująca do Twojej legendy (Miejsce)
+            borderRadius: 5
+        }]
+    },
+    options: {
+        indexAxis: 'y', // Słupki poziome są lepsze dla etykiet tekstowych
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1 } },
+            y: { ticks: { font: { size: 12, weight: 'bold' } } }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
         }
         let networkInstance = null;
 function renderNetworkGraph(data, mode = 'author') {
@@ -1744,6 +1792,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
