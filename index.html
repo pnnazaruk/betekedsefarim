@@ -634,12 +634,6 @@ body.stats-mode #dashboard-view {
         PL: Przeciągnij, aby przesunąć. Użyj rolki, by przybliżyć. | EN: Drag to move. Use scroll to zoom.
     </div>
 </div>
-                    <div class="chart-card">
-    <div class="chart-header">Częstotliwość występowania pieczęci JChL / Frequency of JChL Stamps</div>
-    <div id="chart-stamps-container" style="height: 400px; padding: 10px;">
-        <canvas id="stampsChart"></canvas>
-    </div>
-</div>
                 </div>
             </div>
         </main>
@@ -1300,68 +1294,8 @@ options: {
             Object.values(cities).forEach(c => {
                 L.marker(c.pos).addTo(mapInstance).bindPopup(`<b>${c.name}</b><br>Książek / Books: ${c.count}`);
             });
-            renderNetworkGraph(data); // 
-            
-// --- LOGIKA DLA PIECZĘCI JChL (Wersja z diagnostyką) ---
-            const stampsCounts = {};
-            let foundAny = false;
-
-            data.forEach(r => {
-                // Sprawdzamy, czy wiersz r ma w ogóle komórkę pod indeksem 28
-                if (r.c && r.c[28]) {
-                    let val = getVal(r.c[28]); 
-                    if (val && val !== "-" && val !== "---") {
-                        foundAny = true;
-                        val.split(',').forEach(s => {
-                            let stamp = s.trim();
-                            if (stamp) stampsCounts[stamp] = (stampsCounts[stamp] || 0) + 1;
-                        });
-                    }
-                }
-            });
-
-            console.log("Statystyki pieczęci:", stampsCounts); // Sprawdź to w konsoli (F12)
-
-            const sortedStamps = Object.entries(stampsCounts).sort((a, b) => b[1] - a[1]);
-            const stampsLabels = sortedStamps.map(d => d[0]);
-            const stampsValues = sortedStamps.map(d => d[1]);
-
-            // Jeśli nic nie znaleziono, możemy wypisać komunikat wewnątrz kontenera
-            if (!foundAny) {
-                document.getElementById('chart-stamps-container').innerHTML = 
-                    '<div style="display:flex; height:100%; align-items:center; justify-content:center; color:#999;">Brak danych o pieczęciach w kolumnie AC / No data in column AC</div>';
-            } else {
-                // Przywracamy canvas jeśli był tam komunikat o braku danych
-                document.getElementById('chart-stamps-container').innerHTML = '<canvas id="stampsChart"></canvas>';
-
-                if (window.stampsChartInstance) window.stampsChartInstance.destroy();
-
-                const ctxStamps = document.getElementById('stampsChart').getContext('2d');
-                window.stampsChartInstance = new Chart(ctxStamps, {
-                    type: 'bar',
-                    data: {
-                        labels: stampsLabels,
-                        datasets: [{
-                            label: 'Liczba / Count',
-                            data: stampsValues,
-                            backgroundColor: '#c73848',
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { beginAtZero: true, ticks: { stepSize: 1 } },
-                            y: { ticks: { font: { size: 11, weight: 'bold' } } }
-                        }
-                    }
-                });
-            }
-        });
-    }
+            renderNetworkGraph(data); // <--- TUTAJ TO POWINNO BYĆ
+        }
         let networkInstance = null;
 function renderNetworkGraph(data, mode = 'author') {
             const container = document.getElementById('network-graph');
@@ -1810,24 +1744,3 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
