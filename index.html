@@ -1372,7 +1372,7 @@ options: {
                     }
                 }
             });
-// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (MAX WYPELNIENIE) ---
+// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (OPTYMALIZACJA) ---
 let countSzapira = 0;
 let countOthers = 0;
 
@@ -1395,27 +1395,27 @@ szapiraChart = new Chart(ctxSzapira, {
         datasets: [{
             data: [countSzapira, countOthers],
             backgroundColor: ['#c73848', '#f2f2f2'], 
-            borderColor: ['#fff', '#fff'],
+            borderColor: '#fff',
             borderWidth: 2,
-            offset: [40, 0], // Zwiększyłem wysunięcie dla lepszego efektu wizualnego
-            hoverOffset: 50
+            offset: [40, 0],
+            hoverOffset: 50,
+            // LIKWIDACJA SZAREJ OBWÓDKI PO NAJECHANIU:
+            hoverBorderColor: '#fff', // Ustawiamy na biały (taki sam jak spoczynek) lub 'transparent'
+            hoverBorderWidth: 2       // Zachowujemy tę samą szerokość, by koło nie "drgało"
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: false, // Kluczowe, by wypełniało wysokość kontenera
         layout: {
-            padding: 50 // Większy margines, bo koło będzie teraz bardzo duże przez brak legendy
+            padding: 60 // Duży margines na wysunięty kawałek
         },
         plugins: {
             legend: {
-                display: false // CAŁKOWITE USUNIĘCIE LEGENDY
+                display: false
             },
             tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: 12,
-                titleFont: { size: 14 },
-                bodyFont: { size: 14 },
+                enabled: true,
                 callbacks: {
                     label: function(context) {
                         const total = countSzapira + countOthers;
@@ -1890,4 +1890,5 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
