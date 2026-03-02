@@ -614,14 +614,8 @@ body.stats-mode #dashboard-view {
     </div>
 </div>
 <div class="chart-card">
-    <div class="chart-header">Analiza zbiorów Majera Szapiry / Analysis of Rabbi Meir Shapira's Collection</div>
-    <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
-        <div id="chart-szapira-pie-container" style="width: 300px; height: 300px;">
-            <canvas id="szapiraChart"></canvas>
-        </div>
-        <div id="chart-szapira-line-container" style="flex: 1; min-width: 300px; height: 300px;">
-            <canvas id="szapiraTimelineChart"></canvas>
-        </div>
+    <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
+    <div id="chart-szapira-container" style="height: 450px;"> <canvas id="szapiraChart"></canvas>
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1036,7 +1030,7 @@ document.getElementById('modalContent').innerHTML = `
 
         /* KONIEC KODU WZORCOWEGO - LOGIKA DODATKOWA STATYSTYK */
 
-        et mapInstance, timelineChart, locChart, stampsChart, szapiraChart, szapiraTimelineChart, mapInitialized = false;
+        let mapInstance, timelineChart, locChart, stampsChart, szapiraChart, mapInitialized = false;
 
 function switchTab(mode) {
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1378,79 +1372,62 @@ options: {
                     }
                 }
             });
-// --- SZAPIRA (bez zmian) ---
-// --- ANALIZA SZAPIRY (KOLUMNA AD i G) ---
-            let countSzapira = 0;
-            let countOthers = 0;
-            const szapiraYears = {};
+// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (EFEKT WYSUNIĘCIA) ---
+let countSzapira = 0;
+let countOthers = 0;
 
-            data.forEach(r => {
-                let isSzapira = r.c && r.c[29] && getVal(r.c[29]).toLowerCase() === 'x';
-                if (isSzapira) {
-                    countSzapira++;
-                    let yearVal = r.c[6] ? getVal(r.c[6]) : null; // Kolumna G
-                    let year = parseInt(yearVal);
-                    if (!isNaN(year) && year > 1000) {
-                        szapiraYears[year] = (szapiraYears[year] || 0) + 1;
-                    }
-                } else {
-                    countOthers++;
+data.forEach(r => {
+    let val = r.c && r.c[29] ? getVal(r.c[29]) : "";
+    if (val.toLowerCase() === 'x') {
+        countSzapira++;
+    } else {
+        countOthers++;
+    }
+});
+
+if (szapiraChart) szapiraChart.destroy();
+
+const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
+szapiraChart = new Chart(ctxSzapira, {
+    type: 'pie',
+    data: {
+        labels: ['Zbiory rabina Majera Szapiry/ Collection of Rabbi Meir Shapira', 'Pozostałe/ Other'],
+        datasets: [{
+            data: [countSzapira, countOthers],
+            backgroundColor: ['#c73848', '#f2f2f2'], 
+            borderColor: ['#fff', '#fff'],
+            borderWidth: 2,
+            // EFEKT WYSUNIĘCIA: 30 pikseli dla pierwszego wycinka (Szapira), 0 dla reszty
+            offset: [30, 0], 
+            hoverOffset: 40
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+            padding: 30 // Dodatkowy margines, żeby wysunięty kawałek nie został ucięty
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    font: { size: 14, weight: 'bold' }
                 }
-            });
-
-            // WYKRES 1: PIERŚCIEŃ
-            const canvasPie = document.getElementById('szapiraChart');
-            if (canvasPie) {
-                if (szapiraChart) szapiraChart.destroy();
-                szapiraChart = new Chart(canvasPie.getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Zbiory Szapiry', 'Pozostałe'],
-                        datasets: [{
-                            data: [countSzapira, countOthers],
-                            backgroundColor: ['#c73848', '#f0f0f0'],
-                            borderWidth: 0,
-                            cutout: '75%'
-                        }]
-                    },
-                    options: { 
-                        responsive: true, 
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = countSzapira + countOthers;
+                        const percentage = ((context.raw / total) * 100).toFixed(1);
+                        return ` ${context.label}: ${context.raw} (${percentage}%)`;
                     }
-                });
+                }
             }
-
-            // WYKRES 2: LINIA CZASU
-            const canvasLine = document.getElementById('szapiraTimelineChart');
-            if (canvasLine) {
-                const sortedYears = Object.keys(szapiraYears).sort((a, b) => a - b);
-                if (szapiraTimelineChart) szapiraTimelineChart.destroy();
-                szapiraTimelineChart = new Chart(canvasLine.getContext('2d'), {
-                    type: 'line',
-                    data: {
-                        labels: sortedYears,
-                        datasets: [{
-                            label: 'Liczba książek',
-                            data: sortedYears.map(y => szapiraYears[y]),
-                            borderColor: '#c73848',
-                            backgroundColor: 'rgba(199, 56, 72, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 2
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: { grid: { display: false } },
-                            y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1 } }
-                        },
-                        plugins: { legend: { display: false } }
-                    }
-                });
-            }
+        }
+    }
+});
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -1914,12 +1891,3 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
