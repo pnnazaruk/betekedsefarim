@@ -613,9 +613,22 @@ body.stats-mode #dashboard-view {
         <canvas id="stampsChart"></canvas>
     </div>
 </div>
-<div class="chart-card">
+<div class="chart-card" style="display: flex; flex-direction: column; height: 550px; margin-bottom: 60px; position: relative;">
     <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
-    <div id="chart-szapira-container" style="height: 450px;"> <canvas id="szapiraChart"></canvas>
+    
+    <div style="flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+        <canvas id="szapiraChart"></canvas>
+    </div>
+
+    <div style="display: flex; background: #fcfcfc; border-top: 1px solid #eee; padding: 15px 0;">
+        <div style="flex: 1; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold; color: #c73848; line-height: 1;" id="stat-szapira-count">0</div>
+            <div style="font-size: 10px; color: #666; text-transform: uppercase; margin-top: 4px;">Książki Szapiry</div>
+        </div>
+        <div style="flex: 1; text-align: center;">
+            <div style="font-size: 24px; font-weight: bold; color: #333; line-height: 1;" id="stat-szapira-percent">0%</div>
+            <div style="font-size: 10px; color: #666; text-transform: uppercase; margin-top: 4px;">Udział (%)</div>
+        </div>
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1385,6 +1398,11 @@ data.forEach(r => {
     }
 });
 
+// NOWE: Wpisanie danych do metryczek
+const totalBooks = countSzapira + countOthers;
+document.getElementById('stat-szapira-count').innerText = countSzapira;
+document.getElementById('stat-szapira-percent').innerText = ((countSzapira / totalBooks) * 100).toFixed(1) + "%";
+
 if (szapiraChart) szapiraChart.destroy();
 
 const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
@@ -1399,21 +1417,18 @@ szapiraChart = new Chart(ctxSzapira, {
             borderWidth: 2,
             offset: [40, 0],
             hoverOffset: 50,
-            // LIKWIDACJA SZAREJ OBWÓDKI PO NAJECHANIU:
-            hoverBorderColor: '#fff', // Ustawiamy na biały (taki sam jak spoczynek) lub 'transparent'
-            hoverBorderWidth: 2       // Zachowujemy tę samą szerokość, by koło nie "drgało"
+            hoverBorderColor: '#fff', 
+            hoverBorderWidth: 2
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false, // Kluczowe, by wypełniało wysokość kontenera
+        maintainAspectRatio: true, // Zmiana na true, by koło było idealnie okrągłe
         layout: {
-            padding: 60 // Duży margines na wysunięty kawałek
+            padding: 45 // Zmniejszony nieco padding, by wykres był większy
         },
         plugins: {
-            legend: {
-                display: false
-            },
+            legend: { display: false },
             tooltip: {
                 enabled: true,
                 callbacks: {
@@ -1890,3 +1905,4 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
