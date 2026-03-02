@@ -607,37 +607,16 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 60px;">
-
-    <div class="chart-card" style="display: flex; flex-direction: column; margin: 0; height: 100%;">
-        <div class="chart-header">Częstotliwość występowania poszczególnych typów pieczęci biblioteki JChL / Frequency of various types of the YChL Lubrary Stamps</div>
-        <div id="chart-stamps-container" style="flex-grow: 1; min-height: 400px;">
-            <canvas id="stampsChart"></canvas>
-        </div>
+                <div class="chart-card">
+    <div class="chart-header">Częstotliwość występowania poszczególnych typów pieczęci biblioteki JChL / Frequency of various types of the YChL Lubrary Stamps</div>
+    <div id="chart-stamps-container" style="height: 350px;">
+        <canvas id="stampsChart"></canvas>
     </div>
-
-    <div class="chart-card" style="display: flex; flex-direction: column; margin: 0; height: 100%;">
-        <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
-        
-        <div id="chart-szapira-container" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 20px;">
-            <div style="width: 100%; max-width: 450px; aspect-ratio: 1/1;">
-                <canvas id="szapiraChart"></canvas>
-            </div>
-        </div>
-
-        <div id="szapira-stats-info" style="display: flex; justify-content: space-around; align-items: center; padding: 30px 20px; border-top: 1px solid #eee; background: #fcfcfc; border-radius: 0 0 8px 8px;">
-            <div style="text-align: center; flex: 1;">
-                <div style="font-size: 32px; font-weight: bold; color: #c73848; line-height: 1;" id="stat-szapira-count">0</div>
-                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Książki Szapiry / Shapira Books</div>
-            </div>
-            <div style="border-left: 1px solid #eee; height: 40px;"></div> 
-            <div style="text-align: center; flex: 1;">
-                <div style="font-size: 32px; font-weight: bold; color: #333; line-height: 1;" id="stat-szapira-percent">0%</div>
-                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Udział w całości / Total Share</div>
-            </div>
-        </div>
+</div>
+<div class="chart-card">
+    <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
+    <div id="chart-szapira-container" style="height: 450px;"> <canvas id="szapiraChart"></canvas>
     </div>
-
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1394,7 +1373,6 @@ options: {
                 }
             });
 // --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (OPTYMALIZACJA) ---
-// --- LOGIKA DANYCH ---
 let countSzapira = 0;
 let countOthers = 0;
 
@@ -1407,15 +1385,8 @@ data.forEach(r => {
     }
 });
 
-const total = countSzapira + countOthers;
-const percentage = ((countSzapira / total) * 100).toFixed(1);
-
-// AKTUALIZACJA LICZNIKÓW POD KOŁEM:
-document.getElementById('stat-szapira-count').innerText = countSzapira;
-document.getElementById('stat-szapira-percent').innerText = percentage + "%";
-
-// --- RESZTA KODU WYKRESU (bez zmian, z Twoimi poprawkami obwódek) ---
 if (szapiraChart) szapiraChart.destroy();
+
 const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
 szapiraChart = new Chart(ctxSzapira, {
     type: 'pie',
@@ -1428,19 +1399,31 @@ szapiraChart = new Chart(ctxSzapira, {
             borderWidth: 2,
             offset: [40, 0],
             hoverOffset: 50,
-            hoverBorderColor: '#fff', 
-            hoverBorderWidth: 2
+            // LIKWIDACJA SZAREJ OBWÓDKI PO NAJECHANIU:
+            hoverBorderColor: '#fff', // Ustawiamy na biały (taki sam jak spoczynek) lub 'transparent'
+            hoverBorderWidth: 2       // Zachowujemy tę samą szerokość, by koło nie "drgało"
         }]
     },
-options: {
+    options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: false, // Kluczowe, by wypełniało wysokość kontenera
         layout: {
-            padding: 20 // Zmniejszone z 50, bo kontener jest teraz luźniejszy
+            padding: 60 // Duży margines na wysunięty kawałek
         },
         plugins: {
-            legend: { display: false },
-            tooltip: { enabled: true }
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: true,
+                callbacks: {
+                    label: function(context) {
+                        const total = countSzapira + countOthers;
+                        const percentage = ((context.raw / total) * 100).toFixed(1);
+                        return ` ${context.label}: ${context.raw} (${percentage}%)`;
+                    }
+                }
+            }
         }
     }
 });
@@ -1907,10 +1890,3 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
-
-
