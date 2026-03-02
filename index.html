@@ -613,6 +613,12 @@ body.stats-mode #dashboard-view {
         <canvas id="stampsChart"></canvas>
     </div>
 </div>
+<div class="chart-card">
+    <div class="chart-header">Udział zbiorów Majera Szapiry / Share of Majer Szapira's Collection</div>
+    <div id="chart-szapira-container" style="height: 300px;">
+        <canvas id="szapiraChart"></canvas>
+    </div>
+</div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
 
@@ -1025,7 +1031,7 @@ document.getElementById('modalContent').innerHTML = `
 
         /* KONIEC KODU WZORCOWEGO - LOGIKA DODATKOWA STATYSTYK */
 
-        let mapInstance, timelineChart, locChart, stampsChart, mapInitialized = false;
+        let mapInstance, timelineChart, locChart, stampsChart, szapiraChart, mapInitialized = false;
 
 function switchTab(mode) {
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1367,6 +1373,53 @@ options: {
                     }
                 }
             });
+// --- NOWY WYKRES: ZBIORY MAJERA SZAPIRY (KOLUMNA AD - INDEKS 29) ---
+let countSzapira = 0;
+let countOthers = 0;
+
+data.forEach(r => {
+    // Indeks 29 to kolumna AD
+    let val = r.c && r.c[29] ? getVal(r.c[29]) : "";
+    if (val.toLowerCase() === 'x') {
+        countSzapira++;
+    } else {
+        countOthers++;
+    }
+});
+
+if (szapiraChart) szapiraChart.destroy();
+
+const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
+szapiraChart = new Chart(ctxSzapira, {
+    type: 'pie',
+    data: {
+        labels: ['Zbiory Majera Szapiry', 'Pozostałe'],
+        datasets: [{
+            data: [countSzapira, countOthers],
+            backgroundColor: ['#c73848', '#e0e0e0'], // Czerwony dla Szapiry, szary dla reszty
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const total = countSzapira + countOthers;
+                        const value = context.raw;
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return ` ${context.label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -1830,6 +1883,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
