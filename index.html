@@ -614,8 +614,16 @@ body.stats-mode #dashboard-view {
     </div>
 </div>
 <div class="chart-card">
-    <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
-    <div id="chart-szapira-container" style="height: 450px;"> <canvas id="szapiraChart"></canvas>
+    <div class="chart-header">Kolekcja Majera Szapiry / Meir Shapira's Collection</div>
+    <div class="szapira-layout" style="display: flex; flex-wrap: wrap; justify-content: space-around; align-items: center; padding: 20px;">
+        
+        <div style="width: 300px; height: 300px; position: relative;">
+            <canvas id="szapiraChart"></canvas>
+        </div>
+
+        <div style="flex: 1; min-width: 300px; height: 300px;">
+            <canvas id="szapiraTimelineChart"></canvas>
+        </div>
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1372,60 +1380,69 @@ options: {
                     }
                 }
             });
-// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (EFEKT WYSUNIĘCIA) ---
+// --- SZAPIRA (bez zmian) ---
 let countSzapira = 0;
-let countOthers = 0;
+let totalBooks = data.length;
+const szapiraYears = {};
 
 data.forEach(r => {
-    let val = r.c && r.c[29] ? getVal(r.c[29]) : "";
-    if (val.toLowerCase() === 'x') {
+    let isSzapira = r.c && r.c[29] && getVal(r.c[29]).toLowerCase() === 'x';
+    if (isSzapira) {
         countSzapira++;
-    } else {
-        countOthers++;
+        let year = parseInt(getVal(r.c[6])); // Kolumna G
+        if (!isNaN(year) && year > 1000) szapiraYears[year] = (szapiraYears[year] || 0) + 1;
     }
 });
 
-if (szapiraChart) szapiraChart.destroy();
+const sortedYears = Object.keys(szapiraYears).sort((a, b) => a - b);
 
-const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
-szapiraChart = new Chart(ctxSzapira, {
-    type: 'pie',
+// --- WYKRES 1: PIERŚCIEŃ (DOUGHNUT) ---
+if (szapiraChart) szapiraChart.destroy();
+szapiraChart = new Chart(document.getElementById('szapiraChart'), {
+    type: 'doughnut',
     data: {
-        labels: ['Zbiory Majera Szapiry', 'Pozostałe'],
+        labels: ['Zbiory Szapiry', 'Pozostałe'],
         datasets: [{
-            data: [countSzapira, countOthers],
-            backgroundColor: ['#c73848', '#f2f2f2'], 
-            borderColor: ['#fff', '#fff'],
-            borderWidth: 2,
-            // EFEKT WYSUNIĘCIA: 30 pikseli dla pierwszego wycinka (Szapira), 0 dla reszty
-            offset: [30, 0], 
-            hoverOffset: 40
+            data: [countSzapira, totalBooks - countSzapira],
+            backgroundColor: ['#c73848', '#f0f0f0'],
+            borderWidth: 0,
+            cutout: '80%' // To robi cienki, elegancki pierścień
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-            padding: 30 // Dodatkowy margines, żeby wysunięty kawałek nie został ucięty
-        },
         plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                    font: { size: 14, weight: 'bold' }
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const total = countSzapira + countOthers;
-                        const percentage = ((context.raw / total) * 100).toFixed(1);
-                        return ` ${context.label}: ${context.raw} (${percentage}%)`;
-                    }
-                }
-            }
+            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+            tooltip: { enabled: true }
         }
+    }
+});
+
+// --- WYKRES 2: MINIMALISTYCZNA LINIA ---
+if (szapiraTimelineChart) szapiraTimelineChart.destroy();
+szapiraTimelineChart = new Chart(document.getElementById('szapiraTimelineChart'), {
+    type: 'line',
+    data: {
+        labels: sortedYears,
+        datasets: [{
+            data: sortedYears.map(y => szapiraYears[y]),
+            borderColor: '#c73848',
+            backgroundColor: 'rgba(199, 56, 72, 0.05)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 2,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { grid: { display: false }, ticks: { maxRotation: 0 } },
+            y: { display: false } // Chowamy oś Y dla maksymalnej czystości
+        },
+        plugins: { legend: { display: false } }
     }
 });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
@@ -1891,6 +1908,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
