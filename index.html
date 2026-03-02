@@ -613,10 +613,10 @@ body.stats-mode #dashboard-view {
         <canvas id="stampsChart"></canvas>
     </div>
 </div>
-<div class="chart-card" style="display: flex; flex-direction: column; height: 550px; margin-bottom: 60px; position: relative;">
+<div class="chart-card" style="display: flex; flex-direction: column; height: 500px; margin-bottom: 20px; box-sizing: border-box;">
     <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
     
-    <div style="flex: 1; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+    <div style="flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
         <canvas id="szapiraChart"></canvas>
     </div>
 
@@ -1398,7 +1398,7 @@ data.forEach(r => {
     }
 });
 
-// NOWE: Wpisanie danych do metryczek
+// Wpisanie danych do metryczek
 const totalBooks = countSzapira + countOthers;
 document.getElementById('stat-szapira-count').innerText = countSzapira;
 document.getElementById('stat-szapira-percent').innerText = ((countSzapira / totalBooks) * 100).toFixed(1) + "%";
@@ -1423,9 +1423,9 @@ szapiraChart = new Chart(ctxSzapira, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true, // Zmiana na true, by koło było idealnie okrągłe
+        maintainAspectRatio: true, // Koło zawsze idealnie okrągłe
         layout: {
-            padding: 45 // Zmniejszony nieco padding, by wykres był większy
+            padding: 40 
         },
         plugins: {
             legend: { display: false },
@@ -1905,4 +1905,5 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
