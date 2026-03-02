@@ -1372,7 +1372,7 @@ options: {
                     }
                 }
             });
-// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (EFEKT WYSUNIĘCIA) ---
+// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (MAX WYPELNIENIE) ---
 let countSzapira = 0;
 let countOthers = 0;
 
@@ -1391,32 +1391,31 @@ const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
 szapiraChart = new Chart(ctxSzapira, {
     type: 'pie',
     data: {
-        labels: ['Zbiory rabina Majera Szapiry/ Collection of Rabbi Meir Shapira', 'Pozostałe/ Other'],
+        labels: ['Zbiory rabina Majera Szapiry / Collection of Rabbi Meir Shapira', 'Pozostałe / Other'],
         datasets: [{
             data: [countSzapira, countOthers],
             backgroundColor: ['#c73848', '#f2f2f2'], 
             borderColor: ['#fff', '#fff'],
             borderWidth: 2,
-            // EFEKT WYSUNIĘCIA: 30 pikseli dla pierwszego wycinka (Szapira), 0 dla reszty
-            offset: [30, 0], 
-            hoverOffset: 40
+            offset: [40, 0], // Zwiększyłem wysunięcie dla lepszego efektu wizualnego
+            hoverOffset: 50
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
         layout: {
-            padding: 30 // Dodatkowy margines, żeby wysunięty kawałek nie został ucięty
+            padding: 50 // Większy margines, bo koło będzie teraz bardzo duże przez brak legendy
         },
         plugins: {
             legend: {
-                position: 'bottom',
-                labels: {
-                    padding: 20,
-                    font: { size: 14, weight: 'bold' }
-                }
+                display: false // CAŁKOWITE USUNIĘCIE LEGENDY
             },
             tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 14 },
+                bodyFont: { size: 14 },
                 callbacks: {
                     label: function(context) {
                         const total = countSzapira + countOthers;
@@ -1891,3 +1890,4 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
