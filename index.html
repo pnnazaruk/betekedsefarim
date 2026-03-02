@@ -614,9 +614,8 @@ body.stats-mode #dashboard-view {
     </div>
 </div>
 <div class="chart-card">
-    <div class="chart-header">Udział zbiorów Majera Szapiry / Share of Majer Szapira's Collection</div>
-    <div id="chart-szapira-container" style="height: 300px;">
-        <canvas id="szapiraChart"></canvas>
+    <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
+    <div id="chart-szapira-container" style="height: 450px;"> <canvas id="szapiraChart"></canvas>
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1373,12 +1372,11 @@ options: {
                     }
                 }
             });
-// --- NOWY WYKRES: ZBIORY MAJERA SZAPIRY (KOLUMNA AD - INDEKS 29) ---
+// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (EFEKT WYSUNIĘCIA) ---
 let countSzapira = 0;
 let countOthers = 0;
 
 data.forEach(r => {
-    // Indeks 29 to kolumna AD
     let val = r.c && r.c[29] ? getVal(r.c[29]) : "";
     if (val.toLowerCase() === 'x') {
         countSzapira++;
@@ -1396,24 +1394,34 @@ szapiraChart = new Chart(ctxSzapira, {
         labels: ['Zbiory Majera Szapiry', 'Pozostałe'],
         datasets: [{
             data: [countSzapira, countOthers],
-            backgroundColor: ['#c73848', '#e0e0e0'], // Czerwony dla Szapiry, szary dla reszty
-            borderWidth: 1
+            backgroundColor: ['#c73848', '#f2f2f2'], 
+            borderColor: ['#fff', '#fff'],
+            borderWidth: 2,
+            // EFEKT WYSUNIĘCIA: 30 pikseli dla pierwszego wycinka (Szapira), 0 dla reszty
+            offset: [30, 0], 
+            hoverOffset: 40
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: 30 // Dodatkowy margines, żeby wysunięty kawałek nie został ucięty
+        },
         plugins: {
             legend: {
-                position: 'bottom'
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    font: { size: 14, weight: 'bold' }
+                }
             },
             tooltip: {
                 callbacks: {
                     label: function(context) {
                         const total = countSzapira + countOthers;
-                        const value = context.raw;
-                        const percentage = ((value / total) * 100).toFixed(1);
-                        return ` ${context.label}: ${value} (${percentage}%)`;
+                        const percentage = ((context.raw / total) * 100).toFixed(1);
+                        return ` ${context.label}: ${context.raw} (${percentage}%)`;
                     }
                 }
             }
@@ -1883,6 +1891,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
