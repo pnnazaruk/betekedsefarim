@@ -607,6 +607,12 @@ body.stats-mode #dashboard-view {
                         <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
                         <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
                     </div>
+                <div class="chart-card">
+    <div class="chart-header">Częstotliwość występowania pieczęci JChL / Frequency of JChL Stamps</div>
+    <div id="chart-stamps-container" style="height: 350px;">
+        <canvas id="stampsChart"></canvas>
+    </div>
+</div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
 
@@ -1019,7 +1025,7 @@ document.getElementById('modalContent').innerHTML = `
 
         /* KONIEC KODU WZORCOWEGO - LOGIKA DODATKOWA STATYSTYK */
 
-        let mapInstance, timelineChart, locChart, mapInitialized = false;
+        let mapInstance, timelineChart, locChart, stampsChart, mapInitialized = false;
 
 function switchTab(mode) {
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1280,6 +1286,51 @@ options: {
                     }
                 }
             }
+            });
+    const stampsCounts = {};
+            data.forEach(r => {
+                // Sprawdzamy kolumnę AC (indeks 28)
+                if (r.c && r.c[28]) {
+                    let val = getVal(r.c[28]); 
+                    if (val && val !== "-" && val !== "---") {
+                        // Rozbijamy po przecinku na wypadek wielu pieczęci w jednej komórce
+                        val.split(',').forEach(s => {
+                            let stamp = s.trim();
+                            if (stamp) stampsCounts[stamp] = (stampsCounts[stamp] || 0) + 1;
+                        });
+                    }
+                }
+            });
+
+            const sortedStamps = Object.entries(stampsCounts).sort((a, b) => b[1] - a[1]);
+            const stampsLabels = sortedStamps.map(d => d[0]);
+            const stampsValues = sortedStamps.map(d => d[1]);
+
+            // Niszczymy stary wykres przed narysowaniem nowego (standard w Twoim kodzie)
+            if (stampsChart) stampsChart.destroy();
+
+            const ctxStamps = document.getElementById('stampsChart').getContext('2d');
+            stampsChart = new Chart(ctxStamps, {
+                type: 'bar',
+                data: {
+                    labels: stampsLabels,
+                    datasets: [{
+                        label: 'Liczba / Count',
+                        data: stampsValues,
+                        backgroundColor: '#c73848',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Słupki poziome
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        y: { ticks: { font: { size: 11, weight: 'bold' } } }
+                    }
+                }
             });
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -1744,3 +1795,4 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
