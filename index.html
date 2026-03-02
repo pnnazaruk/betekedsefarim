@@ -1287,29 +1287,38 @@ options: {
                 }
             }
             });
-    const stampsCounts = {};
+// --- POPRAWIONA LOGIKA: PIECZĘCIE (OBSŁUGA WSZYSTKICH TYPÓW) ---
+            const stampsCounts = {};
             data.forEach(r => {
-                // Sprawdzamy kolumnę AC (indeks 28)
                 if (r.c && r.c[28]) {
                     let val = getVal(r.c[28]); 
                     if (val && val !== "-" && val !== "---") {
-                        // Rozbijamy po przecinku na wypadek wielu pieczęci w jednej komórce
+                        // Rozbijamy po przecinku
                         val.split(',').forEach(s => {
-                            let stamp = s.trim();
-                            if (stamp) stampsCounts[stamp] = (stampsCounts[stamp] || 0) + 1;
+                            let stamp = s.trim(); // Czyścimy zbędne spacje przed i po nazwie
+                            if (stamp) {
+                                stampsCounts[stamp] = (stampsCounts[stamp] || 0) + 1;
+                            }
                         });
                     }
                 }
             });
 
+            // Sortowanie: od najczęstszych do najrzadszych
             const sortedStamps = Object.entries(stampsCounts).sort((a, b) => b[1] - a[1]);
             const stampsLabels = sortedStamps.map(d => d[0]);
             const stampsValues = sortedStamps.map(d => d[1]);
 
-            // Niszczymy stary wykres przed narysowaniem nowego (standard w Twoim kodzie)
             if (stampsChart) stampsChart.destroy();
 
             const ctxStamps = document.getElementById('stampsChart').getContext('2d');
+            
+            // ZWIĘKSZENIE WYSOKOŚCI KONTENERA DLA 30 TYPÓW
+            // Jeśli typów jest dużo, zwiększamy wysokość diva, żeby słupki nie były cienkie jak nitki
+            if (sortedStamps.length > 15) {
+                document.getElementById('chart-stamps-container').style.height = (sortedStamps.length * 25) + "px";
+            }
+
             stampsChart = new Chart(ctxStamps, {
                 type: 'bar',
                 data: {
@@ -1322,13 +1331,23 @@ options: {
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Słupki poziome
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false }
+                    },
                     scales: {
-                        x: { beginAtZero: true, ticks: { stepSize: 1 } },
-                        y: { ticks: { font: { size: 11, weight: 'bold' } } }
+                        x: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 } 
+                        },
+                        y: { 
+                            ticks: { 
+                                autoSkip: false, // KLUCZOWE: wymusza pokazanie wszystkich 30 nazw
+                                font: { size: 10, weight: 'bold' } 
+                            } 
+                        }
                     }
                 }
             });
@@ -1795,4 +1814,5 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
