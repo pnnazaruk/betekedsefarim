@@ -613,23 +613,28 @@ body.stats-mode #dashboard-view {
         <canvas id="stampsChart"></canvas>
     </div>
 </div>
-<div class="chart-card" style="display: flex; flex-direction: column; min-height: 600px; margin-bottom: 40px;">
-    <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
-    
-    <div id="chart-szapira-container" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; min-height: 400px;">
-        <canvas id="szapiraChart" style="max-height: 450px !important;"></canvas>
+<div class="chart-card" style="display: flex; flex-direction: column; margin-bottom: 0; height: 100%;">
+        <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
+        
+        <div id="chart-szapira-container" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 20px;">
+            <div style="width: 100%; max-width: 450px; aspect-ratio: 1/1;">
+                <canvas id="szapiraChart"></canvas>
+            </div>
+        </div>
+
+        <div id="szapira-stats-info" style="display: flex; justify-content: space-around; align-items: center; padding: 30px 20px; border-top: 1px solid #eee; background: #fcfcfc; border-radius: 0 0 8px 8px;">
+            <div style="text-align: center; flex: 1;">
+                <div style="font-size: 32px; font-weight: bold; color: #c73848; line-height: 1;" id="stat-szapira-count">0</div>
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Książki Szapiry / Shapira Books</div>
+            </div>
+            <div style="border-left: 1px solid #eee; height: 40px;"></div> 
+            <div style="text-align: center; flex: 1;">
+                <div style="font-size: 32px; font-weight: bold; color: #333; line-height: 1;" id="stat-szapira-percent">0%</div>
+                <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Udział w całości / Total Share</div>
+            </div>
+        </div>
     </div>
 
-    <div id="szapira-stats-info" style="display: flex; justify-content: space-around; align-items: center; padding: 30px 20px; border-top: 1px solid #eee; background: #fcfcfc; border-radius: 0 0 8px 8px;">
-        <div style="text-align: center; flex: 1;">
-            <div style="font-size: 32px; font-weight: bold; color: #c73848; line-height: 1;" id="stat-szapira-count">0</div>
-            <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Książki Szapiry / Shapira Books</div>
-        </div>
-        <div style="border-left: 1px solid #eee; height: 40px;"></div> <div style="text-align: center; flex: 1;">
-            <div style="font-size: 32px; font-weight: bold; color: #333; line-height: 1;" id="stat-szapira-percent">0%</div>
-            <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Udział w całości / Total Share</div>
-        </div>
-    </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1899,6 +1904,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
