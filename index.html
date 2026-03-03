@@ -614,7 +614,7 @@ body.stats-mode #dashboard-view {
     </div>
 </div>
 <div class="chart-card" style="display: flex; flex-direction: column; min-height: 620px; overflow: hidden;">
-    <div class="chart-header">Udział zbiorów rabina Majera Szapiry oraz starodruków na tle biblioteki Jeszywas Chachmej Lublin / Rabbi Meir Shapira’s collection and early printed books as a share of the Yeshivat Chachmei Lublin library.</div>
+    <div class="chart-header">Udział zbiorów rabina Majera Szapiry oraz starodruków na tle biblioteki Jeszywas Chachmej Lublin / Rabbi Meir Shapira’s collection and early printed books as a share of the Yeshivas Chachmei Lublin library.</div>
     
     <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%; min-height: 320px;">
         <canvas id="szapiraChart"></canvas>
@@ -624,7 +624,7 @@ body.stats-mode #dashboard-view {
         
         <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center; background: rgba(199, 56, 72, 0.05);">
             <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #c73848; line-height: 1.2;">
-                KOLEKCJA SZAPIRY<br><span style="font-size: 9px; font-weight: normal; color: #777;">SHAPIRA COLLECTION</span>
+                KOLEKCJA SZAPIRY<br><span style="font-size: 9px; font-weight: normal; color: #777;">THE SHAPIRA COLLECTION</span>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-szapira-count" style="font-size: 16px; font-weight: bold;">0</div>
@@ -640,13 +640,13 @@ body.stats-mode #dashboard-view {
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-szapira-old-pct" style="font-size: 16px; font-weight: bold; color: #c73848;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
             </div>
         </div>
 
         <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center;">
             <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #666; line-height: 1.2;">
-                POZOSTAŁE ZBIORY<br><span style="font-size: 9px; font-weight: normal; color: #777;">OTHER COLLECTION</span>
+                POZOSTAŁE<br><span style="font-size: 9px; font-weight: normal; color: #777;">OTHER</span>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-others-count" style="font-size: 16px; font-weight: bold;">0</div>
@@ -662,13 +662,13 @@ body.stats-mode #dashboard-view {
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-others-old-pct" style="font-size: 16px; font-weight: bold; color: #666;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
             </div>
         </div>
 
         <div style="display: flex; height: 65px; align-items: center; background: #f0f0f0;">
             <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #000; line-height: 1.2;">
-                RAZEM (BIBLIOTEKA)<br><span style="font-size: 9px; font-weight: normal; color: #777;">TOTAL LIBRARY</span>
+                RAZEM (BIBLIOTEKA)<br><span style="font-size: 9px; font-weight: normal; color: #777;">TOTAL (LIBRARY)</span>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-total-count" style="font-size: 16px; font-weight: bold;">0</div>
@@ -684,7 +684,7 @@ body.stats-mode #dashboard-view {
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-total-old-pct" style="font-size: 16px; font-weight: bold; color: #000;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
             </div>
         </div>
     </div>
@@ -1553,8 +1553,8 @@ szapiraChart = new Chart(ctxSzapira, {
                 backgroundColor: ['#c73848', '#d1d1d1'], 
                 // Etykiety specyficzne dla tego kręgu:
                 labels: [
-                    'Zbiory rabina Szapiry / Rabbi Shapira Collection', 
-                    'Pozostałe zbiory / Other Collection'
+                    'Zbiory rabina Szapiry / The Shapira Collection', 
+                    'Pozostałe / Other'
                 ],
                 borderWidth: 2,
                 weight: 1
@@ -1571,10 +1571,10 @@ szapiraChart = new Chart(ctxSzapira, {
                 ],
                 // Etykiety specyficzne dla tego kręgu:
                 labels: [
-                    'Starodruki Szapiry / Shapira Old Prints', 
-                    'Nowsze druki Szapiry / Shapira Modern Prints', 
-                    'Starodruki Pozostałe / Other Old Prints', 
-                    'Nowsze druki Pozostałe / Other Modern Prints'
+                    'Starodruki / Old Prints', 
+                    'Nowsze druki / Modern Prints', 
+                    'Starodruki / Old Prints', 
+                    'Nowsze druki / Modern Prints'
                 ],
                 borderWidth: 2,
                 weight: 0.8
@@ -2067,6 +2067,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
