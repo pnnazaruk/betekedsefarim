@@ -614,7 +614,7 @@ body.stats-mode #dashboard-view {
     </div>
 </div>
 <div class="chart-card" style="display: flex; flex-direction: column; height: 450px; overflow: hidden;">
-    <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
+    <div class="chart-header">Udział zbiorów rabina Majera Szapiry w kolekcji biblioteki Jeszywas Chachmej Lublin / Rabbi Meir Shapira’s collection in the Chachmei Lublin Yeshiva Library</div>
     
     <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%;">
         <canvas id="szapiraChart"></canvas>
@@ -623,11 +623,11 @@ body.stats-mode #dashboard-view {
     <div style="display: flex; background: #fcfcfc; border-top: 1px solid #eee; height: 70px; align-items: center;">
         <div style="flex: 1; text-align: center;">
             <div id="stat-szapira-count" style="font-size: 26px; font-weight: bold; color: #c73848; line-height: 1;">0</div>
-            <div style="font-size: 9px; color: #777; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;">Książki Szapiry</div>
+            <div style="font-size: 9px; color: #777; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;">Książki rabina Szapiry/ Rabbi Shapira Books</div>
         </div>
         <div style="flex: 1; text-align: center;">
             <div id="stat-szapira-percent" style="font-size: 26px; font-weight: bold; color: #333; line-height: 1;">0%</div>
-            <div style="font-size: 9px; color: #777; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;">Udział (%)</div>
+            <div style="font-size: 9px; color: #777; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;">Udział/ Total share (%)</div>
         </div>
     </div>
 </div>
@@ -1409,7 +1409,7 @@ const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
 szapiraChart = new Chart(ctxSzapira, {
     type: 'pie',
     data: {
-        labels: ['Zbiory rabina Majera Szapiry', 'Pozostałe'],
+        labels: ['Zbiory rabina Szapiry/ Collection of Rabbi Shapira', 'Pozostałe/ Other'],
         datasets: [{
             data: [countSzapira, countOthers],
             backgroundColor: ['#c73848', '#f2f2f2'], 
@@ -1911,6 +1911,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
