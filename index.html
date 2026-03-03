@@ -613,72 +613,78 @@ body.stats-mode #dashboard-view {
         <canvas id="stampsChart"></canvas>
     </div>
 </div>
-<div class="chart-card" style="display: flex; flex-direction: column; min-height: 600px; overflow: hidden;">
-    <div class="chart-header">Analiza kolekcji: Dar Majera Szapiry vs Pozostałe zbiory</div>
+<div class="chart-card" style="display: flex; flex-direction: column; min-height: 620px; overflow: hidden;">
+    <div class="chart-header">Analiza kolekcji: Dar Majera Szapiry vs Pozostałe zbiory / Collection Analysis: Rabbi Shapira’s Gift vs Other Collection</div>
     
-    <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%; min-height: 300px;">
+    <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%; min-height: 320px;">
         <canvas id="szapiraChart"></canvas>
     </div>
 
     <div style="display: flex; flex-direction: column; background: #fcfcfc; border-top: 1px solid #eee; font-size: 11px;">
         
-        <div style="display: flex; border-bottom: 1px solid #eee; height: 60px; align-items: center; background: rgba(199, 56, 72, 0.05);">
-            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #c73848;">KOLEKCJA SZAPIRY</div>
+        <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center; background: rgba(199, 56, 72, 0.05);">
+            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #c73848; line-height: 1.2;">
+                KOLEKCJA SZAPIRY<br><span style="font-size: 9px; font-weight: normal; color: #777;">SHAPIRA COLLECTION</span>
+            </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-szapira-count" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777;">Woluminy</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Woluminy / Vol.</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-szapira-percent" style="font-size: 16px; font-weight: bold;">0%</div>
-                <div style="font-size: 8px; color: #777;">Udział w całości</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Udział / Share</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-szapira-old" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777;">Starodruki</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-szapira-old-pct" style="font-size: 16px; font-weight: bold; color: #c73848;">0%</div>
-                <div style="font-size: 8px; color: #777;">% Starodruków</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old</div>
             </div>
         </div>
 
-        <div style="display: flex; border-bottom: 1px solid #eee; height: 60px; align-items: center;">
-            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #666;">POZOSTAŁE ZBIORY</div>
+        <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center;">
+            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #666; line-height: 1.2;">
+                POZOSTAŁE ZBIORY<br><span style="font-size: 9px; font-weight: normal; color: #777;">OTHER COLLECTION</span>
+            </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-others-count" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777;">Woluminy</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Woluminy / Vol.</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-others-percent" style="font-size: 16px; font-weight: bold;">0%</div>
-                <div style="font-size: 8px; color: #777;">Udział w całości</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Udział / Share</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-others-old" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777;">Starodruki</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-others-old-pct" style="font-size: 16px; font-weight: bold; color: #666;">0%</div>
-                <div style="font-size: 8px; color: #777;">% Starodruków</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old</div>
             </div>
         </div>
 
-        <div style="display: flex; height: 60px; align-items: center; background: #eee;">
-            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #000;">RAZEM (BIBLIOTEKA)</div>
+        <div style="display: flex; height: 65px; align-items: center; background: #f0f0f0;">
+            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #000; line-height: 1.2;">
+                RAZEM (BIBLIOTEKA)<br><span style="font-size: 9px; font-weight: normal; color: #777;">TOTAL LIBRARY</span>
+            </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-total-count" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777;">Suma woluminów</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Suma / Total Vol.</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div style="font-size: 16px; font-weight: bold;">100%</div>
-                <div style="font-size: 8px; color: #777;">Całość zbiorów</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Całość / Total</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-total-old" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777;">Suma starodruków</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
             </div>
             <div style="flex: 1; text-align: center;">
                 <div id="stat-total-old-pct" style="font-size: 16px; font-weight: bold; color: #000;">0%</div>
-                <div style="font-size: 8px; color: #777;">% Starodruków</div>
+                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old</div>
             </div>
         </div>
     </div>
@@ -1489,7 +1495,6 @@ options: {
                     }
                 }
             });
-// --- WYKRES DONUT: ZBIORY SZAPIRY I STARODRUKI
 // --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
 let countSzapira = 0;
 let countOthers = 0;
@@ -1518,24 +1523,22 @@ data.forEach(r => {
 const totalAll = countSzapira + countOthers;
 const totalOld = oldPrintsSzapira + oldPrintsOthers;
 
-// 1. AKTUALIZACJA METRYCZEK: SZAPIRA
+// AKTUALIZACJA METRYCZEK (DOM)
 document.getElementById('stat-szapira-count').innerText = countSzapira;
 document.getElementById('stat-szapira-percent').innerText = ((countSzapira / totalAll) * 100).toFixed(1) + "%";
 document.getElementById('stat-szapira-old').innerText = oldPrintsSzapira;
 document.getElementById('stat-szapira-old-pct').innerText = countSzapira > 0 ? ((oldPrintsSzapira / countSzapira) * 100).toFixed(1) + "%" : "0%";
 
-// 2. AKTUALIZACJA METRYCZEK: POZOSTAŁE
 document.getElementById('stat-others-count').innerText = countOthers;
 document.getElementById('stat-others-percent').innerText = ((countOthers / totalAll) * 100).toFixed(1) + "%";
 document.getElementById('stat-others-old').innerText = oldPrintsOthers;
 document.getElementById('stat-others-old-pct').innerText = countOthers > 0 ? ((oldPrintsOthers / countOthers) * 100).toFixed(1) + "%" : "0%";
 
-// 3. AKTUALIZACJA METRYCZEK: RAZEM
 document.getElementById('stat-total-count').innerText = totalAll;
 document.getElementById('stat-total-old').innerText = totalOld;
 document.getElementById('stat-total-old-pct').innerText = totalAll > 0 ? ((totalOld / totalAll) * 100).toFixed(1) + "%" : "0%";
 
-// --- RENDEROWANIE WYKRESU DONUT (PODWÓJNY) ---
+// --- RENDEROWANIE WYKRESU DONUT ---
 if (szapiraChart) szapiraChart.destroy();
 
 const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
@@ -1543,41 +1546,50 @@ szapiraChart = new Chart(ctxSzapira, {
     type: 'doughnut',
     data: {
         datasets: [
-            // PIERŚCIEŃ ZEWNĘTRZNY: Udział Szapiry w całości (Bordo vs Szary)
+            // PIERŚCIEŃ ZEWNĘTRZNY: Zbiory Szapiry vs Pozostałe
             {
-                data: [countSzapira, countOthers],
-                backgroundColor: ['#c73848', '#d1d1d1'],
                 label: 'Kolekcja / Collection',
+                data: [countSzapira, countOthers],
+                backgroundColor: ['#c73848', '#d1d1d1'], // Czerwony (Szapira), Siwy (Inne)
+                borderWidth: 2,
                 weight: 1
             },
-            // PIERŚCIEŃ WEWNĘTRZNY: Starodruki (Wycinki)
+            // PIERŚCIEŃ WEWNĘTRZNY: Podział na wiek
             {
+                label: 'Typ druku / Print Type',
                 data: [oldPrintsSzapira, modernBooksSzapira, oldPrintsOthers, modernBooksOthers],
                 backgroundColor: [
-                    '#8b1e2a', // Starodruki Szapiry (ciemny bordo)
-                    'rgba(199, 56, 72, 0.2)', // Nowsze Szapiry (blady czerwony)
-                    '#666666', // Starodruki pozostałe (ciemny szary)
-                    'rgba(200, 200, 200, 0.2)' // Nowsze pozostałe (blady szary)
+                    '#8b1e2a',           // Ciemny czerwony: Starodruki Szapiry
+                    'rgba(199, 56, 72, 0.3)', // Jasny czerwony: Nowsze Szapiry
+                    '#777777',           // Ciemniejszy siwy: Starodruki Pozostałe
+                    '#e8e8e8'            // Jasny siwy: Nowsze Pozostałe
                 ],
-                label: 'Starodruki / Old Prints',
+                borderWidth: 2,
                 weight: 0.8
             }
         ],
-        labels: ['Szapira Starodruki', 'Szapira Nowsze', 'Pozostałe Starodruki', 'Pozostałe Nowsze']
+        labels: [
+            'Starodruki Szapiry / Shapira Old Prints', 
+            'Nowsze druki Szapiry / Shapira Modern Prints', 
+            'Starodruki Pozostałe / Other Old Prints', 
+            'Nowsze druki Pozostałe / Other Modern Prints'
+        ]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '50%',
+        cutout: '65%', // Powiększenie dziurki w środku (zmniejszenie donuta)
+        layout: {
+            padding: 25 // Odstęp od krawędzi kontenera
+        },
         plugins: {
             legend: { display: false },
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        let label = context.dataset.label || '';
-                        let value = context.raw;
-                        let pct = ((value / totalAll) * 100).toFixed(1);
-                        return `${label}: ${value} (${pct}% całości)`;
+                        const val = context.raw;
+                        const pct = ((val / totalAll) * 100).toFixed(1);
+                        return ` ${context.label}: ${val} (${pct}%)`;
                     }
                 }
             }
@@ -2047,6 +2059,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
