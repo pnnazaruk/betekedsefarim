@@ -1496,6 +1496,7 @@ options: {
                 }
             });
 // --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
+// --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
 let countSzapira = 0;
 let countOthers = 0;
 let oldPrintsSzapira = 0;   
@@ -1551,11 +1552,8 @@ szapiraChart = new Chart(ctxSzapira, {
                 label: 'Kolekcja / Collection',
                 data: [countSzapira, countOthers],
                 backgroundColor: ['#c73848', '#d1d1d1'], 
-                // Zmiana koloru po najechaniu:
                 hoverBackgroundColor: ['#a52a3a', '#bcbcbc'], 
-                // Usunięcie "odskakiwania" (cienia/przesunięcia):
-                hoverOffset: 0
-                // Etykiety specyficzne dla tego kręgu:
+                hoverOffset: 0,
                 labels: [
                     'Zbiory rabina Szapiry / The Shapira Collection', 
                     'Pozostałe / Other'
@@ -1573,16 +1571,13 @@ szapiraChart = new Chart(ctxSzapira, {
                     '#777777', 
                     '#e8e8e8'
                 ],
-                // Zmiana koloru po najechaniu dla każdego z 4 segmentów:
                 hoverBackgroundColor: [
-                    '#5c131b', // Ciemniejszy dla starodruków Szapiry
+                    '#5c131b',
                     'rgba(199, 56, 72, 0.5)', 
                     '#555555', 
                     '#dcdcdc'
                 ],
-                // Usunięcie "odskakiwania":
                 hoverOffset: 0,
-                // Etykiety specyficzne dla tego kręgu:
                 labels: [
                     'Starodruki / Old Prints', 
                     'Nowsze druki / Modern Prints', 
@@ -1608,7 +1603,6 @@ szapiraChart = new Chart(ctxSzapira, {
                     label: function(context) {
                         const val = context.raw;
                         const pct = ((val / totalAll) * 100).toFixed(1);
-                        // Pobieranie etykiety z tablicy labels przypisanej do konkretnego zestawu danych
                         const label = context.dataset.labels[context.dataIndex];
                         return ` ${label}: ${val} (${pct}%)`;
                     }
@@ -2080,6 +2074,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
