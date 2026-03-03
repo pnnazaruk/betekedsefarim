@@ -615,7 +615,23 @@ body.stats-mode #dashboard-view {
 </div>
 <div class="chart-card">
     <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
-    <div id="chart-szapira-container" style="height: 450px;"> <canvas id="szapiraChart"></canvas>
+    <div style="height: 450px; display: flex; flex-direction: column;">
+        
+        <div id="chart-szapira-container" style="flex: 1; min-height: 0;">
+            <canvas id="szapiraChart"></canvas>
+        </div>
+
+        <div style="display: flex; border-top: 1px solid #eee; background: #fcfcfc;">
+            <div style="flex: 1; padding: 15px; text-align: center;">
+                <div id="stat-szapira-count" style="font-size: 24px; font-weight: bold; color: #c73848;">0</div>
+                <div style="font-size: 10px; color: #666; text-transform: uppercase;">Książki Szapiry</div>
+            </div>
+            <div style="flex: 1; padding: 15px; text-align: center; border-left: 1px solid #eee;">
+                <div id="stat-szapira-percent" style="font-size: 24px; font-weight: bold; color: #333;">0%</div>
+                <div style="font-size: 10px; color: #666; text-transform: uppercase;">Udział (%)</div>
+            </div>
+        </div>
+        
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1385,6 +1401,11 @@ data.forEach(r => {
     }
 });
 
+// AKTUALIZACJA LICZB W METRYCZKACH
+const totalSzapira = countSzapira + countOthers;
+document.getElementById('stat-szapira-count').innerText = countSzapira;
+document.getElementById('stat-szapira-percent').innerText = ((countSzapira / totalSzapira) * 100).toFixed(1) + "%";
+
 if (szapiraChart) szapiraChart.destroy();
 
 const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
@@ -1399,21 +1420,18 @@ szapiraChart = new Chart(ctxSzapira, {
             borderWidth: 2,
             offset: [40, 0],
             hoverOffset: 50,
-            // LIKWIDACJA SZAREJ OBWÓDKI PO NAJECHANIU:
-            hoverBorderColor: '#fff', // Ustawiamy na biały (taki sam jak spoczynek) lub 'transparent'
-            hoverBorderWidth: 2       // Zachowujemy tę samą szerokość, by koło nie "drgało"
+            hoverBorderColor: '#fff', 
+            hoverBorderWidth: 2
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false, // Kluczowe, by wypełniało wysokość kontenera
+        maintainAspectRatio: true, // Zmieniamy na true, by koło było idealnie okrągłe
         layout: {
-            padding: 60 // Duży margines na wysunięty kawałek
+            padding: 40 // Nieco mniejszy padding, by wykres lepiej wypełnił środek
         },
         plugins: {
-            legend: {
-                display: false
-            },
+            legend: { display: false },
             tooltip: {
                 enabled: true,
                 callbacks: {
@@ -1890,6 +1908,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
