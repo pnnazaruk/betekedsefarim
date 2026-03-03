@@ -613,25 +613,22 @@ body.stats-mode #dashboard-view {
         <canvas id="stampsChart"></canvas>
     </div>
 </div>
-<div class="chart-card">
+<div class="chart-card" style="display: flex; flex-direction: column; height: 450px; overflow: hidden;">
     <div class="chart-header">Udział zbiorów rabina Majera Szapiry / Share of Rabbi Meir Shapira's Collection</div>
-    <div style="height: 450px; display: flex; flex-direction: column;">
-        
-        <div id="chart-szapira-container" style="flex: 1; min-height: 0;">
-            <canvas id="szapiraChart"></canvas>
-        </div>
+    
+    <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%;">
+        <canvas id="szapiraChart"></canvas>
+    </div>
 
-        <div style="display: flex; border-top: 1px solid #eee; background: #fcfcfc;">
-            <div style="flex: 1; padding: 15px; text-align: center;">
-                <div id="stat-szapira-count" style="font-size: 24px; font-weight: bold; color: #c73848;">0</div>
-                <div style="font-size: 10px; color: #666; text-transform: uppercase;">Książki Szapiry</div>
-            </div>
-            <div style="flex: 1; padding: 15px; text-align: center; border-left: 1px solid #eee;">
-                <div id="stat-szapira-percent" style="font-size: 24px; font-weight: bold; color: #333;">0%</div>
-                <div style="font-size: 10px; color: #666; text-transform: uppercase;">Udział (%)</div>
-            </div>
+    <div style="display: flex; background: #fcfcfc; border-top: 1px solid #eee; height: 70px; align-items: center;">
+        <div style="flex: 1; text-align: center;">
+            <div id="stat-szapira-count" style="font-size: 26px; font-weight: bold; color: #c73848; line-height: 1;">0</div>
+            <div style="font-size: 9px; color: #777; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;">Książki Szapiry</div>
         </div>
-        
+        <div style="flex: 1; text-align: center;">
+            <div id="stat-szapira-percent" style="font-size: 26px; font-weight: bold; color: #333; line-height: 1;">0%</div>
+            <div style="font-size: 9px; color: #777; text-transform: uppercase; margin-top: 5px; letter-spacing: 0.5px;">Udział (%)</div>
+        </div>
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1412,23 +1409,29 @@ const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
 szapiraChart = new Chart(ctxSzapira, {
     type: 'pie',
     data: {
-        labels: ['Zbiory rabina Majera Szapiry / Collection of Rabbi Meir Shapira', 'Pozostałe / Other'],
+        labels: ['Zbiory rabina Majera Szapiry', 'Pozostałe'],
         datasets: [{
             data: [countSzapira, countOthers],
             backgroundColor: ['#c73848', '#f2f2f2'], 
             borderColor: '#fff',
             borderWidth: 2,
-            offset: [40, 0],
-            hoverOffset: 50,
+            offset: [30, 0], // Nieco mniejszy offset, by koło mogło być większe
+            hoverOffset: 35,
             hoverBorderColor: '#fff', 
             hoverBorderWidth: 2
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true, // Zmieniamy na true, by koło było idealnie okrągłe
+        maintainAspectRatio: false, 
+        // WYPELNIENIE: Usunięcie dużych paddingów z layoutu
         layout: {
-            padding: 40 // Nieco mniejszy padding, by wykres lepiej wypełnił środek
+            padding: {
+                top: 10,
+                bottom: 10,
+                left: 30,
+                right: 30
+            }
         },
         plugins: {
             legend: { display: false },
@@ -1908,6 +1911,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
