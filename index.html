@@ -913,34 +913,34 @@ const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let link = getVal(r.c[16]);
     let boundWithSection = "";
 
-for (let i = 0; i <= 30; i++) { // Zwiększyłem zakres do 30 dla bezpieczeństwa
+for (let i = 0; i <= 30; i++) { 
     if (!colLabels[i]) continue;
 
-    // 1. POBIERANIE DANYCH
+    // 1. POBIERANIE DANYCH I NAZW
     let labelName = colLabels[i].label ? colLabels[i].label.toLowerCase() : "";
     let val = getVal(r.c[i]);
     const isSignature = (i === 14);
 
-    // 2. USUNIĘCIE ZBĘDNYCH LABELI (Pełny opis i Fotografie)
-    // Sprawdzamy po nazwie, żeby mieć 100% pewności, niezależnie od numeru kolumny
+    // 2. WYKLUCZENIA (Techniczne R, S, AD oraz Pełny opis i Fotografie)
+    // R=17, S=18, AD=29 + techniczne z Twojej listy
+    if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 29].includes(i)) continue;
+
+    // Dodatkowe sprawdzenie po nazwie dla pewności
     if (labelName.includes("pełny opis") || labelName.includes("fotografie") || labelName.includes("typ pieczątki")) {
         continue; 
     }
-
-    // 3. STANDARDOWE WYKLUCZENIA TECHNICZNE (indeksy pomocnicze)
-    if ([8, 19, 20, 22, 23, 24, 25, 26, 27].includes(i)) continue;
 
     // Pomiń puste (chyba że to sygnatura)
     if ((!val || val === "---") && !isSignature) continue;
     if (isSignature && (!val || val === "---")) val = "-";
 
-    // 4. RENDEROWANIE BOXÓW
+    // 3. RENDEROWANIE STANDARDOWYCH BOXÓW
     if (val.startsWith('http')) {
         h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
     } else {
         let displayVal = val;
         
-        // Specjalna logika dla Miejsca wydania (Hebrajski z kolumny 22)
+        // Specjalna logika dla Miejsca wydania (Hebrajski z kolumny W=22)
         if (i === 7) {
             let hebrewVal = getVal(r.c[22]);
             if (hebrewVal && hebrewVal !== "---" && hebrewVal !== "-") {
@@ -948,19 +948,17 @@ for (let i = 0; i <= 30; i++) { // Zwiększyłem zakres do 30 dla bezpieczeństw
             }
         }
         
-        // Renderowanie obecnego boxa
+        // Renderowanie standardowego wiersza
         h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${displayVal}</span></div>`;
         
-        // 5. DODANIE TYPU PIECZĄTKI Z DYMKIEM (Zaraz po Lokalizacji)
-        // Zakładamy, że Lokalizacja to indeks 21. Jeśli pojawi się w innym miejscu, Typ pójdzie za nią.
-        if (i === 21) { 
-            let stampVal = getVal(r.c[28]); // Pobieramy z kolumny 28
+        // 4. DODANIE "TYP JChL" DOKŁADNIE PO "LOKALIZACJI" (Kolumna L = indeks 11)
+        if (i === 11) { 
+            let stampVal = getVal(r.c[28]); // Kolumna AC = indeks 28
             if (stampVal && stampVal !== "---") {
                 h += `
                 <div class="detail-box">
-                    <span class="label">Typ pieczątki JChL / YChL Stamp Type</span>
-                    <span style="display: flex; align-items: center; gap: 8px;">
-                        ${stampVal}
+                    <span class="label" style="display: flex; align-items: center; gap: 6px;">
+                        Typ pieczątki JChL / YChL Stamp Type
                         <a href="https://teatrnn.pl/wystawy/typologia-znakow-wlasnosciowych-jeszywas-chachmej-lublin/" 
                            target="_blank" 
                            title="Zobacz opis typologii / See typology description"
@@ -983,6 +981,7 @@ for (let i = 0; i <= 30; i++) { // Zwiększyłem zakres do 30 dla bezpieczeństw
                              onmouseout="this.style.backgroundColor='#eee'; this.style.color='#888';">?</span>
                         </a>
                     </span>
+                    <span>${stampVal}</span>
                 </div>`;
             }
         }
@@ -1953,6 +1952,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
