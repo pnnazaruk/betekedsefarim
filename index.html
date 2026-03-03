@@ -1551,6 +1551,10 @@ szapiraChart = new Chart(ctxSzapira, {
                 label: 'Kolekcja / Collection',
                 data: [countSzapira, countOthers],
                 backgroundColor: ['#c73848', '#d1d1d1'], 
+                // Zmiana koloru po najechaniu:
+                hoverBackgroundColor: ['#a52a3a', '#bcbcbc'], 
+                // Usunięcie "odskakiwania" (cienia/przesunięcia):
+                hoverOffset: 0
                 // Etykiety specyficzne dla tego kręgu:
                 labels: [
                     'Zbiory rabina Szapiry / The Shapira Collection', 
@@ -1564,11 +1568,20 @@ szapiraChart = new Chart(ctxSzapira, {
                 label: 'Typ druku / Print Type',
                 data: [oldPrintsSzapira, modernBooksSzapira, oldPrintsOthers, modernBooksOthers],
                 backgroundColor: [
-                    '#8b1e2a',                 // Ciemny czerwony: Starodruki Szapiry
-                    'rgba(199, 56, 72, 0.3)',  // Jasny czerwony: Nowsze Szapiry
-                    '#777777',                 // Ciemniejszy siwy: Starodruki Pozostałe
-                    '#e8e8e8'                  // Jasny siwy: Nowsze Pozostałe
+                    '#8b1e2a', 
+                    'rgba(199, 56, 72, 0.3)', 
+                    '#777777', 
+                    '#e8e8e8'
                 ],
+                // Zmiana koloru po najechaniu dla każdego z 4 segmentów:
+                hoverBackgroundColor: [
+                    '#5c131b', // Ciemniejszy dla starodruków Szapiry
+                    'rgba(199, 56, 72, 0.5)', 
+                    '#555555', 
+                    '#dcdcdc'
+                ],
+                // Usunięcie "odskakiwania":
+                hoverOffset: 0,
                 // Etykiety specyficzne dla tego kręgu:
                 labels: [
                     'Starodruki / Old Prints', 
@@ -2067,6 +2080,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
