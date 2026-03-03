@@ -1450,81 +1450,97 @@ options: {
                     }
                 }
             });
-// --- WYKRES KOŁOWY: ZBIORY MAJERA SZAPIRY (OPTYMALIZACJA) ---
+// --- WYKRES DONUT: ZBIORY SZAPIRY I STARODRUKI
 let countSzapira = 0;
 let countOthers = 0;
-let oldPrintsSzapira = 0;   // Starodruki Szapiry
-let modernBooksSzapira = 0; // Nowsze książki Szapiry
+let oldPrintsSzapira = 0;   // Starodruki Szapiry (<=1800)
+let modernBooksSzapira = 0; // Nowsze Szapiry (>1800)
+let oldPrintsOthers = 0;    // Starodruki pozostałe (tło)
+let modernBooksOthers = 0;  // Nowsze pozostałe (tło)
 
 data.forEach(r => {
     // Sprawdzamy czy wiersz należy do kolekcji Szapiry (Kolumna AD / Indeks 29)
     let isSzapira = r.c && r.c[29] && getVal(r.c[29]).toLowerCase() === 'x';
     
+    // Pobieramy rok wydania (Kolumna F / Indeks 5)
+    let yearRaw = r.c[5] ? getVal(r.c[5]) : "";
+    let year = parseInt(yearRaw);
+    let isOld = (!isNaN(year) && year > 0 && year <= 1800);
+
     if (isSzapira) {
         countSzapira++;
-        
-        // Pobieramy rok wydania (Kolumna F / Indeks 5)
-        let yearRaw = r.c[5] ? getVal(r.c[5]) : "";
-        let year = parseInt(yearRaw);
-        
-        if (!isNaN(year) && year > 0) {
-            if (year <= 1800) {
-                oldPrintsSzapira++;
-            } else {
-                modernBooksSzapira++;
-            }
-        }
+        if (isOld) oldPrintsSzapira++;
+        else modernBooksSzapira++;
     } else {
         countOthers++;
+        if (isOld) oldPrintsOthers++;
+        else modernBooksOthers++;
     }
 });
 
 // AKTUALIZACJA LICZB W METRYCZKACH (4 sekcje)
-const totalSzapira = countSzapira + countOthers;
+const totalAll = countSzapira + countOthers;
 document.getElementById('stat-szapira-count').innerText = countSzapira;
-document.getElementById('stat-szapira-percent').innerText = ((countSzapira / totalSzapira) * 100).toFixed(1) + "%";
+document.getElementById('stat-szapira-percent').innerText = ((countSzapira / totalAll) * 100).toFixed(1) + "%";
 document.getElementById('stat-szapira-old').innerText = oldPrintsSzapira;
 document.getElementById('stat-szapira-modern').innerText = modernBooksSzapira;
 
-// --- RENDEROWANIE WYKRESU ---
+// --- RENDEROWANIE WYKRESU DONUT (DWUPOZIOMOWY) ---
 if (szapiraChart) szapiraChart.destroy();
 
 const ctxSzapira = document.getElementById('szapiraChart').getContext('2d');
 szapiraChart = new Chart(ctxSzapira, {
-    type: 'pie',
+    type: 'doughnut',
     data: {
-        labels: ['Zbiory rabina Szapiry/ Collection of Rabbi Shapira', 'Pozostałe/ Other'],
-        datasets: [{
-            data: [countSzapira, countOthers],
-            backgroundColor: ['#c73848', '#f2f2f2'], 
-            borderColor: '#fff',
-            borderWidth: 2,
-            offset: [30, 0],
-            hoverOffset: 35,
-            hoverBorderColor: '#fff', 
-            hoverBorderWidth: 2
-        }]
+        datasets: [
+            // PIERŚCIEŃ ZEWNĘTRZNY: Szczegółowy podział
+            {
+                label: 'Szczegóły / Details',
+                data: [oldPrintsSzapira, modernBooksSzapira, countOthers],
+                backgroundColor: [
+                    '#8b1e2a', // Ciemny bordowy (Starodruki Szapiry)
+                    '#c73848', // Jasny bordowy (Nowsze Szapiry)
+                    '#f2f2f2'  // Jasny szary (Reszta kolekcji)
+                ],
+                borderColor: '#fff',
+                borderWidth: 2,
+                weight: 1.5 // Grubszy pierścień zewnętrzny
+            },
+            // PIERŚCIEŃ WEWNĘTRZNY: Ogólny podział (Szapira vs Reszta)
+            {
+                label: 'Główny podział / Main division',
+                data: [countSzapira, countOthers],
+                backgroundColor: [
+                    'rgba(199, 56, 72, 0.4)', // Półprzezroczysty bordowy
+                    '#e6e6e6'                 // Ciemniejszy szary
+                ],
+                borderColor: '#fff',
+                borderWidth: 2,
+                weight: 1 // Cieńszy pierścień wewnętrzny
+            }
+        ],
+        labels: [
+            'Starodruki Szapiry / Shapira Old Prints', 
+            'Nowsze Szapiry / Shapira Modern', 
+            'Pozostałe zbiory / Other collection'
+        ]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false, 
+        maintainAspectRatio: false,
+        cutout: '45%', // Rozmiar "dziurki" w środku
         layout: {
-            padding: {
-                top: 10,
-                bottom: 10,
-                left: 30,
-                right: 30
-            }
+            padding: 15
         },
         plugins: {
             legend: { display: false },
             tooltip: {
-                enabled: true,
+                backgroundColor: 'rgba(0,0,0,0.8)',
                 callbacks: {
                     label: function(context) {
-                        const total = countSzapira + countOthers;
-                        const percentage = ((context.raw / total) * 100).toFixed(1);
-                        return ` ${context.label}: ${context.raw} (${percentage}%)`;
+                        const val = context.raw;
+                        const percentage = ((val / totalAll) * 100).toFixed(1);
+                        return ` ${context.label}: ${val} (${percentage}%)`;
                     }
                 }
             }
@@ -1994,6 +2010,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
