@@ -6,7 +6,6 @@
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -690,12 +689,6 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="chart-wrapper" style="margin-top: 50px; border: 2px solid #1a1a1a; padding: 20px; background: #fff;">
-    <h3 style="font-size: 14px; text-transform: uppercase; text-align: center; color: #1a1a1a; font-family: 'Segoe UI', sans-serif; margin-top: 0; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
-        Główne kategorie tematyczne / Main Subject Categories
-    </h3>
-    <div id="subjectSunburst" style="width: 100%; height: 700px;"></div>
-</div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
 
@@ -757,30 +750,31 @@ body.stats-mode #dashboard-view {
         }
 async function init() {
     try {
-        console.log("Start pobierania danych...");
-        const response = await fetch(SHEET_URL);
-        const text = await response.text();
-        const json = JSON.parse(text.substr(47).slice(0, -2));
-        
+        let r = await fetch(url);
+        let t = await r.text();
+        let json = JSON.parse(t.substring(t.indexOf("{"), t.lastIndexOf("}") + 1));
         rawRows = json.table.rows;
         colLabels = json.table.cols;
 
-        // Renderowanie podstawowych elementów
-        renderTable(rawRows);
-        updateStats(rawRows);
-        updateMap(rawRows);
+        // DODANO: Zapisanie danych do zmiennej globalnej dla przycisku "Generuj"
+        window.currentData = rawRows; 
 
-        // Wywołanie wykresu Sunburst pod statystykami
-        renderSunburst(rawRows);
+        const fuseData = rawRows.map(row => ({ 
+            original: row, 
+            searchable: row.c.map(cell => getVal(cell)).join(' ') 
+        }));
+        fuse = new Fuse(fuseData, { keys: ['searchable'], threshold: 0.3, ignoreLocation: true });
 
-        // Obsługa ID z URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const idFromUrl = urlParams.get('id');
-        if (idFromUrl) openModal(idFromUrl);
+        applyURLState();
+        filterAndSort();
 
-        console.log("Dane załadowane pomyślnie.");
-    } catch (err) {
-        console.error("BŁĄD KRYTYCZNY INIT:", err);
+        // DODANO: Pierwsze uruchomienie grafu (domyślnie autorzy)
+        renderNetworkGraph(rawRows, 'author'); 
+
+        document.getElementById('loader').style.display = 'none';
+        window.addEventListener('popstate', () => { applyURLState(); filterAndSort(false); });
+    } catch (e) { 
+        console.error(e); 
     }
 }
 
@@ -1502,6 +1496,7 @@ options: {
                 }
             });
 // --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
+// --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
 let countSzapira = 0;
 let countOthers = 0;
 let oldPrintsSzapira = 0;   
@@ -1616,71 +1611,6 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
-function renderSunburst(dataRows) {
-    try {
-        const sbData = getSunburstData(dataRows);
-        const plotData = [{
-            type: "sunburst",
-            labels: sbData.labels,
-            parents: sbData.parents,
-            values: sbData.values,
-            customdata: sbData.labels.map(l => sbData.englishLabels[l] || ""),
-            hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
-            leaf: {opacity: 1},
-            marker: {
-                line: {width: 2, color: "#1a1a1a"},
-                colorscale: [[0, '#ffffff'], [1, '#c73848']]
-            },
-            textfont: { family: "Segoe UI, Arial", size: 14, color: "#1a1a1a" }
-        }];
-
-        const layout = {
-            margin: {l: 10, r: 10, b: 10, t: 10},
-            paper_bgcolor: "white",
-            sunburstcolorway: ["#c73848", "#1a1a1a", "#555", "#888"]
-        };
-
-        Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
-    } catch (e) {
-        console.error("Błąd rysowania Sunburst:", e);
-    }
-}
-
-function getSunburstData(dataRows) {
-    const labels = ["Kolekcja"];
-    const parents = [""];
-    const values = [0];
-    const englishLabels = { "Kolekcja": "Collection" };
-
-    dataRows.forEach(r => {
-        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
-        if (!val || val === "---" || val === "") return;
-
-        let blocks = val.split(';');
-        blocks.forEach(block => {
-            let parts = block.split('/');
-            let polishFull = parts[0].trim();
-            let englishFull = parts[1] ? parts[1].trim() : "";
-
-            let mainCategory = polishFull.split('--')[0].trim();
-            let mainEnglish = englishFull.split('--')[0].trim();
-
-            if (mainCategory) {
-                let idx = labels.indexOf(mainCategory);
-                if (idx === -1) {
-                    labels.push(mainCategory);
-                    parents.push("Kolekcja");
-                    values.push(1);
-                    englishLabels[mainCategory] = mainEnglish;
-                } else {
-                    values[idx]++;
-                }
-                values[0]++; 
-            }
-        });
-    });
-    return { labels, parents, values, englishLabels };
-}
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -2142,43 +2072,27 @@ if (e.key === "Escape") {
         }
     }
 });
-function getSunburstData(dataRows) {
-    const labels = ["Kolekcja"];
-    const parents = [""];
-    const values = [0];
-    const englishLabels = { "Kolekcja": "Collection" };
-
-    dataRows.forEach(r => {
-        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
-        if (!val || val === "---" || val === "") return;
-
-        let blocks = val.split(';');
-        blocks.forEach(block => {
-            let parts = block.split('/');
-            let polishFull = parts[0].trim();
-            let englishFull = parts[1] ? parts[1].trim() : "";
-
-            // Wycinamy subkategorie - bierzemy tylko to przed "--"
-            let mainCategory = polishFull.split('--')[0].trim();
-            let mainEnglish = englishFull.split('--')[0].trim();
-
-            if (mainCategory) {
-                let idx = labels.indexOf(mainCategory);
-                if (idx === -1) {
-                    labels.push(mainCategory);
-                    parents.push("Kolekcja");
-                    values.push(1);
-                    englishLabels[mainCategory] = mainEnglish;
-                } else {
-                    values[idx]++;
-                }
-                values[0]++; 
-            }
-        });
-    });
-    return { labels, parents, values, englishLabels };
-}
         init();
     </script></body></html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
