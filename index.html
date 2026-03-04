@@ -689,16 +689,16 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-item" style="border-top: 2px solid #1a1a1a; margin-top: 30px; padding-top: 20px;">
-    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 15px;">
-        Tematyka / Subjects
+<div class="stats-item" style="grid-column: 1 / -1; margin-top: 0px; border-top: 2px solid #1a1a1a; padding-top: 15px; border-radius: 0; position: relative;">
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 20px;">
+        Struktura tematyczna / Subject Structure
     </h3>
     
-    <div style="height: 320px; position: relative; margin-bottom: 20px;">
+    <div style="height: 350px; width: 100%; position: relative;">
         <canvas id="subjectBarChart"></canvas>
     </div>
 
-    <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; font-family: 'Segoe UI', sans-serif;">
+    <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 15px; padding-bottom: 10px;">
         </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -1625,11 +1625,13 @@ szapiraChart = new Chart(ctxSzapira, {
 });
 // 1. Zliczanie haseł
 // 1. Zliczanie haseł
+// --- ANALIZA DANYCH TEMATYCZNYCH (AF / 31) ---
 const subjectCounts = {};
 data.forEach(r => {
     let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
-    if (!val || val === "---") return;
+    if (!val || val === "---" || val === "") return;
 
+    // Rozbicie po średnikach i czyszczenie (główna kategoria przed / lub --)
     let parts = val.split(';');
     parts.forEach(p => {
         let clean = p.split('/')[0].split('--')[0].trim();
@@ -1637,65 +1639,60 @@ data.forEach(r => {
     });
 });
 
-// 2. Podział na Top 10 i resztę
-const allSubjects = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1]);
-const top10 = allSubjects.slice(0, 10);
-const others = allSubjects.slice(10);
+// Sortowanie i podział (Top 10 + reszta)
+const sortedEntries = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1]);
+const top10 = sortedEntries.slice(0, 10);
+const others = sortedEntries.slice(10);
 
-// 3. Renderowanie Wykresu (Top 10) - STYL SZAPIRA
-if (window.subjectChartInstance) window.subjectChartInstance.destroy();
-const ctxSubject = document.getElementById('subjectBarChart').getContext('2d');
-window.subjectChartInstance = new Chart(ctxSubject, {
+// --- RENDEROWANIE WYKRESU (BAR CHART) ---
+if (window.subjectChart) window.subjectChart.destroy();
+const ctxS = document.getElementById('subjectBarChart').getContext('2d');
+
+window.subjectChart = new Chart(ctxS, {
     type: 'bar',
     data: {
         labels: top10.map(x => x[0]),
         datasets: [{
             data: top10.map(x => x[1]),
-            backgroundColor: '#c73848',
-            borderColor: '#1a1a1a',
-            borderWidth: 2,
+            backgroundColor: '#c73848', 
+            borderColor: '#1a1a1a',     
+            borderWidth: 2,             
             hoverBackgroundColor: '#a52a3a'
         }]
     },
     options: {
-        indexAxis: 'y',
+        indexAxis: 'y', // Poziome słupki - techniczna czytelność
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: 10 }, // Spójne z Twoim donutem
-        plugins: { 
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: '#1a1a1a',
-                titleFont: { family: 'Segoe UI' },
-                bodyFont: { family: 'Segoe UI' },
-                cornerRadius: 0, // Twoje kanciaste ramki
-                displayColors: false,
-                callbacks: {
-                    label: function(context) {
-                        return ` Liczba: ${context.raw}`;
-                    }
+        scales: {
+            x: { display: false }, // Usuwamy oś X dla minimalizmu
+            y: { 
+                grid: { display: false },
+                ticks: { 
+                    color: '#1a1a1a', 
+                    font: { weight: 'bold', family: 'Segoe UI', size: 11 } 
                 }
             }
         },
-        scales: {
-            x: { beginAtZero: true, display: false },
-            y: { 
-                grid: { display: false }, 
-                ticks: { 
-                    color: '#1a1a1a', 
-                    font: { family: 'Segoe UI', weight: 'bold', size: 11 } 
-                } 
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#1a1a1a',
+                cornerRadius: 0, 
+                displayColors: false,
+                titleFont: { family: 'Segoe UI' },
+                bodyFont: { family: 'Segoe UI' }
             }
         }
     }
 });
 
-// 4. Renderowanie Metryczek (Pozostałe) - CZYSTY HTML BEZ STYLE.JS
-const metricsContainer = document.getElementById('subject-metrics-container');
-metricsContainer.innerHTML = others.map(([name, count]) => `
-    <div class="metric-badge" style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; display: flex; align-items: center; background: #fff;">
-        <span style="color: #1a1a1a;">${name}</span>
-        <span style="color: #c73848; font-weight: bold; border-left: 1px solid #1a1a1a; margin-left: 8px; padding-left: 8px;">${count}</span>
+// --- RENDEROWANIE METRYCZEK (POZOSTAŁE) ---
+const mContainer = document.getElementById('subject-metrics-container');
+mContainer.innerHTML = others.map(([name, count]) => `
+    <div style="border: 1px solid #1a1a1a; padding: 2px 6px; font-size: 10px; background: #fff; display: flex; align-items: center; border-radius: 0; font-family: 'Segoe UI', sans-serif;">
+        <span style="color: #1a1a1a; margin-right: 6px;">${name}</span>
+        <span style="color: #c73848; font-weight: bold; border-left: 1px solid #1a1a1a; padding-left: 6px;">${count}</span>
     </div>
 `).join('');
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
@@ -2161,6 +2158,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
