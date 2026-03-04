@@ -690,11 +690,11 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<canvas id="ownerChart"></canvas> <div class="sunburst-wrapper" style="margin-top: 30px; border-top: 2px solid #1a1a1a; padding-top: 20px;">
-    <h3 style="font-size: 13px; text-transform: uppercase; text-align: center; color: #1a1a1a; margin-bottom: 15px; font-family: 'Segoe UI', sans-serif; font-weight: bold;">
-        Główne kategorie tematyczne / Main Subjects
+<div class="sunburst-outer-wrapper" style="margin-top: 40px; border-top: 2px solid #1a1a1a; padding-top: 30px; width: 100%;">
+    <h3 style="font-size: 13px; text-transform: uppercase; text-align: left; color: #1a1a1a; letter-spacing: 1px; font-weight: bold; margin-bottom: 20px;">
+        Struktura tematyczna zbiorów / Subject Structure
     </h3>
-    <div id="subjectSunburst" style="width: 100%; height: 500px;"></div>
+    <div id="subjectSunburst" style="width: 100%; height: 650px;"></div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1620,26 +1620,43 @@ szapiraChart = new Chart(ctxSzapira, {
 });
 // --- TUTAJ WKLEJ RENDEROWANIE SUNBURSTA ---
 try {
-    const sb = getSunburstData(data); // data to nazwa zmiennej w Twojej pętli
+    const sb = getSunburstData(data);
+    
     const plotData = [{
         type: "sunburst",
         labels: sb.labels,
         parents: sb.parents,
         values: sb.values,
         customdata: sb.labels.map(l => sb.englishLabels[l] || ""),
+        
+        // Formatowanie tekstu: Nazwa + Procenty
+        textinfo: "label+percent root", 
+        insidetextorientation: "radial", // Tekst układa się wzdłuż promieni - mega czytelne!
+        
         hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
+        
         leaf: {opacity: 1},
         marker: {
-            line: {width: 2, color: "#1a1a1a"},
-            colorscale: [[0, '#ffffff'], [1, '#c73848']]
+            line: {width: 0}, // BRAK OBWÓDEK - czysty minimalizm
+            // Używamy kolorów z Twojej palety: Czerwień Szapiry, Głęboka czerń, Szarości
+            colorscale: [
+                [0, '#1a1a1a'], 
+                [0.5, '#c73848'], 
+                [1, '#d1d1d1']
+            ]
         },
-        textfont: { family: "Segoe UI, Arial", size: 12, color: "#1a1a1a" }
+        textfont: { 
+            family: "Segoe UI, sans-serif", 
+            size: 11, 
+            color: "#fff" // Biały tekst na ciemnych polach
+        }
     }];
 
     const layout = {
         margin: {l: 0, r: 0, b: 0, t: 0},
-        paper_bgcolor: "transparent",
-        sunburstcolorway: ["#c73848", "#1a1a1a", "#555555", "#888888"]
+        paper_bgcolor: "rgba(0,0,0,0)", // Przezroczyste tło
+        sunburstcolorway: ["#c73848", "#1a1a1a", "#444444", "#888888"],
+        extendsunburstcolors: true
     };
 
     Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
@@ -2108,13 +2125,13 @@ if (e.key === "Escape") {
     }
 });
 function getSunburstData(rows) {
-    const labels = ["Kolekcja"];
+    const ROOT_NAME = "Biblioteka Jeszywas Chachmej Lublin";
+    const labels = [ROOT_NAME];
     const parents = [""];
     const values = [0];
-    const englishLabels = { "Kolekcja": "Collection" };
+    const englishLabels = { [ROOT_NAME]: "Library of Yeshivas Chachmei Lublin" };
 
     rows.forEach(r => {
-        // Kolumna AF to indeks 31
         let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
         if (!val || val === "---" || val === "") return;
 
@@ -2128,7 +2145,7 @@ function getSunburstData(rows) {
                 let idx = labels.indexOf(polishPart);
                 if (idx === -1) {
                     labels.push(polishPart);
-                    parents.push("Kolekcja");
+                    parents.push(ROOT_NAME);
                     values.push(1);
                     englishLabels[polishPart] = englishPart;
                 } else {
@@ -2142,6 +2159,7 @@ function getSunburstData(rows) {
 }
         init();
     </script></body></html>
+
 
 
 
