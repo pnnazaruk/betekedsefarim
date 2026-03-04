@@ -6,11 +6,11 @@
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     <style>
         /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
@@ -690,11 +690,11 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="chart-wrapper" style="margin-top: 50px;">
-    <h3 style="font-size: 14px; text-transform: uppercase; text-align: center; color: #c73848; font-family: sans-serif;">
-        Tematyka kolekcji / Subject Headings
+<div id="subject-sunburst-container" style="width: 100%; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+    <h3 style="font-size: 13px; text-transform: uppercase; text-align: center; color: #c73848;">
+        Tematyka kolekcji (Szczegółowa)
     </h3>
-    <div id="subjectSunburst" style="width: 100%; height: 500px;"></div>
+    <div id="subjectSunburst" style="height: 500px;"></div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -948,123 +948,123 @@ function openModal(rowIndex) {
         return "ID " + id;
     };
 
-// --- NOWA LOGIKA: PRZYGOTOWANIE SLIDERA 
-const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
-let galleryHTML = "";
-currentSlide = 0; 
+    // --- NOWA LOGIKA: PRZYGOTOWANIE SLIDERA 
+    const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
+    let galleryHTML = "";
+    currentSlide = 0; 
 
-if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
-    const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
-    if (images.length > 0) {
-galleryHTML = `
-    <div class="photo-slider-container" data-current-slide="0">
-        ${images.length > 1 ? `
-            <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
-            <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
-        ` : ''}
-        <div class="photo-slider-wrapper">
-${images.map(imgUrl => `
-    <img src="${imgUrl}" onclick="openLightbox(this.src, true)" alt="Dodatkowe zdjęcie">
-`).join('')}
-        </div>
-    </div>
-`;
+    if (extraImagesRaw && extraImagesRaw !== "-" && extraImagesRaw !== "") {
+        const images = extraImagesRaw.split('|').map(url => url.trim()).filter(Boolean);
+        if (images.length > 0) {
+            galleryHTML = `
+                <div class="photo-slider-container" data-current-slide="0">
+                    ${images.length > 1 ? `
+                        <button class="photo-slider-btn photo-prev-btn" onclick="moveSlide(-1, this)">&#10094;</button>
+                        <button class="photo-slider-btn photo-next-btn" onclick="moveSlide(1, this)">&#10095;</button>
+                    ` : ''}
+                    <div class="photo-slider-wrapper">
+                        ${images.map(imgUrl => `
+                            <img src="${imgUrl}" onclick="openLightbox(this.src, true)" alt="Dodatkowe zdjęcie">
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
     }
-}
     // ---------------------------------------------------------------
 
-const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
+    const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
     let link = getVal(r.c[16]);
     let boundWithSection = "";
 
-for (let i = 0; i <= 30; i++) { 
-    if (!colLabels[i]) continue;
+    // Zwiększono zakres do 31, aby uwzględnić kolumnę AF
+    for (let i = 0; i <= 31; i++) { 
+        if (!colLabels[i]) continue;
 
-    // 1. POBIERANIE DANYCH I NAZW
-    let labelName = colLabels[i].label ? colLabels[i].label.toLowerCase() : "";
-    let val = getVal(r.c[i]);
-    const isSignature = (i === 14);
+        // 1. POBIERANIE DANYCH I NAZW
+        let labelName = colLabels[i].label ? colLabels[i].label.toLowerCase() : "";
+        let val = getVal(r.c[i]);
+        const isSignature = (i === 14);
 
-    // 2. WYKLUCZENIA 
-    // Dodajemy 22 (Hebrajskie miejsce), 28 (Typ pieczątki) i 30 (Język) do listy wykluczeń, 
-    // ponieważ renderujemy je ręcznie w konkretnych miejscach poniżej.
-    // R=17, S=18, AD=29
-    if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30].includes(i)) continue;
+        // 2. WYKLUCZENIA 
+        // Dodano indeks 31 (Hasła przedmiotowe) do wykluczeń pętli standardowej
+        if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(i)) continue;
 
-    // Dodatkowe sprawdzenie po nazwie dla pewności (Pełny opis / Fotografie)
-    if (labelName.includes("pełny opis") || labelName.includes("fotografie")) {
-        continue; 
+        if (labelName.includes("pełny opis") || labelName.includes("fotografie")) {
+            continue; 
+        }
+
+        if ((!val || val === "---") && !isSignature) continue;
+        if (isSignature && (!val || val === "---")) val = "-";
+
+        // 3. RENDEROWANIE STANDARDOWYCH BOXÓW
+        if (val.startsWith('http')) {
+            h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
+        } else {
+            h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val}</span></div>`;
+            
+            // --- LOGIKA ROZBICIA MIEJSCA WYDANIA ---
+            if (i === 7) {
+                let hebrewPlace = getVal(r.c[22]);
+                if (hebrewPlace && hebrewPlace !== "---" && hebrewPlace !== "-") {
+                    h += `<div class="detail-box"><span class="label">מקום הוצאה</span><span style="direction: rtl; unicode-bidi: bidi-override; text-align: left; display: block;">${hebrewPlace}</span></div>`;
+                }
+            }
+
+            // --- LOGIKA WSTAWIENIA JĘZYKA ORAZ HASEŁ PRZEDMIOTOWYCH ---
+            if (i === 10) {
+                // Renderowanie Języka (indeks 30)
+                let langVal = getVal(r.c[30]);
+                if (langVal && langVal !== "---") {
+                    h += `<div class="detail-box"><span class="label">Język / Language</span><span>${langVal}</span></div>`;
+                }
+                
+                // Renderowanie Haseł Przedmiotowych (indeks 31 / kolumna AF)
+                let subjectVal = getVal(r.c[31]);
+                if (subjectVal && subjectVal !== "---" && subjectVal !== "-" && subjectVal !== "") {
+                    h += `<div class="detail-box"><span class="label">Hasła przedmiotowe / Subject headings</span><span style="font-style: italic; color: #444;">${subjectVal}</span></div>`;
+                }
+            }
+            
+            // --- LOGIKA TYPU PIECZĄTKI ---
+            if (i === 11) { 
+                let stampVal = getVal(r.c[28]); 
+                if (stampVal && stampVal !== "---") {
+                    h += `
+                    <div class="detail-box">
+                        <span class="label" style="display: flex; align-items: center; gap: 6px;">
+                            Typ pieczątki JChL / YChL Stamp Type
+                            <a href="https://teatrnn.pl/wystawy/typologia-znakow-wlasnosciowych-jeszywas-chachmej-lublin/" 
+                               target="_blank" 
+                               title="Zobacz opis typologii / See typology description"
+                               style="text-decoration: none; display: inline-flex;">
+                               <span style="
+                                    display: inline-block;
+                                    width: 14px;
+                                    height: 14px;
+                                    background-color: #eee;
+                                    color: #888;
+                                    border-radius: 50%;
+                                    text-align: center;
+                                    font-size: 10px;
+                                    line-height: 14px;
+                                    font-family: sans-serif;
+                                    cursor: help;
+                                    transition: all 0.2s;
+                                    border: 1px solid #ddd;
+                               " onmouseover="this.style.backgroundColor='#c73848'; this.style.color='#fff';" 
+                                 onmouseout="this.style.backgroundColor='#eee'; this.style.color='#888';">?</span>
+                            </a>
+                        </span>
+                        <span>${stampVal}</span>
+                    </div>`;
+                }
+            }
+        }
     }
 
-    // Pomiń puste (chyba że to sygnatura)
-    if ((!val || val === "---") && !isSignature) continue;
-    if (isSignature && (!val || val === "---")) val = "-";
-
-    // 3. RENDEROWANIE STANDARDOWYCH BOXÓW
-    if (val.startsWith('http')) {
-        h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
-    } else {
-        // Renderowanie standardowego wiersza
-        h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val}</span></div>`;
-        
-        // --- LOGIKA ROZBICIA MIEJSCA WYDANIA ---
-        // Po polskim Miejscu wydania (H = indeks 7) dodajemy hebrajskie (W = indeks 22)
-        if (i === 7) {
-            let hebrewPlace = getVal(r.c[22]);
-            if (hebrewPlace && hebrewPlace !== "---" && hebrewPlace !== "-") {
-                h += `<div class="detail-box"><span class="label">מקום הוצאה</span><span style="direction: rtl; unicode-bidi: bidi-override; text-align: left; display: block;">${hebrewPlace}</span></div>`;
-            }
-        }
-
-        // --- LOGIKA WSTAWIENIA JĘZYKA ---
-        // Po Drukarzu (K = indeks 10) dodajemy Język (AE = indeks 30)
-        if (i === 10) {
-            let langVal = getVal(r.c[30]);
-            if (langVal && langVal !== "---") {
-                h += `<div class="detail-box"><span class="label">Język / Language</span><span>${langVal}</span></div>`;
-            }
-        }
-        
-        // --- LOGIKA TYPU PIECZĄTKI (Z LINKIEM) ---
-        // Po Lokalizacji (L = indeks 11) dodajemy Typ JChL (AC = indeks 28)
-        if (i === 11) { 
-            let stampVal = getVal(r.c[28]); 
-            if (stampVal && stampVal !== "---") {
-                h += `
-                <div class="detail-box">
-                    <span class="label" style="display: flex; align-items: center; gap: 6px;">
-                        Typ pieczątki JChL / YChL Stamp Type
-                        <a href="https://teatrnn.pl/wystawy/typologia-znakow-wlasnosciowych-jeszywas-chachmej-lublin/" 
-                           target="_blank" 
-                           title="Zobacz opis typologii / See typology description"
-                           style="text-decoration: none; display: inline-flex;">
-                           <span style="
-                                display: inline-block;
-                                width: 14px;
-                                height: 14px;
-                                background-color: #eee;
-                                color: #888;
-                                border-radius: 50%;
-                                text-align: center;
-                                font-size: 10px;
-                                line-height: 14px;
-                                font-family: sans-serif;
-                                cursor: help;
-                                transition: all 0.2s;
-                                border: 1px solid #ddd;
-                           " onmouseover="this.style.backgroundColor='#c73848'; this.style.color='#fff';" 
-                             onmouseout="this.style.backgroundColor='#eee'; this.style.color='#888';">?</span>
-                        </a>
-                    </span>
-                    <span>${stampVal}</span>
-                </div>`;
-            }
-        }
-    }
-}
-
-    // 3. Przygotowanie sekcji Współoprawne (Tytuł bez podkreślenia)
+    // 3. Przygotowanie sekcji Współoprawne
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         const boundIds = boundWithRaw.split(',').map(id => id.trim());
         const boundLinks = boundIds.map(id => {
@@ -1104,33 +1104,33 @@ for (let i = 0; i <= 30; i++) {
         </div>
     `;
 
-    // 5. Renderowanie do HTML (Z uwzględnieniem RWD dla galerii)
+    // 5. Renderowanie do HTML
     const isMobile = window.innerWidth <= 768;
 
-document.getElementById('modalContent').innerHTML = `
-    <div class="modal-body">
-        <div class="modal-img-col">
-<img src="${getVal(r.c[23])}" 
-     onclick="openLightbox(this.src, false)" 
-     style="max-width:100%; cursor: zoom-in;" ...>
-            
-            ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
-            
-            <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">
-                ${galleryHTML}
+    document.getElementById('modalContent').innerHTML = `
+        <div class="modal-body">
+            <div class="modal-img-col">
+                <img src="${getVal(r.c[23])}" 
+                     onclick="openLightbox(this.src, false)" 
+                     style="max-width:100%; cursor: zoom-in;">
+                
+                ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
+                
+                <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">
+                    ${galleryHTML}
+                </div>
+            </div>
+            <div class="modal-data-col">
+                ${finalDetailsHtml} 
+                ${copySection}
+                ${provenanceHTML}
+                
+                <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">
+                    ${galleryHTML}
+                </div>
             </div>
         </div>
-        <div class="modal-data-col">
-            ${finalDetailsHtml} 
-            ${copySection}
-            ${provenanceHTML}
-            
-            <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">
-                ${galleryHTML}
-            </div>
-        </div>
-    </div>
-`;
+    `;
 
     // 6. Pokazanie modala i aktualizacja URL
     document.getElementById('modalOverlay').style.display = 'flex';
@@ -1617,29 +1617,68 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
-try {
-    const sbData = getSunburstData(data); // "data" to Twoja tablica z wierszami
+// ==========================================
+// NOWY KOD: RENDEROWANIE WYKRESU SUNBURST
+// ==========================================
+const sbData = getSunburstData(data); // "data" to Twoja zmienna z wierszami
 
-    const plotData = [{
-        type: "sunburst",
-        labels: sbData.labels,
-        parents: sbData.parents,
-        values: sbData.values,
-        leaf: {opacity: 0.8},
-        marker: {line: {width: 1}, colorscale: 'Reds'},
-        hoverinfo: "label+value+percent root",
-        textinfo: "label"
-    }];
+const plotData = [{
+    type: "sunburst",
+    labels: sbData.labels,
+    parents: sbData.parents,
+    values: sbData.values,
+    leaf: {opacity: 0.8},
+    marker: {line: {width: 1}, colorscale: 'Reds'},
+    branchvalues: "total"
+}];
 
-    const layout = {
-        margin: {l: 0, r: 0, b: 0, t: 0},
-        paper_bgcolor: "transparent",
-        font: { family: "Segoe UI, sans-serif" }
-    };
+const layout = {
+    margin: {l: 0, r: 0, b: 0, t: 0},
+    paper_bgcolor: "transparent",
+    height: 500
+};
 
-    Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
-} catch (e) {
-    console.error("Błąd Sunburst:", e);
+Plotly.newPlot('subjectSunburst', plotData, layout);
+
+// --- KONIEC FUNKCJI STATYSTYK ---
+} 
+
+
+// ==========================================
+// FUNKCJA POMOCNICZA (KROK 3)
+// ==========================================
+function getSunburstData(dataRows) {
+    const labels = ["Tematyka"];
+    const parents = [""];
+    const values = [0];
+
+    dataRows.forEach(r => {
+        // Kolumna AF to indeks 31
+        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
+        if (!val || val === "---" || val === "") return;
+
+        let blocks = val.split(';');
+        blocks.forEach(block => {
+            let polishPart = block.split('/')[0].trim();
+            let levels = polishPart.split('--').map(l => l.trim());
+            
+            let currentParent = "Tematyka";
+            levels.forEach(level => {
+                let existingIdx = labels.indexOf(level);
+                if (existingIdx === -1) {
+                    labels.push(level);
+                    parents.push(currentParent);
+                    values.push(1);
+                } else {
+                    values[existingIdx]++;
+                }
+                currentParent = level;
+            });
+            // Zwiększamy licznik głównego rodzica
+            values[0]++;
+        });
+    });
+    return { labels, parents, values };
 }
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -2102,36 +2141,6 @@ if (e.key === "Escape") {
         }
     }
 });
-function getSunburstData(dataRows) {
-    const labels = ["Tematyka"];
-    const parents = [""];
-    const values = [0];
-
-    dataRows.forEach(r => {
-        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
-        if (!val || val === "---" || val === "") return;
-
-        let blocks = val.split(';');
-        blocks.forEach(block => {
-            let polishPart = block.split('/')[0].trim();
-            let levels = polishPart.split('--').map(l => l.trim());
-            
-            let currentParent = "Tematyka";
-            levels.forEach(level => {
-                let existingIdx = labels.indexOf(level);
-                if (existingIdx === -1) {
-                    labels.push(level);
-                    parents.push(currentParent);
-                    values.push(1);
-                } else {
-                    values[existingIdx]++;
-                }
-                currentParent = level;
-            });
-            values[0]++; 
-        });
-    });
-    return { labels, parents, values };
-}
         init();
     </script></body></html>
+
