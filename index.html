@@ -690,11 +690,11 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="sunburst-outer-wrapper" style="margin-top: 40px; border-top: 2px solid #1a1a1a; padding-top: 30px; width: 100%;">
-    <h3 style="font-size: 13px; text-transform: uppercase; text-align: left; color: #1a1a1a; letter-spacing: 1px; font-weight: bold; margin-bottom: 20px;">
-        Struktura tematyczna zbiorów / Subject Structure
+<div class="stats-section" style="border-top: 2px solid #1a1a1a; margin-top: 30px; padding-top: 20px;">
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 20px;">
+        Struktura tematyczna / Subject Structure
     </h3>
-    <div id="subjectSunburst" style="width: 100%; height: 650px;"></div>
+    <div id="subjectSunburst" style="width: 100%; height: 600px; background: #fff;"></div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1627,39 +1627,36 @@ try {
         labels: sb.labels,
         parents: sb.parents,
         values: sb.values,
-        customdata: sb.labels.map(l => sb.englishLabels[l] || ""),
         
-        // Formatowanie tekstu: Nazwa + Procenty
-        textinfo: "label+percent root", 
-        insidetextorientation: "radial", // Tekst układa się wzdłuż promieni - mega czytelne!
+        // Czysty tekst: Nazwa kategorii + udział %
+        textinfo: "label+percent root",
+        insidetextorientation: "radial", // Tekst wzdłuż promieni (najbardziej czytelny)
         
-        hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
+        hovertemplate: "<b>%{label}</b><br>Ilość: %{value}<extra></extra>",
         
-        leaf: {opacity: 1},
         marker: {
-            line: {width: 0}, // BRAK OBWÓDEK - czysty minimalizm
-            // Używamy kolorów z Twojej palety: Czerwień Szapiry, Głęboka czerń, Szarości
+            line: { width: 0 }, // Brak obwódek dla minimalistycznego wyglądu
             colorscale: [
-                [0, '#1a1a1a'], 
-                [0.5, '#c73848'], 
-                [1, '#d1d1d1']
+                [0, '#1a1a1a'],    // Czarny
+                [0.5, '#c73848'],  // Czerwony Szapiry
+                [1, '#eeeeee']     // Bardzo jasny szary
             ]
         },
         textfont: { 
             family: "Segoe UI, sans-serif", 
             size: 11, 
-            color: "#fff" // Biały tekst na ciemnych polach
+            color: "#fff" 
         }
     }];
 
     const layout = {
-        margin: {l: 0, r: 0, b: 0, t: 0},
-        paper_bgcolor: "rgba(0,0,0,0)", // Przezroczyste tło
-        sunburstcolorway: ["#c73848", "#1a1a1a", "#444444", "#888888"],
+        margin: { l: 0, r: 0, b: 0, t: 0 }, // Usunięcie marginesów Plotly
+        paper_bgcolor: "rgba(0,0,0,0)",    // Przezroczyste tło
+        sunburstcolorway: ["#c73848", "#1a1a1a", "#555555", "#888888"],
         extendsunburstcolors: true
     };
 
-    Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
+    Plotly.newPlot('subjectSunburst', plotData, layout, { displayModeBar: false, responsive: true });
 } catch (e) {
     console.error("Błąd Sunburst:", e);
 }
@@ -2159,6 +2156,7 @@ function getSunburstData(rows) {
 }
         init();
     </script></body></html>
+
 
 
 
