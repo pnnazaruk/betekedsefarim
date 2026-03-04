@@ -6,6 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -688,6 +689,12 @@ body.stats-mode #dashboard-view {
             </div>
         </div>
     </div>
+</div>
+<div class="chart-wrapper" style="margin-top: 50px;">
+    <h3 style="font-size: 14px; text-transform: uppercase; text-align: center; color: #c73848; font-family: sans-serif;">
+        Tematyka kolekcji / Subject Headings
+    </h3>
+    <div id="subjectSunburst" style="width: 100%; height: 500px;"></div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1496,7 +1503,6 @@ options: {
                 }
             });
 // --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
-// --- ZAAWANSOWANA ANALIZA ZBIORÓW SZAPIRY I STARODRUKÓW ---
 let countSzapira = 0;
 let countOthers = 0;
 let oldPrintsSzapira = 0;   
@@ -1611,6 +1617,30 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
+try {
+    const sbData = getSunburstData(data); // "data" to Twoja tablica z wierszami
+
+    const plotData = [{
+        type: "sunburst",
+        labels: sbData.labels,
+        parents: sbData.parents,
+        values: sbData.values,
+        leaf: {opacity: 0.8},
+        marker: {line: {width: 1}, colorscale: 'Reds'},
+        hoverinfo: "label+value+percent root",
+        textinfo: "label"
+    }];
+
+    const layout = {
+        margin: {l: 0, r: 0, b: 0, t: 0},
+        paper_bgcolor: "transparent",
+        font: { family: "Segoe UI, sans-serif" }
+    };
+
+    Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
+} catch (e) {
+    console.error("Błąd Sunburst:", e);
+}
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -2072,5 +2102,37 @@ if (e.key === "Escape") {
         }
     }
 });
+function getSunburstData(dataRows) {
+    const labels = ["Tematyka"];
+    const parents = [""];
+    const values = [0];
+
+    dataRows.forEach(r => {
+        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
+        if (!val || val === "---" || val === "") return;
+
+        let blocks = val.split(';');
+        blocks.forEach(block => {
+            let polishPart = block.split('/')[0].trim();
+            let levels = polishPart.split('--').map(l => l.trim());
+            
+            let currentParent = "Tematyka";
+            levels.forEach(level => {
+                let existingIdx = labels.indexOf(level);
+                if (existingIdx === -1) {
+                    labels.push(level);
+                    parents.push(currentParent);
+                    values.push(1);
+                } else {
+                    values[existingIdx]++;
+                }
+                currentParent = level;
+            });
+            values[0]++; 
+        });
+    });
+    return { labels, parents, values };
+}
         init();
     </script></body></html>
+
