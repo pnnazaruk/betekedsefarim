@@ -6,7 +6,6 @@
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -690,12 +689,6 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="sunburst-section" style="border: 2px solid #1a1a1a; margin-top: 20px; background: #fff; padding: 0;">
-    <div style="background: #1a1a1a; color: #fff; padding: 5px 10px; font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
-        Struktura tematyczna / Subject Structure
-    </div>
-    <div id="subjectSunburst" style="width: 100%; height: 500px;"></div>
-</div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
 
@@ -1160,7 +1153,7 @@ function openModal(rowIndex) {
 
         /* KONIEC KODU WZORCOWEGO - LOGIKA DODATKOWA STATYSTYK */
 
-       let mapInstance, timelineChart, locChart, stampsChart, szapiraChart, subjectSunburstChart, mapInitialized = false;
+        let mapInstance, timelineChart, locChart, stampsChart, szapiraChart, mapInitialized = false;
 
 function switchTab(mode) {
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
@@ -1618,50 +1611,6 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
-// --- TUTAJ WKLEJ RENDEROWANIE SUNBURSTA ---
-try {
-    const sb = getSunburstData(data);
-    
-    const plotData = [{
-        type: "sunburst",
-        labels: sb.labels,
-        parents: sb.parents,
-        values: sb.values,
-        customdata: sb.labels.map(l => sb.englishLabels[l] || ""),
-        
-        // Surowy tekst: Nazwa + %
-        textinfo: "label+percent root",
-        insidetextorientation: "horizontal", // Bardziej techniczny, czytelny układ
-        
-        hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
-        
-        marker: {
-            // Dodajemy czarną ramkę do KAŻDEGO segmentu, tak jak masz ramki w tabeli
-            line: { width: 1.5, color: "#1a1a1a" },
-            // Kolory: Tylko Twoja czerwień i biel dla kontrastu
-            colors: sb.labels.map((l, i) => i === 0 ? "#ffffff" : (i % 2 === 0 ? "#c73848" : "#ffffff"))
-        },
-        textfont: { 
-            family: "Segoe UI, sans-serif", 
-            size: 11, 
-            color: "#1a1a1a" // Czarny tekst dla czytelności na białym/czerwonym
-        }
-    }];
-
-    const layout = {
-        margin: { l: 5, r: 5, b: 5, t: 5 },
-        paper_bgcolor: "#ffffff",
-        // Usunięcie interaktywnych przejść kolorów, by zachować surowość
-        sunburstcolorway: ["#c73848", "#1a1a1a", "#ffffff"]
-    };
-
-    Plotly.newPlot('subjectSunburst', plotData, layout, { 
-        displayModeBar: false, 
-        responsive: true 
-    });
-} catch (e) {
-    console.error("Błąd Sunburst:", e);
-}
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -2123,46 +2072,8 @@ if (e.key === "Escape") {
         }
     }
 });
-function getSunburstData(rows) {
-    const ROOT_NAME = "Biblioteka Jeszywas Chachmej Lublin";
-    const labels = [ROOT_NAME];
-    const parents = [""];
-    const values = [0];
-    const englishLabels = { [ROOT_NAME]: "Library of Yeshivas Chachmei Lublin" };
-
-    rows.forEach(r => {
-        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
-        if (!val || val === "---" || val === "") return;
-
-        let blocks = val.split(';');
-        blocks.forEach(block => {
-            let parts = block.split('/');
-            let polishPart = parts[0].trim().split('--')[0].trim();
-            let englishPart = parts[1] ? parts[1].trim().split('--')[0].trim() : "";
-
-            if (polishPart) {
-                let idx = labels.indexOf(polishPart);
-                if (idx === -1) {
-                    labels.push(polishPart);
-                    parents.push(ROOT_NAME);
-                    values.push(1);
-                    englishLabels[polishPart] = englishPart;
-                } else {
-                    values[idx]++;
-                }
-                values[0]++; 
-            }
-        });
-    });
-    return { labels, parents, values, englishLabels };
-}
         init();
     </script></body></html>
-
-
-
-
-
 
 
 
