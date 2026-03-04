@@ -689,6 +689,21 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
+<div class="stats-item" style="border-top: 2px solid #1a1a1a; margin-top: 30px; padding-top: 20px;">
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 15px;">
+        Główna tematyka / Top Subjects
+    </h3>
+    
+    <div style="height: 300px; position: relative; margin-bottom: 20px;">
+        <canvas id="subjectBarChart"></canvas>
+    </div>
+
+    <h3 style="font-size: 11px; text-transform: uppercase; color: #555; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+        Pozostałe kategorie / Other categories
+    </h3>
+    <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; font-family: 'Segoe UI', sans-serif;">
+        </div>
+</div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
 
@@ -1611,6 +1626,69 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
+// 1. Zliczanie haseł
+const subjectCounts = {};
+data.forEach(r => {
+    let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
+    if (!val || val === "---") return;
+
+    let parts = val.split(';');
+    parts.forEach(p => {
+        let clean = p.split('/')[0].split('--')[0].trim();
+        if (clean) subjectCounts[clean] = (subjectCounts[clean] || 0) + 1;
+    });
+});
+
+// 2. Podział na Top 10 i resztę
+const allSubjects = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1]);
+const top10 = allSubjects.slice(0, 10);
+const others = allSubjects.slice(10);
+
+// 3. Renderowanie Wykresu (Top 10)
+if (window.subjectChartInstance) window.subjectChartInstance.destroy();
+const ctxSubject = document.getElementById('subjectBarChart').getContext('2d');
+window.subjectChartInstance = new Chart(ctxSubject, {
+    type: 'bar',
+    data: {
+        labels: top10.map(x => x[0]),
+        datasets: [{
+            data: top10.map(x => x[1]),
+            backgroundColor: '#c73848',
+            borderColor: '#1a1a1a',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { beginAtZero: true, display: false },
+            y: { grid: { display: false }, ticks: { color: '#1a1a1a', font: { weight: 'bold' } } }
+        }
+    }
+});
+
+// 4. Renderowanie Metryczek (Pozostałe)
+const metricsContainer = document.getElementById('subject-metrics-container');
+metricsContainer.innerHTML = ''; // Czyścimy
+
+others.forEach(([name, count]) => {
+    const badge = document.createElement('div');
+    badge.style.cssText = `
+        padding: 2px 8px;
+        border: 1px solid #1a1a1a;
+        font-size: 11px;
+        background: #f9f9f9;
+        color: #1a1a1a;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    `;
+    badge.innerHTML = `<span>${name}</span> <b style="color: #c73848; border-left: 1px solid #ccc; padding-left: 5px;">${count}</b>`;
+    metricsContainer.appendChild(badge);
+});
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -2074,6 +2152,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
