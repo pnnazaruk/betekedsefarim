@@ -689,17 +689,17 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 20px; border-radius: 0; position: relative; background: #fff; font-family: 'Segoe UI', sans-serif;">
-    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0; padding: 15px 15px 10px 15px; border-bottom: 1px solid #eee;">
+<div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 15px; border-radius: 0; position: relative; background: #fff;">
+    <h3 style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0; padding: 10px 15px; border-bottom: 1px solid #eee; line-height: 1;">
         Struktura tematyczna / Subject Structure
     </h3>
     
-    <div style="padding: 15px;">
+    <div style="padding: 10px 15px 15px 15px;">
         <div style="height: 350px; width: 100%; position: relative;">
             <canvas id="subjectBarChart"></canvas>
         </div>
 
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px;">
+        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 15px;">
             </div>
     </div>
 </div>
@@ -1641,11 +1641,10 @@ const top10 = sortedEntries.slice(0, 10);
 const others = sortedEntries.slice(10);
 
 // --- WYKRES (WYMUSZENIE SEGOE UI) ---
+// ... (logika zliczania subjectCounts pozostaje bez zmian)
+
 if (window.subjectChart) window.subjectChart.destroy();
 const ctxS = document.getElementById('subjectBarChart').getContext('2d');
-
-// To polecenie gwarantuje, że wykres użyje Twojej czcionki
-Chart.defaults.font.family = '"Segoe UI", sans-serif';
 
 window.subjectChart = new Chart(ctxS, {
     type: 'bar',
@@ -1655,7 +1654,7 @@ window.subjectChart = new Chart(ctxS, {
             data: top10.map(x => x[1]),
             backgroundColor: '#c73848',
             borderColor: '#1a1a1a',
-            borderWidth: 1 // Cienka ramka słupka jak w tabeli
+            borderWidth: 1
         }]
     },
     options: {
@@ -1668,7 +1667,8 @@ window.subjectChart = new Chart(ctxS, {
                 grid: { display: false },
                 ticks: { 
                     color: '#1a1a1a', 
-                    font: { family: '"Segoe UI"', weight: 'bold', size: 11 } 
+                    // TUTAJ WYMUSZAMY CZCIONKĘ DLA ETYKIET SŁUPKÓW
+                    font: { family: "'Segoe UI', sans-serif", weight: 'bold', size: 11 } 
                 }
             }
         },
@@ -1677,8 +1677,8 @@ window.subjectChart = new Chart(ctxS, {
             tooltip: {
                 backgroundColor: '#1a1a1a',
                 cornerRadius: 0,
-                titleFont: { family: '"Segoe UI"' },
-                bodyFont: { family: '"Segoe UI"' }
+                titleFont: { family: "'Segoe UI', sans-serif" },
+                bodyFont: { family: "'Segoe UI', sans-serif" }
             }
         }
     }
@@ -2157,6 +2157,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
