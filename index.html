@@ -690,9 +690,9 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-section" style="border-top: 2px solid #1a1a1a; margin-top: 30px; padding-top: 20px;">
-    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 20px;">
-        Struktura tematyczna / Subject Structure
+<div class="stats-item" style="border-top: 2px solid #1a1a1a; margin-top: 30px; padding-top: 20px;">
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 20px; font-family: 'Segoe UI', sans-serif;">
+        Struktura tematyczna zbiorów / Subject Structure
     </h3>
     <div id="subjectSunburst" style="width: 100%; height: 600px; background: #fff;"></div>
 </div>
@@ -1628,35 +1628,43 @@ try {
         parents: sb.parents,
         values: sb.values,
         
-        // Czysty tekst: Nazwa kategorii + udział %
+        // WYGLĄD TEKSTU: Tylko label i procent, bez zbędnych liczb w nawiasach
         textinfo: "label+percent root",
-        insidetextorientation: "radial", // Tekst wzdłuż promieni (najbardziej czytelny)
+        insidetextorientation: "radial", // Tekst wzdłuż promieni - mega czytelne
         
-        hovertemplate: "<b>%{label}</b><br>Ilość: %{value}<extra></extra>",
-        
+        hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Udział: %{percentRoot:.1%}<extra></extra>",
+        customdata: sb.labels.map(l => sb.englishLabels[l] || ""),
+
         marker: {
-            line: { width: 0 }, // Brak obwódek dla minimalistycznego wyglądu
+            line: { width: 0 }, // Całkowity brak obwódek - czysty, płaski design
+            // Kolorystyka: Tylko Twoja czerwień i skala szarości/czerni
             colorscale: [
-                [0, '#1a1a1a'],    // Czarny
-                [0.5, '#c73848'],  // Czerwony Szapiry
-                [1, '#eeeeee']     // Bardzo jasny szary
+                [0, '#1a1a1a'],    // Głęboka czerń
+                [0.5, '#c73848'],  // Czerwień Szapiry
+                [1, '#e0e0e0']     // Techniczny szary
             ]
         },
         textfont: { 
             family: "Segoe UI, sans-serif", 
             size: 11, 
-            color: "#fff" 
+            color: "#ffffff" // Biały tekst dla maksymalnego kontrastu
         }
     }];
 
     const layout = {
-        margin: { l: 0, r: 0, b: 0, t: 0 }, // Usunięcie marginesów Plotly
-        paper_bgcolor: "rgba(0,0,0,0)",    // Przezroczyste tło
-        sunburstcolorway: ["#c73848", "#1a1a1a", "#555555", "#888888"],
+        margin: { l: 0, r: 0, b: 0, t: 0 }, // Usunięcie domyślnych marginesów Plotly
+        paper_bgcolor: "transparent",
+        sunburstcolorway: ["#c73848", "#1a1a1a", "#555", "#888"],
         extendsunburstcolors: true
     };
 
-    Plotly.newPlot('subjectSunburst', plotData, layout, { displayModeBar: false, responsive: true });
+    // WYŁĄCZENIE PASKA NARZĘDZI (małe ikonki Plotly), które psują minimalizm
+    const config = {
+        displayModeBar: false, 
+        responsive: true
+    };
+
+    Plotly.newPlot('subjectSunburst', plotData, layout, config);
 } catch (e) {
     console.error("Błąd Sunburst:", e);
 }
@@ -2156,6 +2164,7 @@ function getSunburstData(rows) {
 }
         init();
     </script></body></html>
+
 
 
 
