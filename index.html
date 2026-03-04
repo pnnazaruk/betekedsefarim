@@ -757,56 +757,30 @@ body.stats-mode #dashboard-view {
         }
 async function init() {
     try {
-        // 1. POBIERANIE DANYCH
+        console.log("Start pobierania danych...");
         const response = await fetch(SHEET_URL);
         const text = await response.text();
         const json = JSON.parse(text.substr(47).slice(0, -2));
         
-        rawRows = json.table.rows; // To są Twoje dane
+        rawRows = json.table.rows;
         colLabels = json.table.cols;
 
-        // 2. AKTUALIZACJA RESZTY STRONY
+        // Renderowanie podstawowych elementów
         renderTable(rawRows);
         updateStats(rawRows);
         updateMap(rawRows);
 
-        // 3. GENEROWANIE WYKRESU SUNBURST (Dopiero gdy mamy rawRows!)
-        try {
-            const sbData = getSunburstData(rawRows); 
+        // Wywołanie wykresu Sunburst pod statystykami
+        renderSunburst(rawRows);
 
-            const plotData = [{
-                type: "sunburst",
-                labels: sbData.labels,
-                parents: sbData.parents,
-                values: sbData.values,
-                customdata: sbData.labels.map(l => sbData.englishLabels[l] || ""),
-                hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
-                leaf: {opacity: 1},
-                marker: {
-                    line: {width: 2, color: "#1a1a1a"},
-                    colorscale: [[0, '#ffffff'], [1, '#c73848']]
-                },
-                textfont: { family: "Segoe UI, Arial", size: 14, color: "#1a1a1a" }
-            }];
-
-            const layout = {
-                margin: {l: 10, r: 10, b: 10, t: 10},
-                paper_bgcolor: "white",
-                sunburstcolorway: ["#c73848", "#1a1a1a", "#555", "#888"] 
-            };
-
-            Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
-        } catch (sbErr) {
-            console.error("Błąd Sunburst:", sbErr);
-        }
-
-        // 4. OBSŁUGA URL (Jeśli link prowadzi do konkretnej książki)
+        // Obsługa ID z URL
         const urlParams = new URLSearchParams(window.location.search);
         const idFromUrl = urlParams.get('id');
         if (idFromUrl) openModal(idFromUrl);
 
+        console.log("Dane załadowane pomyślnie.");
     } catch (err) {
-        console.error("Błąd init:", err);
+        console.error("BŁĄD KRYTYCZNY INIT:", err);
     }
 }
 
@@ -1642,29 +1616,70 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
-try {
-    const sbData = getSunburstData(data); // "data" to Twoja tablica z wierszami
+function renderSunburst(dataRows) {
+    try {
+        const sbData = getSunburstData(dataRows);
+        const plotData = [{
+            type: "sunburst",
+            labels: sbData.labels,
+            parents: sbData.parents,
+            values: sbData.values,
+            customdata: sbData.labels.map(l => sbData.englishLabels[l] || ""),
+            hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
+            leaf: {opacity: 1},
+            marker: {
+                line: {width: 2, color: "#1a1a1a"},
+                colorscale: [[0, '#ffffff'], [1, '#c73848']]
+            },
+            textfont: { family: "Segoe UI, Arial", size: 14, color: "#1a1a1a" }
+        }];
 
-    const plotData = [{
-        type: "sunburst",
-        labels: sbData.labels,
-        parents: sbData.parents,
-        values: sbData.values,
-        leaf: {opacity: 0.8},
-        marker: {line: {width: 1}, colorscale: 'Reds'},
-        hoverinfo: "label+value+percent root",
-        textinfo: "label"
-    }];
+        const layout = {
+            margin: {l: 10, r: 10, b: 10, t: 10},
+            paper_bgcolor: "white",
+            sunburstcolorway: ["#c73848", "#1a1a1a", "#555", "#888"]
+        };
 
-    const layout = {
-        margin: {l: 0, r: 0, b: 0, t: 0},
-        paper_bgcolor: "transparent",
-        font: { family: "Segoe UI, sans-serif" }
-    };
+        Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
+    } catch (e) {
+        console.error("Błąd rysowania Sunburst:", e);
+    }
+}
 
-    Plotly.newPlot('subjectSunburst', plotData, layout, {displayModeBar: false, responsive: true});
-} catch (e) {
-    console.error("Błąd Sunburst:", e);
+function getSunburstData(dataRows) {
+    const labels = ["Kolekcja"];
+    const parents = [""];
+    const values = [0];
+    const englishLabels = { "Kolekcja": "Collection" };
+
+    dataRows.forEach(r => {
+        let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
+        if (!val || val === "---" || val === "") return;
+
+        let blocks = val.split(';');
+        blocks.forEach(block => {
+            let parts = block.split('/');
+            let polishFull = parts[0].trim();
+            let englishFull = parts[1] ? parts[1].trim() : "";
+
+            let mainCategory = polishFull.split('--')[0].trim();
+            let mainEnglish = englishFull.split('--')[0].trim();
+
+            if (mainCategory) {
+                let idx = labels.indexOf(mainCategory);
+                if (idx === -1) {
+                    labels.push(mainCategory);
+                    parents.push("Kolekcja");
+                    values.push(1);
+                    englishLabels[mainCategory] = mainEnglish;
+                } else {
+                    values[idx]++;
+                }
+                values[0]++; 
+            }
+        });
+    });
+    return { labels, parents, values, englishLabels };
 }
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -2165,4 +2180,5 @@ function getSunburstData(dataRows) {
 }
         init();
     </script></body></html>
+
 
