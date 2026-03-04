@@ -690,11 +690,11 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-item" style="border-top: 2px solid #1a1a1a; margin-top: 30px; padding-top: 20px;">
-    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 20px; font-family: 'Segoe UI', sans-serif;">
-        Struktura tematyczna zbiorów / Subject Structure
-    </h3>
-    <div id="subjectSunburst" style="width: 100%; height: 600px; background: #fff;"></div>
+<div class="sunburst-section" style="border: 2px solid #1a1a1a; margin-top: 20px; background: #fff; padding: 0;">
+    <div style="background: #1a1a1a; color: #fff; padding: 5px 10px; font-size: 11px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
+        Struktura tematyczna / Subject Structure
+    </div>
+    <div id="subjectSunburst" style="width: 100%; height: 500px;"></div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1627,44 +1627,38 @@ try {
         labels: sb.labels,
         parents: sb.parents,
         values: sb.values,
-        
-        // WYGLĄD TEKSTU: Tylko label i procent, bez zbędnych liczb w nawiasach
-        textinfo: "label+percent root",
-        insidetextorientation: "radial", // Tekst wzdłuż promieni - mega czytelne
-        
-        hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Udział: %{percentRoot:.1%}<extra></extra>",
         customdata: sb.labels.map(l => sb.englishLabels[l] || ""),
-
+        
+        // Surowy tekst: Nazwa + %
+        textinfo: "label+percent root",
+        insidetextorientation: "horizontal", // Bardziej techniczny, czytelny układ
+        
+        hovertemplate: "<b>%{label}</b><br>%{customdata}<br>Ilość: %{value}<extra></extra>",
+        
         marker: {
-            line: { width: 0 }, // Całkowity brak obwódek - czysty, płaski design
-            // Kolorystyka: Tylko Twoja czerwień i skala szarości/czerni
-            colorscale: [
-                [0, '#1a1a1a'],    // Głęboka czerń
-                [0.5, '#c73848'],  // Czerwień Szapiry
-                [1, '#e0e0e0']     // Techniczny szary
-            ]
+            // Dodajemy czarną ramkę do KAŻDEGO segmentu, tak jak masz ramki w tabeli
+            line: { width: 1.5, color: "#1a1a1a" },
+            // Kolory: Tylko Twoja czerwień i biel dla kontrastu
+            colors: sb.labels.map((l, i) => i === 0 ? "#ffffff" : (i % 2 === 0 ? "#c73848" : "#ffffff"))
         },
         textfont: { 
             family: "Segoe UI, sans-serif", 
             size: 11, 
-            color: "#ffffff" // Biały tekst dla maksymalnego kontrastu
+            color: "#1a1a1a" // Czarny tekst dla czytelności na białym/czerwonym
         }
     }];
 
     const layout = {
-        margin: { l: 0, r: 0, b: 0, t: 0 }, // Usunięcie domyślnych marginesów Plotly
-        paper_bgcolor: "transparent",
-        sunburstcolorway: ["#c73848", "#1a1a1a", "#555", "#888"],
-        extendsunburstcolors: true
+        margin: { l: 5, r: 5, b: 5, t: 5 },
+        paper_bgcolor: "#ffffff",
+        // Usunięcie interaktywnych przejść kolorów, by zachować surowość
+        sunburstcolorway: ["#c73848", "#1a1a1a", "#ffffff"]
     };
 
-    // WYŁĄCZENIE PASKA NARZĘDZI (małe ikonki Plotly), które psują minimalizm
-    const config = {
+    Plotly.newPlot('subjectSunburst', plotData, layout, { 
         displayModeBar: false, 
-        responsive: true
-    };
-
-    Plotly.newPlot('subjectSunburst', plotData, layout, config);
+        responsive: true 
+    });
 } catch (e) {
     console.error("Błąd Sunburst:", e);
 }
@@ -2164,6 +2158,7 @@ function getSunburstData(rows) {
 }
         init();
     </script></body></html>
+
 
 
 
