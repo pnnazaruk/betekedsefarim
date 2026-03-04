@@ -689,17 +689,17 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-item" style="grid-column: 1 / -1; border-top: 2px solid #1a1a1a; margin-top: 20px; border-radius: 0; position: relative; background: #fff;">
-    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin-bottom: 20px; padding-top: 15px;">
+<div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 20px; border-radius: 0; position: relative; background: #fff; font-family: 'Segoe UI', sans-serif;">
+    <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0; padding: 15px 15px 10px 15px; border-bottom: 1px solid #eee;">
         Struktura tematyczna / Subject Structure
     </h3>
     
-    <div style="padding: 0;">
+    <div style="padding: 15px;">
         <div style="height: 350px; width: 100%; position: relative;">
             <canvas id="subjectBarChart"></canvas>
         </div>
 
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px; padding-bottom: 15px;">
+        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 20px;">
             </div>
     </div>
 </div>
@@ -1625,32 +1625,27 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
-// --- ANALIZA DANYCH TEMATYCZNYCH (AF / 31) ---
-// --- ANALIZA DANYCH TEMATYCZNYCH (AF / 31) ---
+// --- ANALIZA DANYCH TEMAT ---
 const subjectCounts = {};
 data.forEach(r => {
     let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
     if (!val || val === "---" || val === "") return;
-
-    // Rozbicie po średnikach i czyszczenie (główna kategoria przed / lub --)
-    let parts = val.split(';');
-    parts.forEach(p => {
+    val.split(';').forEach(p => {
         let clean = p.split('/')[0].split('--')[0].trim();
         if (clean) subjectCounts[clean] = (subjectCounts[clean] || 0) + 1;
     });
 });
 
-// Sortowanie i podział (Top 10 + reszta)
 const sortedEntries = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1]);
 const top10 = sortedEntries.slice(0, 10);
 const others = sortedEntries.slice(10);
 
-// --- RENDEROWANIE WYKRESU (BAR CHART) ---
+// --- WYKRES (WYMUSZENIE SEGOE UI) ---
 if (window.subjectChart) window.subjectChart.destroy();
 const ctxS = document.getElementById('subjectBarChart').getContext('2d');
 
-// Wymuszenie czcionki Segoe UI dla Chart.js
-Chart.defaults.font.family = '"Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+// To polecenie gwarantuje, że wykres użyje Twojej czcionki
+Chart.defaults.font.family = '"Segoe UI", sans-serif';
 
 window.subjectChart = new Chart(ctxS, {
     type: 'bar',
@@ -1658,26 +1653,22 @@ window.subjectChart = new Chart(ctxS, {
         labels: top10.map(x => x[0]),
         datasets: [{
             data: top10.map(x => x[1]),
-            backgroundColor: '#c73848', 
-            borderColor: '#1a1a1a',     
-            borderWidth: 1, // Cienka ramka słupków pasująca do ramki kontenera
-            hoverBackgroundColor: '#a52a3a'
+            backgroundColor: '#c73848',
+            borderColor: '#1a1a1a',
+            borderWidth: 1 // Cienka ramka słupka jak w tabeli
         }]
     },
     options: {
-        indexAxis: 'y', // Poziome słupki - techniczna czytelność
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-            padding: { left: 5, right: 20, top: 0, bottom: 0 }
-        },
         scales: {
-            x: { display: false }, // Usuwamy oś X dla minimalizmu
+            x: { display: false },
             y: { 
                 grid: { display: false },
                 ticks: { 
                     color: '#1a1a1a', 
-                    font: { weight: 'bold', size: 11, family: '"Segoe UI"' } 
+                    font: { family: '"Segoe UI"', weight: 'bold', size: 11 } 
                 }
             }
         },
@@ -1685,21 +1676,20 @@ window.subjectChart = new Chart(ctxS, {
             legend: { display: false },
             tooltip: {
                 backgroundColor: '#1a1a1a',
-                cornerRadius: 0, 
-                displayColors: false,
-                titleFont: { family: '"Segoe UI"', size: 12 },
-                bodyFont: { family: '"Segoe UI"', size: 12 }
+                cornerRadius: 0,
+                titleFont: { family: '"Segoe UI"' },
+                bodyFont: { family: '"Segoe UI"' }
             }
         }
     }
 });
 
-// --- RENDEROWANIE METRYCZEK (POZOSTAŁE) ---
+// --- METRYCZKI (ZACHOWANIE RAMKI 1PX I SEGOE UI) ---
 const mContainer = document.getElementById('subject-metrics-container');
 if (mContainer) {
     mContainer.innerHTML = others.map(([name, count]) => `
         <div style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; font-family: 'Segoe UI', sans-serif; background: #fff; display: flex; align-items: center; border-radius: 0;">
-            <span style="color: #1a1a1a; white-space: nowrap;">${name}</span>
+            <span style="color: #1a1a1a;">${name}</span>
             <span style="color: #c73848; font-weight: bold; border-left: 1px solid #1a1a1a; margin-left: 8px; padding-left: 8px;">${count}</span>
         </div>
     `).join('');
@@ -2167,6 +2157,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
