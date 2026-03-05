@@ -690,16 +690,16 @@ body.stats-mode #dashboard-view {
     </div>
 </div>
 <div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 15px; border-radius: 0; position: relative; background: #fff;">
-    <h3 style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0; padding: 10px 15px; border-bottom: 1px solid #eee; line-height: 1;">
+    <h3 style="font-family: 'Segoe UI', sans-serif !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0 !important; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; line-height: 1;">
         Struktura tematyczna / Subject Structure
     </h3>
     
-    <div style="padding: 10px 15px 15px 15px;">
-        <div style="height: 350px; width: 100%; position: relative;">
+    <div style="padding: 10px;">
+        <div style="height: 300px; width: 100%; position: relative;">
             <canvas id="subjectBarChart"></canvas>
         </div>
 
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 15px;">
+        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px;">
             </div>
     </div>
 </div>
@@ -1643,6 +1643,8 @@ const others = sortedEntries.slice(10);
 // --- WYKRES (WYMUSZENIE SEGOE UI) ---
 // ... (logika zliczania subjectCounts pozostaje bez zmian)
 
+// ... (logika subjectCounts bez zmian)
+
 if (window.subjectChart) window.subjectChart.destroy();
 const ctxS = document.getElementById('subjectBarChart').getContext('2d');
 
@@ -1661,14 +1663,18 @@ window.subjectChart = new Chart(ctxS, {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        // KLUCZ: Usunięcie ukrytych marginesów biblioteki
+        layout: {
+            padding: { left: 0, right: 10, top: 0, bottom: 0 }
+        },
         scales: {
             x: { display: false },
             y: { 
                 grid: { display: false },
                 ticks: { 
                     color: '#1a1a1a', 
-                    // TUTAJ WYMUSZAMY CZCIONKĘ DLA ETYKIET SŁUPKÓW
-                    font: { family: "'Segoe UI', sans-serif", weight: 'bold', size: 11 } 
+                    // Zmniejszamy czcionkę do 10px, by pasowała do reszty statystyk
+                    font: { family: "'Segoe UI', sans-serif", weight: '600', size: 10 } 
                 }
             }
         },
@@ -1677,8 +1683,8 @@ window.subjectChart = new Chart(ctxS, {
             tooltip: {
                 backgroundColor: '#1a1a1a',
                 cornerRadius: 0,
-                titleFont: { family: "'Segoe UI', sans-serif" },
-                bodyFont: { family: "'Segoe UI', sans-serif" }
+                titleFont: { family: "'Segoe UI'", size: 10 },
+                bodyFont: { family: "'Segoe UI'", size: 10 }
             }
         }
     }
@@ -2157,6 +2163,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
