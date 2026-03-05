@@ -1675,9 +1675,9 @@ window.subjectChart = new Chart(ctxS, {
         labels: top10.map(x => x[0]),
         datasets: [{
             data: top10.map(x => ((x[1] / totalValidEntries) * 100).toFixed(1)),
-            backgroundColor: '#c73848',
+            backgroundColor: '#2c3e50',
             borderWidth: 0,
-            hoverBackgroundColor: '#a52a3a',
+            hoverBackgroundColor: '#212e3b',
             barThickness: 22 // Grubsze słupki, by lepiej wyglądały na dużej szerokości
         }]
     },
@@ -1743,7 +1743,7 @@ if (mContainer) {
             ">
                 <span style="padding-right: 5px; text-align: left;">${name}</span>
                 <div style="flex-grow: 1; border-bottom: 1px dotted #eee; margin: 0 8px; height: 10px;"></div>
-                <span style="color: #c73848; font-weight: normal; white-space: nowrap;">
+                <span style="color: #2c3e50; font-weight: normal; white-space: nowrap;">
                     <span style="color: #ccc; margin-right: 5px;">&bull;</span>${percent}%
                 </span>
             </div>
@@ -2213,6 +2213,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
