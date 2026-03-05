@@ -255,94 +255,101 @@ details.facet-container {
     border-bottom: 1px solid #ccc; 
     padding-bottom: 10px; 
     margin-bottom: 5px; 
-    direction: ltr !important; /* Wymuszamy domyślny kierunek dla całego kontenera */
 }
 
-/* NAGŁÓWEK (Summary) - Polsko/Angielski */
+/* NAGŁÓWEK (Summary) - Domyślnie styl Polsko/Angielski (Lewa strona) */
 summary.facet-summary { 
     list-style: none; 
     cursor: pointer; 
-    display: flex !important; 
-    justify-content: space-between !important; 
+    display: flex; 
+    justify-content: space-between; 
     align-items: center;
     font-size: 11px; 
     font-weight: bold; 
     text-transform: uppercase; 
     outline: none;
-    direction: ltr !important; 
-    text-align: left !important;
+    direction: ltr;     /* Wymuszenie lewej strony */
+    text-align: left;
 }
 
 summary.facet-summary::-webkit-details-marker { display: none; }
 
-/* Trójkącik dla wersji polskiej */
+/* Trójkącik dla wersji polskiej (po lewej stronie tekstu) */
 summary.facet-summary::before { 
-    content: '▸' !important; 
-    margin-right: 8px !important; 
-    margin-left: 0 !important;
+    content: '▸'; 
+    margin-right: 8px; 
     transition: transform 0.2s; 
     display: inline-block; 
 }
 details[open] summary.facet-summary::before { transform: rotate(90deg); }
 
-/* NAGŁÓWEK HEBRAJSKI (Całkowite odwrócenie) */
+/* NAGŁÓWEK HEBRAJSKI (Nadpisanie - Prawa strona) */
 summary.heb { 
-    direction: rtl !important; 
-    text-align: right !important;
-    flex-direction: row !important; /* Ważne: Flex sam ułoży badge po lewej przy RTL */
+    direction: rtl; 
+    text-align: right;
+    font-family: "SBL Hebrew", serif; 
+    font-size: 14px; 
+    text-transform: none; 
 }
-summary.heb::before { content: none !important; }
+/* Usuwamy trójkącik z lewej, dodajemy po prawej dla wersji HEB */
+summary.heb::before { content: none; }
 summary.heb::after { 
-    content: '◂' !important; 
-    margin-left: 8px !important; 
+    content: '◂'; 
+    margin-left: 8px; 
     transition: transform 0.2s; 
     display: inline-block; 
 }
 details[open] summary.heb::after { transform: rotate(-90deg); }
 
-/* BADGE (Czarny licznik) */
+/* BADGE (Licznik zaznaczonych przy nagłówku) */
 .active-badge { 
     font-size: 9px; 
     background: #1a1a1a; 
     color: #fff; 
     padding: 0 5px; 
     border-radius: 3px; 
-    margin-left: auto; /* Pcha badge na koniec niezależnie od tekstu */
+    margin-left: 5px; 
 }
 
-/* LISTA ELEMENTÓW (li) */
+/* WNĘTRZE I LISTA */
+.facet-inner-content { padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.facet-mini-search { width: 100%; padding: 5px; font-size: 12px; border: 1px solid #ccc; box-sizing: border-box; outline: none; margin-bottom: 5px; }
+
+.facet-list { 
+    list-style: none; padding: 0; margin: 0; max-height: 150px; 
+    overflow-y: auto; border: 1px solid #eee; background: #fff; 
+    display: flex; flex-direction: column; 
+}
+
+/* ELEMENTY LISTY (li) - Domyślnie Lewa strona */
 .facet-item { 
     font-size: 12px; 
     padding: 6px 8px; 
     cursor: pointer; 
     border-bottom: 1px solid #f0f0f0; 
-    display: flex !important; 
-    justify-content: space-between !important; 
+    display: flex; 
+    justify-content: space-between; 
     align-items: center; 
-    direction: ltr !important;
-    text-align: left !important;
+    direction: ltr;
 }
+.facet-item:hover { background: #f5f5f5; }
+.facet-item.active { background: #1a1a1a !important; color: #fff !important; }
 
-/* Hebrajska lista */
+/* ELEMENTY LISTY - HEBRAJSKIE (Prawa strona) */
 .facet-item.heb { 
-    direction: rtl !important; 
-    text-align: right !important; 
+    direction: rtl; 
+    text-align: right; 
+    font-family: "SBL Hebrew", serif; 
+    font-size: 14px; 
 }
 
-/* PIGUŁKA (Szara pigułka z liczbą) */
+/* PIGUŁKA LICZNIKA (Ta mała szara przy nazwie na liście) */
 .count-pill { 
     font-size: 9px; 
     background: #eee; 
     padding: 2px 5px; 
     border-radius: 10px; 
-    color: #333;
-    margin-left: 10px; /* Odstęp od tekstu w wersji polskiej */
-}
-
-/* W wersji hebrajskiej odwracamy margines pigułki */
-.facet-item.heb .count-pill {
-    margin-left: 0;
-    margin-right: 10px;
+    color: #333; 
 }
 .active .count-pill { background: #444; color: #fff; }
 
@@ -605,13 +612,8 @@ body.stats-mode #dashboard-view {
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'printerListPL')"><ul id="printerListPL" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-loc"><summary class="facet-summary">Lokalizacja / Location <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
-<details class="facet-container" id="det-subject">
-    <summary class="facet-summary">Hasło przedmiotowe / Subject Heading<span class="active-badge" style="display:none">0</span>
-    </summary>
-    <div class="facet-inner-content">
-        <input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')">
-        <ul id="subjectListPL" class="facet-list"></ul> </div>
-</details>
+<details class="facet-container" id="det-subject"><summary class="facet-summary">Hasło przedmiotowe / Subject Heading<span class="active-badge" style="display:none">0</span></summary>
+    <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')"><ul id="subjectListPL" class="facet-list"></ul> </div></details>
             <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-city-he"><summary class="facet-summary heb">עיר <span class="active-badge" style="display:none">0</span></summary>
@@ -2371,48 +2373,5 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
