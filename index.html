@@ -689,18 +689,16 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 15px; border-radius: 0; position: relative; background: #fff;">
+<div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 0 !important; border-radius: 0; position: relative; background: #fff; z-index: 10;">
     <h3 style="font-family: 'Segoe UI', sans-serif !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0 !important; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; line-height: 1;">
         Struktura tematyczna / Subject Structure
     </h3>
     
     <div style="padding: 10px;">
-        <div style="height: 300px; width: 100%; position: relative;">
+        <div style="height: 280px; width: 100%; position: relative;">
             <canvas id="subjectBarChart"></canvas>
         </div>
-
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px;">
-            </div>
+        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px;"></div>
     </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
@@ -2163,6 +2161,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
