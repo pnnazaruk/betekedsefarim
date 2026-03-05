@@ -561,11 +561,13 @@ body.stats-mode #dashboard-view {
             <details class="facet-container" id="det-loc"><summary class="facet-summary">Lokalizacja / Location <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
 <details class="facet-container" id="det-subject">
-    <summary class="facet-summary">Hasło przedmiotowe / Subject Heading <span class="active-badge" style="display:none">0</span></summary>
+    <summary class="facet-summary">
+        Hasło przedmiotowe / Subject Heading 
+        <span class="active-badge" style="display:none">0</span>
+    </summary>
     <div class="facet-inner-content">
         <input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')">
-        <ul id="subjectListPL" class="facet-list"></ul>
-    </div>
+        <ul id="subjectListPL" class="facet-list"></ul> </div>
 </details>
             <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
@@ -1016,7 +1018,7 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
     renderFacetList('cityListPL', counts.city, 'city', false, 'Wszystko/ All', 'Nieznane', null);
     renderFacetList('printerListPL', counts.printer, 'printer', false, 'Wszystko/ All', 'Nieznany', null);
     renderFacetList('locListPL', counts.loc, 'loc', false, 'Wszystko/ All', 'Nieznana', null);
-    renderFacetList('subjectListPL', counts.subject, 'subject', false, 'Wszystko/ All', 'Nieznane', null); // Nowa lista
+    renderFacetList('subjectListPL', counts.subject, 'subject', false, 'Wszystko/ All', 'Nieznane', null);
     
     renderFacetList('authorListHE', counts.author, 'author', true, 'הכל', 'לא ידוע', plToHe.author);
     renderFacetList('cityListHE', counts.city, 'city', true, 'הכל', 'לא ידוע', plToHe.city);
@@ -2326,6 +2328,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
