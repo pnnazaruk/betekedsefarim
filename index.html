@@ -898,16 +898,32 @@ async function init() {
             });
         }
 
-        function clearFacet(type) {
-            if (type === 'all') { 
-                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); 
-                document.getElementById('yearSlider').value = 1939;
-                document.getElementById('hebYearSlider').value = 5700;
-                updateYearLabel(1939); updateHebYearLabel(5700);
-                document.getElementById('search').value = "";
-            } else activeFilters[type].clear();
-            filterAndSort();
-        }
+function clearFacet(type) {
+    if (type === 'all') { 
+        // 1. Czyścimy wszystkie zestawy filtrów (dodano .subject)
+        activeFilters.city.clear(); 
+        activeFilters.author.clear(); 
+        activeFilters.printer.clear(); 
+        activeFilters.loc.clear();
+        activeFilters.subject.clear(); // <--- TA LINIA JEST KLUCZOWA
+
+        // 2. Resetujemy slidery lat
+        document.getElementById('yearSlider').value = 1939;
+        document.getElementById('hebYearSlider').value = 5700;
+        updateYearLabel(1939); 
+        updateHebYearLabel(5700);
+
+        // 3. Czyścimy główne pole wyszukiwania
+        document.getElementById('search').value = "";
+    } else {
+        // Czyścimy tylko jeden konkretny filtr
+        activeFilters[type].clear();
+    }
+
+    // 4. AKTUALIZACJA WYNIKÓW I INTERFEJSU
+    filterAndSort();   // Przefiltruje książki na nowo
+    updateFacetsUI();  // <--- DODAJ TO, żeby odświeżyć wygląd paneli bocznych (zdjąć zaznaczenia)
+}
 
         function toggleFilter(val, type) {
             if (activeFilters[type].has(val)) activeFilters[type].delete(val);
@@ -2373,6 +2389,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
