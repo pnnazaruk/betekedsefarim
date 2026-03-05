@@ -691,15 +691,14 @@ body.stats-mode #dashboard-view {
 </div>
 <div class="chart-card" style="grid-column: 1 / -1;">
     <div class="chart-header">
-        Struktura tematyczna (%) / Subject Structure (%)
+        Struktura tematyczna biblioteki Jeszywas Chachmej Lublin / Subject structure of the Chachmei Lublin Yeshiva library
     </div>
     
-    <div style="padding: 10px;">
-        <div style="height: 350px; width: 100%; position: relative;">
+    <div style="padding: 15px;">
+        <div style="height: 400px; width: 100%; position: relative;">
             <canvas id="subjectBarChart"></canvas>
         </div>
-
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px;">
             </div>
     </div>
 </div>
@@ -1633,14 +1632,24 @@ data.forEach(r => {
     let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
     if (!val || val === "---" || val === "") return;
 
-    let parts = val.split(';');
-    parts.forEach(p => {
-        // 1. Rozbijamy po kropce i bierzemy pierwszy człon (Biblia. Pięcioksiąg -> Biblia)
-        // 2. Rozbijamy po ukośniku i bierzemy pierwszy człon (Talmud / Komentarze -> Talmud)
-        let clean = p.split('.')[0].split('/')[0].split('--')[0].trim();
+    // Rozbijamy po średnikach (jeśli książka ma kilka tematów)
+    val.split(';').forEach(p => {
+        // Rozbijamy na część polską i angielską (po ukośniku)
+        let parts = p.split('/');
         
-        if (clean) {
-            subjectCounts[clean] = (subjectCounts[clean] || 0) + 1;
+        let plPart = parts[0] ? parts[0].trim() : "";
+        let enPart = parts[1] ? parts[1].trim() : "";
+
+        // Czyścimy kropki i myślniki w obu językach
+        // Biblia. Ruth -> Biblia | Bible. Ruth -> Bible
+        let cleanPL = plPart.split('.')[0].split('--')[0].trim();
+        let cleanEN = enPart.split('.')[0].split('--')[0].trim();
+
+        if (cleanPL) {
+            // Składamy finalną etykietę (jeśli nie ma angielskiej, zostaje samo PL)
+            let finalLabel = cleanEN ? `${cleanPL} / ${cleanEN}` : cleanPL;
+            
+            subjectCounts[finalLabel] = (subjectCounts[finalLabel] || 0) + 1;
             totalValidEntries++;
         }
     });
@@ -2175,6 +2184,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
