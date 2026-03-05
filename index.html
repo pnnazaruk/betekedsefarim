@@ -1632,23 +1632,17 @@ data.forEach(r => {
     let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
     if (!val || val === "---" || val === "") return;
 
-    // Rozbijamy po średnikach (jeśli książka ma kilka tematów)
     val.split(';').forEach(p => {
-        // Rozbijamy na część polską i angielską (po ukośniku)
         let parts = p.split('/');
-        
         let plPart = parts[0] ? parts[0].trim() : "";
         let enPart = parts[1] ? parts[1].trim() : "";
 
-        // Czyścimy kropki i myślniki w obu językach
-        // Biblia. Ruth -> Biblia | Bible. Ruth -> Bible
+        // Ucinanie kropki i myślnika w obu językach
         let cleanPL = plPart.split('.')[0].split('--')[0].trim();
         let cleanEN = enPart.split('.')[0].split('--')[0].trim();
 
         if (cleanPL) {
-            // Składamy finalną etykietę (jeśli nie ma angielskiej, zostaje samo PL)
             let finalLabel = cleanEN ? `${cleanPL} / ${cleanEN}` : cleanPL;
-            
             subjectCounts[finalLabel] = (subjectCounts[finalLabel] || 0) + 1;
             totalValidEntries++;
         }
@@ -1659,6 +1653,10 @@ const sortedEntries = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1]);
 const top10 = sortedEntries.slice(0, 10);
 const others = sortedEntries.slice(10);
 
+// OBLICZANIE MAKSYMALNEJ WARTOŚCI DLA SKALOWANIA SŁUPKÓW
+const maxPercent = Math.max(...top10.map(x => (x[1] / totalValidEntries) * 100));
+const dynamicMax = Math.ceil(maxPercent + (maxPercent * 0.1)); // Dodaje 10% zapasu, żeby słupek nie dotykał ramki
+
 // --- RENDEROWANIE WYKRESU ---
 if (window.subjectChart) window.subjectChart.destroy();
 const ctxS = document.getElementById('subjectBarChart').getContext('2d');
@@ -1668,28 +1666,39 @@ window.subjectChart = new Chart(ctxS, {
     data: {
         labels: top10.map(x => x[0]),
         datasets: [{
-            // PRZELICZANIE NA PROCENTY
             data: top10.map(x => ((x[1] / totalValidEntries) * 100).toFixed(1)),
-            backgroundColor: '#c73848', // Sama czerwień
-            borderWidth: 0,              // BRAK RAMEK SŁUPKÓW
-            hoverBackgroundColor: '#a52a3a'
+            backgroundColor: '#c73848',
+            borderWidth: 0,
+            hoverBackgroundColor: '#a52a3a',
+            barThickness: 22 // Grubsze słupki, by lepiej wyglądały na dużej szerokości
         }]
     },
     options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { left: 0, right: 30, top: 0, bottom: 0 } },
+        layout: {
+            // Zmniejszamy paddingi, by wykres "rozepchał" się wewnątrz chart-card
+            padding: { left: 0, right: 40, top: 10, bottom: 0 }
+        },
         scales: {
-            x: { 
-                display: false,
-                max: 100 // Skala do 100%
+            x: {
+                display: true,
+                max: dynamicMax, // DZIĘKI TEMU SŁUPKI SĄ DŁUŻSZE
+                grid: { color: '#f0f0f0', drawBorder: false },
+                ticks: {
+                    callback: value => value + "%",
+                    font: { size: 10, family: "'Segoe UI'" },
+                    color: '#aaa'
+                }
             },
-            y: { 
+            y: {
                 grid: { display: false },
-                ticks: { 
-                    color: '#1a1a1a', 
-                    font: { family: "'Segoe UI'", weight: 'bold', size: 11 } 
+                ticks: {
+                    color: '#1a1a1a',
+                    font: { family: "'Segoe UI'", weight: 'bold', size: 11 },
+                    // Zapewnia, że długie nazwy PL/EN nie zostaną ucięte
+                    autoSkip: false
                 }
             }
         },
@@ -1698,10 +1707,10 @@ window.subjectChart = new Chart(ctxS, {
             tooltip: {
                 backgroundColor: '#1a1a1a',
                 cornerRadius: 0,
+                titleFont: { family: "'Segoe UI'" },
+                bodyFont: { family: "'Segoe UI'" },
                 callbacks: {
-                    label: function(context) {
-                        return context.parsed.x + '% udziału / share';
-                    }
+                    label: (ctx) => ` ${ctx.parsed.x}% udziału / share`
                 }
             }
         }
@@ -2184,6 +2193,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
