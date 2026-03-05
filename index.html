@@ -691,15 +691,17 @@ body.stats-mode #dashboard-view {
 </div>
 <div class="chart-card" style="grid-column: 1 / -1;">
     <div class="chart-header">
-        Struktura tematyczna / Subject Structure
+        Struktura tematyczna (%) / Subject Structure (%)
     </div>
     
-    <div style="height: 350px; width: 100%; position: relative;">
-        <canvas id="subjectBarChart"></canvas>
-    </div>
-
-    <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; font-family: 'Segoe UI', sans-serif;">
+    <div style="padding: 10px;">
+        <div style="height: 350px; width: 100%; position: relative;">
+            <canvas id="subjectBarChart"></canvas>
         </div>
+
+        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+            </div>
+    </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1623,15 +1625,24 @@ szapiraChart = new Chart(ctxSzapira, {
         }
     }
 });
-// --- ANALIZA DANYCH TEMAT ---
-// --- ANALIZA DANYCH ---
+// --- ANALIZA DANYCH TEMATYCZNYCH ---
 const subjectCounts = {};
+let totalValidEntries = 0;
+
 data.forEach(r => {
     let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
     if (!val || val === "---" || val === "") return;
-    val.split(';').forEach(p => {
-        let clean = p.split('/')[0].split('--')[0].trim();
-        if (clean) subjectCounts[clean] = (subjectCounts[clean] || 0) + 1;
+
+    let parts = val.split(';');
+    parts.forEach(p => {
+        // 1. Rozbijamy po kropce i bierzemy pierwszy człon (Biblia. Pięcioksiąg -> Biblia)
+        // 2. Rozbijamy po ukośniku i bierzemy pierwszy człon (Talmud / Komentarze -> Talmud)
+        let clean = p.split('.')[0].split('/')[0].split('--')[0].trim();
+        
+        if (clean) {
+            subjectCounts[clean] = (subjectCounts[clean] || 0) + 1;
+            totalValidEntries++;
+        }
     });
 });
 
@@ -1643,32 +1654,33 @@ const others = sortedEntries.slice(10);
 if (window.subjectChart) window.subjectChart.destroy();
 const ctxS = document.getElementById('subjectBarChart').getContext('2d');
 
-// Globalne ustawienie czcionki zgodne z Twoim body {}
-Chart.defaults.font.family = '"Segoe UI", Roboto, Arial, sans-serif';
-Chart.defaults.color = '#1a1a1a';
-
 window.subjectChart = new Chart(ctxS, {
     type: 'bar',
     data: {
         labels: top10.map(x => x[0]),
         datasets: [{
-            data: top10.map(x => x[1]),
-            backgroundColor: '#c73848', // Twoja czerwień z .prov-label
-            borderColor: '#1a1a1a',
-            borderWidth: 1
+            // PRZELICZANIE NA PROCENTY
+            data: top10.map(x => ((x[1] / totalValidEntries) * 100).toFixed(1)),
+            backgroundColor: '#c73848', // Sama czerwień
+            borderWidth: 0,              // BRAK RAMEK SŁUPKÓW
+            hoverBackgroundColor: '#a52a3a'
         }]
     },
     options: {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { left: 0, right: 20, top: 0, bottom: 0 } },
+        layout: { padding: { left: 0, right: 30, top: 0, bottom: 0 } },
         scales: {
-            x: { display: false },
+            x: { 
+                display: false,
+                max: 100 // Skala do 100%
+            },
             y: { 
                 grid: { display: false },
                 ticks: { 
-                    font: { weight: 'bold', size: 11 } 
+                    color: '#1a1a1a', 
+                    font: { family: "'Segoe UI'", weight: 'bold', size: 11 } 
                 }
             }
         },
@@ -1677,22 +1689,28 @@ window.subjectChart = new Chart(ctxS, {
             tooltip: {
                 backgroundColor: '#1a1a1a',
                 cornerRadius: 0,
-                titleFont: { size: 12 },
-                bodyFont: { size: 12 }
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.x + '% udziału / share';
+                    }
+                }
             }
         }
     }
 });
 
-// --- METRYCZKI (STYL PIGUŁEK) ---
+// --- METRYCZKI (BEZ POGRUBIENIA, PROCENTY) ---
 const mContainer = document.getElementById('subject-metrics-container');
 if (mContainer) {
-    mContainer.innerHTML = others.map(([name, count]) => `
-        <div style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; font-weight: bold; background: #fff; display: flex; align-items: center;">
-            <span>${name}</span>
-            <span style="color: #c73848; margin-left: 8px; border-left: 1px solid #eee; padding-left: 8px;">${count}</span>
-        </div>
-    `).join('');
+    mContainer.innerHTML = others.map(([name, count]) => {
+        const percent = ((count / totalValidEntries) * 100).toFixed(1);
+        return `
+            <div style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; font-family: 'Segoe UI', sans-serif; background: #fff; display: flex; align-items: center;">
+                <span style="color: #1a1a1a; font-weight: normal;">${name}</span>
+                <span style="color: #c73848; font-weight: normal; border-left: 1px solid #eee; margin-left: 8px; padding-left: 8px;">${percent}%</span>
+            </div>
+        `;
+    }).join('');
 }
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -2157,6 +2175,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
