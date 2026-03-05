@@ -870,7 +870,14 @@ const filtered = searchFiltered.filter(r => {
     const matchLoc = activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim()));
     
     // 3. NOWOŚĆ: Logika dopasowania hasła przedmiotowego
-    const matchSubj = activeFilters.subject.size === 0 || (isUnknown(subjPL) ? activeFilters.subject.has('_UNK_') : activeFilters.subject.has(subjPL.trim()));
+    const matchSubj = activeFilters.subject.size === 0 || 
+        Array.from(activeFilters.subject).some(s => {
+            // Jeśli szukamy "Nieznanych"
+            if (s === '_UNK_') return isUnknown(subjPL);
+            // Sprawdzamy, czy którykolwiek z wybranych w filtrze tematów 
+            // znajduje się na liście tematów danej książki (rozbitej po średniku)
+            return subjPL.split(';').map(p => p.trim()).includes(s);
+        });
 
     // 4. Zwrócenie wyniku (dodajemy matchSubj na końcu)
     return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj;
@@ -2294,6 +2301,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
