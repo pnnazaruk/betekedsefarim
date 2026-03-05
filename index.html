@@ -1718,18 +1718,17 @@ window.subjectChart = new Chart(ctxS, {
 });
 
 // --- METRYCZKI (BEZ POGRUBIENIA, PROCENTY) ---
-const mContainer = document.getElementById('subject-metrics-container');
-if (mContainer) {
-    mContainer.innerHTML = others.map(([name, count]) => {
-        const percent = ((count / totalValidEntries) * 100).toFixed(1);
-        return `
-            <div style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; font-family: 'Segoe UI', sans-serif; background: #fff; display: flex; align-items: center;">
-                <span style="color: #1a1a1a; font-weight: normal;">${name}</span>
-                <span style="color: #c73848; font-weight: normal; border-left: 1px solid #eee; margin-left: 8px; padding-left: 8px;">${percent}%</span>
-            </div>
-        `;
-    }).join('');
-}
+mContainer.innerHTML = others.map(([name, count]) => {
+    const percent = ((count / totalValidEntries) * 100).toFixed(1);
+    return `
+        <div style="font-size: 10px; font-family: 'Segoe UI', sans-serif; color: #555; display: flex; gap: 4px;">
+            <span>${name}</span>
+            <span style="color: #ccc;">•</span>
+            <span style="color: #c73848;">${percent}%</span>
+            <span style="margin-right: 10px;"> </span>
+        </div>
+    `;
+}).join('');
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
             data.forEach(r => {
@@ -2193,6 +2192,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
