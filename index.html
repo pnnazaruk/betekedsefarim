@@ -612,7 +612,7 @@ body.stats-mode #dashboard-view {
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'printerListPL')"><ul id="printerListPL" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-loc"><summary class="facet-summary">Lokalizacja / Location <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
-<details class="facet-container" id="det-subject"><summary class="facet-summary">Temat / Subject <span class="active-badge" style="display:none">0</span></summary>
+<details class="facet-container" id="det-subject"><summary class="facet-summary">Hasło przedmiotowe / Subject Heading<span class="active-badge" style="display:none">0</span></summary>
     <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')"><ul id="subjectListPL" class="facet-list"></ul> </div></details>
             <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
@@ -898,32 +898,16 @@ async function init() {
             });
         }
 
-function clearFacet(type) {
-    if (type === 'all') { 
-        // 1. Czyścimy wszystkie zestawy filtrów (dodano .subject)
-        activeFilters.city.clear(); 
-        activeFilters.author.clear(); 
-        activeFilters.printer.clear(); 
-        activeFilters.loc.clear();
-        activeFilters.subject.clear(); // <--- TA LINIA JEST KLUCZOWA
-
-        // 2. Resetujemy slidery lat
-        document.getElementById('yearSlider').value = 1939;
-        document.getElementById('hebYearSlider').value = 5700;
-        updateYearLabel(1939); 
-        updateHebYearLabel(5700);
-
-        // 3. Czyścimy główne pole wyszukiwania
-        document.getElementById('search').value = "";
-    } else {
-        // Czyścimy tylko jeden konkretny filtr
-        activeFilters[type].clear();
-    }
-
-    // 4. AKTUALIZACJA WYNIKÓW I INTERFEJSU
-    filterAndSort();   // Przefiltruje książki na nowo
-    updateFacetsUI();  // <--- DODAJ TO, żeby odświeżyć wygląd paneli bocznych (zdjąć zaznaczenia)
-}
+        function clearFacet(type) {
+            if (type === 'all') { 
+                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); 
+                document.getElementById('yearSlider').value = 1939;
+                document.getElementById('hebYearSlider').value = 5700;
+                updateYearLabel(1939); updateHebYearLabel(5700);
+                document.getElementById('search').value = "";
+            } else activeFilters[type].clear();
+            filterAndSort();
+        }
 
         function toggleFilter(val, type) {
             if (activeFilters[type].has(val)) activeFilters[type].delete(val);
@@ -1028,23 +1012,33 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
             })
         );
 
-// 4. Definicje dopasowania dla poszczególnych kategorii (Logika pomocnicza)
-        const mCity = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL) ? '_UNK_' : cityPL.trim()));
-        const mAuth = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL) ? '_UNK_' : authPL.trim()));
-        const mPrn  = (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL) ? '_UNK_' : prnPL.trim()));
-        const mLoc  = (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL) ? '_UNK_' : locPL.trim()));
-        // matchSubjCond masz już zdefiniowane w punkcie 3
+        // 4. Warunki "Pass" dla każdej kategorii (każdy uwzględnia matchSubjCond)
+        const passCity = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
+                         matchSubjCond;
 
-        // Warunki "Pass" - Każda kategoria ignoruje WŁASNY filtr, 
-        // ale musi spełniać WSZYSTKIE POZOSTAŁE warunki.
-        const passCity = mAuth && mPrn && mLoc && matchSubjCond;
-        const passAuth = mCity && mPrn && mLoc && matchSubjCond;
-        const passPrn  = mCity && mAuth && mLoc && matchSubjCond;
-        const passLoc  = mCity && mAuth && mPrn && matchSubjCond;
-        
-        // Warunek dla Tematu (Subject) - ignoruje filtr subject, 
-        // dzięki temu na liście tematów widzisz wszystkie opcje dostępne dla innych filtrów.
-        const passSubj = mCity && mAuth && mPrn && mLoc;
+        const passAuth = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
+                         matchSubjCond;
+
+        const passPrn = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                        (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                        (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
+                        matchSubjCond;
+
+        const passLoc = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                        (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                        (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                        matchSubjCond;
+
+        // Warunek pass dla samego tematu (nie może uwzględniać filtra subject, żeby pokazać inne opcje)
+        const passSubj = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                         (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
+
         // 5. Zliczanie wartości
         if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
         if (passAuth) { let k = isUnknown(authPL)?'_UNK_':authPL.trim(); counts.author[k] = (counts.author[k]||0)+1; plToHe.author[k] = isUnknown(authPL)?'לא ידוע':authHE.trim(); }
@@ -2379,9 +2373,4 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
 
