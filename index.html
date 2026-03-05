@@ -1028,33 +1028,23 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
             })
         );
 
-        // 4. Warunki "Pass" dla każdej kategorii (każdy uwzględnia matchSubjCond)
-        const passCity = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
-                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
-                         matchSubjCond;
+// 4. Definicje dopasowania dla poszczególnych kategorii (Logika pomocnicza)
+        const mCity = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL) ? '_UNK_' : cityPL.trim()));
+        const mAuth = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL) ? '_UNK_' : authPL.trim()));
+        const mPrn  = (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL) ? '_UNK_' : prnPL.trim()));
+        const mLoc  = (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL) ? '_UNK_' : locPL.trim()));
+        // matchSubjCond masz już zdefiniowane w punkcie 3
 
-        const passAuth = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
-                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
-                         matchSubjCond;
-
-        const passPrn = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
-                        (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
-                        (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
-                        matchSubjCond;
-
-        const passLoc = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
-                        (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
-                        (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                        matchSubjCond;
-
-        // Warunek pass dla samego tematu (nie może uwzględniać filtra subject, żeby pokazać inne opcje)
-        const passSubj = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
-                         (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
-                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
-
+        // Warunki "Pass" - Każda kategoria ignoruje WŁASNY filtr, 
+        // ale musi spełniać WSZYSTKIE POZOSTAŁE warunki.
+        const passCity = mAuth && mPrn && mLoc && matchSubjCond;
+        const passAuth = mCity && mPrn && mLoc && matchSubjCond;
+        const passPrn  = mCity && mAuth && mLoc && matchSubjCond;
+        const passLoc  = mCity && mAuth && mPrn && matchSubjCond;
+        
+        // Warunek dla Tematu (Subject) - ignoruje filtr subject, 
+        // dzięki temu na liście tematów widzisz wszystkie opcje dostępne dla innych filtrów.
+        const passSubj = mCity && mAuth && mPrn && mLoc;
         // 5. Zliczanie wartości
         if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
         if (passAuth) { let k = isUnknown(authPL)?'_UNK_':authPL.trim(); counts.author[k] = (counts.author[k]||0)+1; plToHe.author[k] = isUnknown(authPL)?'לא ידוע':authHE.trim(); }
@@ -2389,6 +2379,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
