@@ -535,7 +535,13 @@ body.stats-mode #dashboard-view {
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'printerListPL')"><ul id="printerListPL" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-loc"><summary class="facet-summary">Lokalizacja / Location <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
-
+<details class="facet-container" id="det-subject">
+    <summary class="facet-summary">Hasło przedmiotowe / Subject Heading <span class="active-badge" style="display:none">0</span></summary>
+    <div class="facet-inner-content">
+        <input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')">
+        <ul id="subjectListPL" class="facet-list"></ul>
+    </div>
+</details>
             <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-city-he"><summary class="facet-summary heb">עיר <span class="active-badge" style="display:none">0</span></summary>
@@ -748,7 +754,7 @@ body.stats-mode #dashboard-view {
         /* POCZĄTEK KODU WZORCOWEGO - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
         let rawRows = [];
         let colLabels = [];
-        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set() };
+        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set(), subject: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
         let fuse;
@@ -845,17 +851,30 @@ async function init() {
             const sHE = document.getElementById('sortSelectHE').value;
 
             let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
+const filtered = searchFiltered.filter(r => {
+    // 1. Pobranie wartości z kolumn (dodajemy r.c[31])
+    const cityPL = getVal(r.c[7]), 
+          authPL = getVal(r.c[3]), 
+          prnPL = getVal(r.c[10]), 
+          locPL = getVal(r.c[11]),
+          subjPL = getVal(r.c[31]);
 
-            const filtered = searchFiltered.filter(r => {
-                const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
-                const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
-                const matchYear = (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear);
-                const matchCity = activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()));
-                const matchAuth = activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()));
-                const matchPrn = activeFilters.printer.size === 0 || (isUnknown(prnPL) ? activeFilters.printer.has('_UNK_') : activeFilters.printer.has(prnPL.trim()));
-                const matchLoc = activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim()));
-                return matchYear && matchCity && matchAuth && matchPrn && matchLoc;
-            });
+    const year = extractYear(getVal(r.c[5])), 
+          hebYear = hebrewYearToNumber(getVal(r.c[6]));
+
+    // 2. Definicja dopasowań
+    const matchYear = (year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear);
+    const matchCity = activeFilters.city.size === 0 || (isUnknown(cityPL) ? activeFilters.city.has('_UNK_') : activeFilters.city.has(cityPL.trim()));
+    const matchAuth = activeFilters.author.size === 0 || (isUnknown(authPL) ? activeFilters.author.has('_UNK_') : activeFilters.author.has(authPL.trim()));
+    const matchPrn = activeFilters.printer.size === 0 || (isUnknown(prnPL) ? activeFilters.printer.has('_UNK_') : activeFilters.printer.has(prnPL.trim()));
+    const matchLoc = activeFilters.loc.size === 0 || (isUnknown(locPL) ? activeFilters.loc.has('_UNK_') : activeFilters.loc.has(locPL.trim()));
+    
+    // 3. NOWOŚĆ: Logika dopasowania hasła przedmiotowego
+    const matchSubj = activeFilters.subject.size === 0 || (isUnknown(subjPL) ? activeFilters.subject.has('_UNK_') : activeFilters.subject.has(subjPL.trim()));
+
+    // 4. Zwrócenie wyniku (dodajemy matchSubj na końcu)
+    return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj;
+});
 
             const sortVal = sPL !== "none" ? sPL : sHE;
             if(sortVal !== "none") {
@@ -889,34 +908,96 @@ async function init() {
             }
         }
 
-        function updateFacetsUI(term, maxYear, maxHebYear) {
-            const counts = { city: {}, author: {}, printer: {}, loc: {} };
-            const plToHe = { city: {}, author: {} };
-            let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
+function updateFacetsUI(term, maxYear, maxHebYear) {
+    // 1. Inicjalizacja liczników (dodano subject)
+    const counts = { city: {}, author: {}, printer: {}, loc: {}, subject: {} };
+    const plToHe = { city: {}, author: {} };
+    let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
 
-            searchFiltered.forEach(r => {
-                const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
-                const cityHE = getVal(r.c[22]) || cityPL, authHE = getVal(r.c[4]) || authPL;
-                const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
-                if (!((year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear))) return;
-                const passCity = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
-                const passAuth = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
-                const passPrn = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
-                const passLoc = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim()));
+    searchFiltered.forEach(r => {
+        // 2. Pobranie wartości (dodano subjPL z kolumny index 31)
+        const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
+        const subjPL = getVal(r.c[31]); 
+        const cityHE = getVal(r.c[22]) || cityPL, authHE = getVal(r.c[4]) || authPL;
+        
+        const year = extractYear(getVal(r.c[5])), hebYear = hebrewYearToNumber(getVal(r.c[6]));
+        
+        // Filtracja lat
+        if (!((year === 0 || year <= maxYear) && (hebYear === 999999 || hebYear <= maxHebYear))) return;
 
-                if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
-                if (passAuth) { let k = isUnknown(authPL)?'_UNK_':authPL.trim(); counts.author[k] = (counts.author[k]||0)+1; plToHe.author[k] = isUnknown(authPL)?'לא ידוע':authHE.trim(); }
-                if (passPrn) { let k = isUnknown(prnPL)?'_UNK_':prnPL.trim(); counts.printer[k] = (counts.printer[k]||0)+1; }
-                if (passLoc) { let k = isUnknown(locPL)?'_UNK_':locPL.trim(); counts.loc[k] = (counts.loc[k]||0)+1; }
-            });
-            renderFacetList('authorListPL', counts.author, 'author', false, 'Wszystko/ All', 'Nieznany', null);
-            renderFacetList('cityListPL', counts.city, 'city', false, 'Wszystko/ All', 'Nieznane', null);
-            renderFacetList('printerListPL', counts.printer, 'printer', false, 'Wszystko/ All', 'Nieznany', null);
-            renderFacetList('locListPL', counts.loc, 'loc', false, 'Wszystko/ All', 'Nieznana', null);
-            renderFacetList('authorListHE', counts.author, 'author', true, 'הכל', 'לא ידוע', plToHe.author);
-            renderFacetList('cityListHE', counts.city, 'city', true, 'הכל', 'לא ידוע', plToHe.city);
-            Object.keys(activeFilters).forEach(t => { let b = document.querySelector(`#det-${t} .active-badge`); if(b) { b.innerText = activeFilters[t].size; b.style.display = activeFilters[t].size > 0 ? 'inline' : 'none'; } });
+        // 3. Logika dopasowania tematu (obsługa średników)
+        const matchSubjCond = (activeFilters.subject.size === 0 || 
+            Array.from(activeFilters.subject).some(s => {
+                if (s === '_UNK_') return isUnknown(subjPL);
+                return subjPL.split(';').map(p => p.trim()).includes(s);
+            })
+        );
+
+        // 4. Warunki "Pass" dla każdej kategorii (każdy uwzględnia matchSubjCond)
+        const passCity = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
+                         matchSubjCond;
+
+        const passAuth = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
+                         matchSubjCond;
+
+        const passPrn = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                        (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                        (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
+                        matchSubjCond;
+
+        const passLoc = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                        (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                        (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                        matchSubjCond;
+
+        // Warunek pass dla samego tematu (nie może uwzględniać filtra subject, żeby pokazać inne opcje)
+        const passSubj = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
+                         (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
+                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
+
+        // 5. Zliczanie wartości
+        if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
+        if (passAuth) { let k = isUnknown(authPL)?'_UNK_':authPL.trim(); counts.author[k] = (counts.author[k]||0)+1; plToHe.author[k] = isUnknown(authPL)?'לא ידוע':authHE.trim(); }
+        if (passPrn) { let k = isUnknown(prnPL)?'_UNK_':prnPL.trim(); counts.printer[k] = (counts.printer[k]||0)+1; }
+        if (passLoc) { let k = isUnknown(locPL)?'_UNK_':locPL.trim(); counts.loc[k] = (counts.loc[k]||0)+1; }
+        
+        // Specjalna logika zliczania dla tematów (split po średniku)
+        if (passSubj) { 
+            if (isUnknown(subjPL)) {
+                counts.subject['_UNK_'] = (counts.subject['_UNK_'] || 0) + 1;
+            } else {
+                subjPL.split(';').forEach(part => {
+                    let k = part.trim();
+                    if (k) counts.subject[k] = (counts.subject[k] || 0) + 1;
+                });
+            }
         }
+    });
+
+    // 6. Renderowanie list w UI
+    renderFacetList('authorListPL', counts.author, 'author', false, 'Wszystko/ All', 'Nieznany', null);
+    renderFacetList('cityListPL', counts.city, 'city', false, 'Wszystko/ All', 'Nieznane', null);
+    renderFacetList('printerListPL', counts.printer, 'printer', false, 'Wszystko/ All', 'Nieznany', null);
+    renderFacetList('locListPL', counts.loc, 'loc', false, 'Wszystko/ All', 'Nieznana', null);
+    renderFacetList('subjectListPL', counts.subject, 'subject', false, 'Wszystko/ All', 'Nieznane', null); // Nowa lista
+    
+    renderFacetList('authorListHE', counts.author, 'author', true, 'הכל', 'לא ידוע', plToHe.author);
+    renderFacetList('cityListHE', counts.city, 'city', true, 'הכל', 'לא ידוע', plToHe.city);
+
+    // Aktualizacja plakietek (badge) z liczbą wybranych filtrów
+    Object.keys(activeFilters).forEach(t => { 
+        let b = document.querySelector(`#det-${t} .active-badge`); 
+        if(b) { 
+            b.innerText = activeFilters[t].size; 
+            b.style.display = activeFilters[t].size > 0 ? 'inline' : 'none'; 
+        } 
+    });
+}
 
         function renderFacetList(id, counts, type, isHeb, allLabel, unkLabel, heMap) {
             const list = document.getElementById(id); let html = `<li class="facet-item ${activeFilters[type].size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
@@ -2213,6 +2294,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
