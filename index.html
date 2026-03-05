@@ -900,7 +900,7 @@ async function init() {
 
         function clearFacet(type) {
             if (type === 'all') { 
-                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); 
+                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); activeFilters.subject.clear(); 
                 document.getElementById('yearSlider').value = 1939;
                 document.getElementById('hebYearSlider').value = 5700;
                 updateYearLabel(1939); updateHebYearLabel(5700);
@@ -2373,5 +2373,6 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
