@@ -689,17 +689,17 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="stats-item" style="grid-column: 1 / -1; border: 1px solid #1a1a1a; margin-top: 0 !important; border-radius: 0; position: relative; background: #fff; z-index: 10;">
-    <h3 style="font-family: 'Segoe UI', sans-serif !important; font-size: 11px !important; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; font-weight: bold; margin: 0 !important; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; line-height: 1;">
+<div class="chart-card" style="grid-column: 1 / -1;">
+    <div class="chart-header">
         Struktura tematyczna / Subject Structure
-    </h3>
-    
-    <div style="padding: 10px;">
-        <div style="height: 280px; width: 100%; position: relative;">
-            <canvas id="subjectBarChart"></canvas>
-        </div>
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px;"></div>
     </div>
+    
+    <div style="height: 350px; width: 100%; position: relative;">
+        <canvas id="subjectBarChart"></canvas>
+    </div>
+
+    <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; font-family: 'Segoe UI', sans-serif;">
+        </div>
 </div>
 <div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
@@ -1624,6 +1624,7 @@ szapiraChart = new Chart(ctxSzapira, {
     }
 });
 // --- ANALIZA DANYCH TEMAT ---
+// --- ANALIZA DANYCH ---
 const subjectCounts = {};
 data.forEach(r => {
     let val = (r.c && r.c[31] && r.c[31].v) ? String(r.c[31].v) : "";
@@ -1638,13 +1639,13 @@ const sortedEntries = Object.entries(subjectCounts).sort((a, b) => b[1] - a[1]);
 const top10 = sortedEntries.slice(0, 10);
 const others = sortedEntries.slice(10);
 
-// --- WYKRES (WYMUSZENIE SEGOE UI) ---
-// ... (logika zliczania subjectCounts pozostaje bez zmian)
-
-// ... (logika subjectCounts bez zmian)
-
+// --- RENDEROWANIE WYKRESU ---
 if (window.subjectChart) window.subjectChart.destroy();
 const ctxS = document.getElementById('subjectBarChart').getContext('2d');
+
+// Globalne ustawienie czcionki zgodne z Twoim body {}
+Chart.defaults.font.family = '"Segoe UI", Roboto, Arial, sans-serif';
+Chart.defaults.color = '#1a1a1a';
 
 window.subjectChart = new Chart(ctxS, {
     type: 'bar',
@@ -1652,7 +1653,7 @@ window.subjectChart = new Chart(ctxS, {
         labels: top10.map(x => x[0]),
         datasets: [{
             data: top10.map(x => x[1]),
-            backgroundColor: '#c73848',
+            backgroundColor: '#c73848', // Twoja czerwień z .prov-label
             borderColor: '#1a1a1a',
             borderWidth: 1
         }]
@@ -1661,18 +1662,13 @@ window.subjectChart = new Chart(ctxS, {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        // KLUCZ: Usunięcie ukrytych marginesów biblioteki
-        layout: {
-            padding: { left: 0, right: 10, top: 0, bottom: 0 }
-        },
+        layout: { padding: { left: 0, right: 20, top: 0, bottom: 0 } },
         scales: {
             x: { display: false },
             y: { 
                 grid: { display: false },
                 ticks: { 
-                    color: '#1a1a1a', 
-                    // Zmniejszamy czcionkę do 10px, by pasowała do reszty statystyk
-                    font: { family: "'Segoe UI', sans-serif", weight: '600', size: 10 } 
+                    font: { weight: 'bold', size: 11 } 
                 }
             }
         },
@@ -1681,20 +1677,20 @@ window.subjectChart = new Chart(ctxS, {
             tooltip: {
                 backgroundColor: '#1a1a1a',
                 cornerRadius: 0,
-                titleFont: { family: "'Segoe UI'", size: 10 },
-                bodyFont: { family: "'Segoe UI'", size: 10 }
+                titleFont: { size: 12 },
+                bodyFont: { size: 12 }
             }
         }
     }
 });
 
-// --- METRYCZKI (ZACHOWANIE RAMKI 1PX I SEGOE UI) ---
+// --- METRYCZKI (STYL PIGUŁEK) ---
 const mContainer = document.getElementById('subject-metrics-container');
 if (mContainer) {
     mContainer.innerHTML = others.map(([name, count]) => `
-        <div style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; font-family: 'Segoe UI', sans-serif; background: #fff; display: flex; align-items: center; border-radius: 0;">
-            <span style="color: #1a1a1a;">${name}</span>
-            <span style="color: #c73848; font-weight: bold; border-left: 1px solid #1a1a1a; margin-left: 8px; padding-left: 8px;">${count}</span>
+        <div style="border: 1px solid #1a1a1a; padding: 2px 8px; font-size: 11px; font-weight: bold; background: #fff; display: flex; align-items: center;">
+            <span>${name}</span>
+            <span style="color: #c73848; margin-left: 8px; border-left: 1px solid #eee; padding-left: 8px;">${count}</span>
         </div>
     `).join('');
 }
@@ -2161,6 +2157,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
