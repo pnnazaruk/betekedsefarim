@@ -689,7 +689,7 @@ body.stats-mode #dashboard-view {
         </div>
     </div>
 </div>
-<div class="chart-card" style="grid-column: 1 / -1;">
+<div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
     <div class="chart-header">
         Struktura tematyczna biblioteki Jeszywas Chachmej Lublin / Subject structure of the Chachmei Lublin Yeshiva library
     </div>
@@ -698,7 +698,15 @@ body.stats-mode #dashboard-view {
         <div style="height: 400px; width: 100%; position: relative;">
             <canvas id="subjectBarChart"></canvas>
         </div>
-        <div id="subject-metrics-container" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px;">
+
+        <div id="subject-metrics-container" style="
+            column-width: 180px; 
+            column-count: 4; 
+            column-gap: 30px; 
+            margin-top: 25px; 
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        ">
             </div>
     </div>
 </div>
@@ -1720,17 +1728,27 @@ window.subjectChart = new Chart(ctxS, {
 // --- METRYCZKI (BEZ POGRUBIENIA, PROCENTY) ---
 const mContainer = document.getElementById('subject-metrics-container');
 if (mContainer) {
-mContainer.innerHTML = others.map(([name, count]) => {
-    const percent = ((count / totalValidEntries) * 100).toFixed(1);
-    return `
-        <div style="font-size: 10px; font-family: 'Segoe UI', sans-serif; color: #555; display: flex; gap: 4px;">
-            <span>${name}</span>
-            <span style="color: #ccc;">•</span>
-            <span style="color: #c73848;">${percent}%</span>
-            <span style="margin-right: 10px;"> </span>
-        </div>
-    `;
-}).join('');
+    mContainer.innerHTML = others.map(([name, count]) => {
+        const percent = ((count / totalValidEntries) * 100).toFixed(1);
+        return `
+            <div style="
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center;
+                font-size: 11px; 
+                font-family: 'Segoe UI', sans-serif; 
+                padding: 4px 0; 
+                break-inside: avoid;
+                color: #555;
+            ">
+                <span style="padding-right: 5px; text-align: left;">${name}</span>
+                <div style="flex-grow: 1; border-bottom: 1px dotted #eee; margin: 0 8px; height: 10px;"></div>
+                <span style="color: #c73848; font-weight: normal; white-space: nowrap;">
+                    <span style="color: #ccc; margin-right: 5px;">&bull;</span>${percent}%
+                </span>
+            </div>
+        `;
+    }).join('');
 }
             mapInstance.eachLayer(l => { if(l instanceof L.Marker) mapInstance.removeLayer(l); });
             const cities = {};
@@ -2195,6 +2213,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
