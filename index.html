@@ -1122,7 +1122,7 @@ function openModal(rowIndex) {
         return "ID " + id;
     };
 
-    // --- NOWA LOGIKA: PRZYGOTOWANIE SLIDERA 
+    // --- PRZYGOTOWANIE SLIDERA ---
     const extraImagesRaw = (r.c[27] && r.c[27].v) ? String(r.c[27].v).trim() : "";
     let galleryHTML = "";
     currentSlide = 0; 
@@ -1145,64 +1145,51 @@ function openModal(rowIndex) {
             `;
         }
     }
-    // ---------------------------------------------------------------
 
     const boundWithRaw = (r.c[26] && r.c[26].v) ? String(r.c[26].v).trim() : "";
     let h = ""; 
     let link = getVal(r.c[16]);
     let boundWithSection = "";
 
-    // Zwiększono zakres do 32, aby uwzględnić kolumnę AG
-    for (let i = 0; i <= 32; i++) { 
+    // Pętla do 31 (bez 32, które obsłużymy osobno na końcu)
+    for (let i = 0; i <= 31; i++) { 
         if (!colLabels[i]) continue;
 
-        // 1. POBIERANIE DANYCH I NAZW
         let labelName = colLabels[i].label ? colLabels[i].label.toLowerCase() : "";
         let val = getVal(r.c[i]);
         const isSignature = (i === 14);
-        const isPrinter = (i === 10); // Kolumna K - Drukarz
+        const isPrinter = (i === 10);
 
-        // 2. WYKLUCZENIA (dodano 32, aby nie renderowało się podwójnie)
-        if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32].includes(i)) continue;
+        // Wykluczenia
+        if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(i)) continue;
+        if (labelName.includes("pełny opis") || labelName.includes("fotografie")) continue;
 
-        if (labelName.includes("pełny opis") || labelName.includes("fotografie")) {
-            continue; 
-        }
-
-        // --- POPRAWKA: WYMUSZENIE WYŚWIETLANIA DRUKARZA ---
         if ((!val || val === "---" || val === "") && !isSignature && !isPrinter) continue;
-
         if (isSignature && (!val || val === "---" || val === "")) val = "-";
         if (isPrinter && (!val || val === "---" || val === "")) val = "Nieznany / Unknown";
 
-        // 3. RENDEROWANIE STANDARDOWYCH BOXÓW
         if (val.startsWith('http')) {
             h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><a href="${val}" target="_blank" class="link-btn">SZCZEGÓŁY / DETAILS</a></div>`;
         } else {
             h += `<div class="detail-box"><span class="label">${colLabels[i].label}</span><span>${val}</span></div>`;
             
-            // --- LOGIKA ROZBICIA MIEJSCA WYDANIA ---
             if (i === 7) {
                 let hebrewPlace = getVal(r.c[22]);
                 if (hebrewPlace && hebrewPlace !== "---" && hebrewPlace !== "-") {
-                    h += `<div class="detail-box"><span class="label">מקום הוצאה (אחיד)</span><span style="direction: rtl; unicode-bidi: bidi-override; text-align: left; display: block;">${hebrewPlace}</span></div>`;
+                    h += `<div class="detail-box"><span class="label">מקום הוצאه (אחיד)</span><span style="direction: rtl; text-align: left; display: block;">${hebrewPlace}</span></div>`;
                 }
             }
 
-            // --- LOGIKA WSTAWIENIA JĘZYKA ORAZ HASEŁ PRZEDMIOTOWYCH ---
             if (i === 10) {
                 let langVal = getVal(r.c[30]);
-                if (langVal && langVal !== "---") {
-                    h += `<div class="detail-box"><span class="label">Język / Language</span><span>${langVal}</span></div>`;
-                }
-                
+                if (langVal && langVal !== "---") h += `<div class="detail-box"><span class="label">Język / Language</span><span>${langVal}</span></div>`;
                 let subjectVal = getVal(r.c[31]);
                 if (subjectVal && subjectVal !== "---" && subjectVal !== "-" && subjectVal !== "") {
                     h += `<div class="detail-box"><span class="label">Hasła przedmiotowe / Subject headings</span><span style="font-style: italic; color: #444;">${subjectVal}</span></div>`;
                 }
             }
             
-            // --- LOGIKA TYPU PIECZĄTKI I BIBLIOGRAFII (POD UWAGAMI - i=11) ---
+            // Typ pieczątki pod Uwagami (indeks 11)
             if (i === 11) { 
                 let stampVal = getVal(r.c[28]); 
                 if (stampVal && stampVal !== "---") {
@@ -1210,63 +1197,61 @@ function openModal(rowIndex) {
                     <div class="detail-box">
                         <span class="label" style="display: flex; align-items: center; gap: 6px;">
                             Typ pieczątki JChL / YChL Stamp Type
-                            <a href="https://teatrnn.pl/wystawy/typologia-znakow-wlasnosciowych-jeszywas-chachmej-lublin/" 
-                               target="_blank" 
-                               title="Zobacz opis typologii / See typology description"
-                               style="text-decoration: none; display: inline-flex;">
+                            <a href="https://teatrnn.pl/wystawy/typologia-znakow-wlasnosciowych-jeszywas-chachmej-lublin/" target="_blank" style="text-decoration: none; display: inline-flex;">
                                <span style="display: inline-block; width: 14px; height: 14px; background-color: #eee; color: #888; border-radius: 50%; text-align: center; font-size: 10px; line-height: 14px; border: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#c73848'; this.style.color='#fff';" onmouseout="this.style.backgroundColor='#eee'; this.style.color='#888';">?</span>
                             </a>
                         </span>
                         <span>${stampVal}</span>
                     </div>`;
                 }
-
-                // --- NOWA SEKCJA: BIBLIOGRAPHY OF THE HEBREW BOOK (Kolumna AG) ---
-                let biblioVal = getVal(r.c[32]);
-                if (biblioVal && biblioVal !== "" && biblioVal !== "---" && biblioVal !== "-") {
-                    const bhbSearchUrl = `https://uli.nli.org.il/discovery/search?query=any,contains,${biblioVal}&tab=BHB_slot&search_scope=BHB&vid=972NNL_ULI_C:BHB&offset=0`;
-                    h += `
-                    <div class="detail-box">
-                        <span class="label">Bibliography of the Hebrew Book</span>
-                        <span>
-                            <a href="${bhbSearchUrl}" target="_blank" style="color: #c73848; text-decoration: underline; font-weight: bold;">
-                                ${biblioVal}
-                            </a>
-                        </span>
-                    </div>`;
-                }
             }
         }
     }
 
-    // 3. Przygotowanie sekcji Współoprawne
+    // --- PRZYGOTOWANIE SEKCJI BHB (Kolumna AG) ---
+    let bhbSection = "";
+    let biblioVal = getVal(r.c[32]);
+    if (biblioVal && biblioVal !== "" && biblioVal !== "---" && biblioVal !== "-") {
+        const bhbUrl = `https://uli.nli.org.il/discovery/search?query=any,contains,${biblioVal}&tab=BHB_slot&search_scope=BHB&vid=972NNL_ULI_C:BHB&offset=0`;
+        bhbSection = `
+            <div class="detail-box">
+                <span class="label">Bibliography of the Hebrew Book</span>
+                <span>
+                    <a href="${bhbUrl}" target="_blank" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block;">
+                        ${biblioVal}
+                    </a>
+                </span>
+            </div>`;
+    }
+
+    // --- PRZYGOTOWANIE SEKCJI WSPÓŁOPRAWNE ---
     if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         const boundIds = boundWithRaw.split(',').map(id => id.trim());
         const boundLinks = boundIds.map(id => {
             const bookTitle = getTitleById(id); 
             return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">${bookTitle}</a>`;
         }).join('');
-
         boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><span>${boundLinks}</span></div>`;
     }
 
-    // 4. Logika wstawiania pod sygnaturę
+    // --- SKŁADANIE FINALNEGO HTML ---
     let finalDetailsHtml = h;
     const callNumberLabel = "Obecna Sygnatura / Current Call number"; 
     
+    // Wstawienie współoprawnych pod sygnaturę
     if (boundWithSection) {
         const regex = new RegExp(`(<div class="detail-box">\\s*<span class="label">${callNumberLabel}</span>.*?</div>)`, 's');
-        if (regex.test(h)) {
-            finalDetailsHtml = h.replace(regex, `$1${boundWithSection}`);
-        } else {
-            finalDetailsHtml = h + boundWithSection;
-        }
+        finalDetailsHtml = regex.test(h) ? h.replace(regex, `$1${boundWithSection}`) : h + boundWithSection;
     }
 
+    // DODANIE BHB NA SAMYM KOŃCU DANYCH (ale przed przyciskiem KOPIUJ)
+    finalDetailsHtml += bhbSection;
+
+    // SEKCJA LINKU (zawsze na samym dole kolumny danych)
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
+    
     const provenanceHTML = `<div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;"><span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span><div id="provenance-graph-space" class="dynamic-graph-height"></div></div>`;
 
-    // 5. Renderowanie do HTML
     const isMobile = window.innerWidth <= 768;
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
@@ -1284,21 +1269,17 @@ function openModal(rowIndex) {
         </div>
     `;
 
-    // 6. Pokazanie modala i aktualizacja URL
     document.getElementById('modalOverlay').style.display = 'flex';
     const url = new URL(window.location); 
     url.searchParams.set('id', rowIndex); 
     window.history.replaceState({}, '', url);
 
-    // 7. Obsługa grafu proweniencji
     const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v).trim() : "";
     const provDetails = (r.c[25] && r.c[25].v) ? String(r.c[25].v).trim() : "";
     if (provText && provText !== "-") {
         document.getElementById('provenance-container').style.display = 'block';
         setTimeout(() => {
-            if (typeof ProvenanceModule !== 'undefined') {
-                ProvenanceModule.init(provText, provDetails, 'provenance-graph-space');
-            }
+            if (typeof ProvenanceModule !== 'undefined') ProvenanceModule.init(provText, provDetails, 'provenance-graph-space');
         }, 300);
     }
 }
@@ -2350,6 +2331,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
