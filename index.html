@@ -1152,8 +1152,8 @@ function openModal(rowIndex) {
     let link = getVal(r.c[16]);
     let boundWithSection = "";
 
-    // Zwiększono zakres do 31, aby uwzględnić kolumnę AF
-    for (let i = 0; i <= 31; i++) { 
+    // Zwiększono zakres do 32, aby uwzględnić kolumnę AG
+    for (let i = 0; i <= 32; i++) { 
         if (!colLabels[i]) continue;
 
         // 1. POBIERANIE DANYCH I NAZW
@@ -1162,21 +1162,18 @@ function openModal(rowIndex) {
         const isSignature = (i === 14);
         const isPrinter = (i === 10); // Kolumna K - Drukarz
 
-        // 2. WYKLUCZENIA 
-        if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(i)) continue;
+        // 2. WYKLUCZENIA (dodano 32, aby nie renderowało się podwójnie)
+        if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32].includes(i)) continue;
 
         if (labelName.includes("pełny opis") || labelName.includes("fotografie")) {
             continue; 
         }
 
         // --- POPRAWKA: WYMUSZENIE WYŚWIETLANIA DRUKARZA ---
-        // Jeśli pole jest puste, kontynuuj pętlę (pomiń), CHYBA ŻE to sygnatura lub drukarz
         if ((!val || val === "---" || val === "") && !isSignature && !isPrinter) continue;
 
-        // Ustawianie wartości domyślnych dla pustych pól obowiązkowych
         if (isSignature && (!val || val === "---" || val === "")) val = "-";
         if (isPrinter && (!val || val === "---" || val === "")) val = "Nieznany / Unknown";
-        // --------------------------------------------------
 
         // 3. RENDEROWANIE STANDARDOWYCH BOXÓW
         if (val.startsWith('http')) {
@@ -1194,20 +1191,18 @@ function openModal(rowIndex) {
 
             // --- LOGIKA WSTAWIENIA JĘZYKA ORAZ HASEŁ PRZEDMIOTOWYCH ---
             if (i === 10) {
-                // Renderowanie Języka (indeks 30)
                 let langVal = getVal(r.c[30]);
                 if (langVal && langVal !== "---") {
                     h += `<div class="detail-box"><span class="label">Język / Language</span><span>${langVal}</span></div>`;
                 }
                 
-                // Renderowanie Haseł Przedmiotowych (indeks 31 / kolumna AF)
                 let subjectVal = getVal(r.c[31]);
                 if (subjectVal && subjectVal !== "---" && subjectVal !== "-" && subjectVal !== "") {
                     h += `<div class="detail-box"><span class="label">Hasła przedmiotowe / Subject headings</span><span style="font-style: italic; color: #444;">${subjectVal}</span></div>`;
                 }
             }
             
-            // --- LOGIKA TYPU PIECZĄTKI ---
+            // --- LOGIKA TYPU PIECZĄTKI I BIBLIOGRAFII (POD UWAGAMI - i=11) ---
             if (i === 11) { 
                 let stampVal = getVal(r.c[28]); 
                 if (stampVal && stampVal !== "---") {
@@ -1219,25 +1214,25 @@ function openModal(rowIndex) {
                                target="_blank" 
                                title="Zobacz opis typologii / See typology description"
                                style="text-decoration: none; display: inline-flex;">
-                               <span style="
-                                    display: inline-block;
-                                    width: 14px;
-                                    height: 14px;
-                                    background-color: #eee;
-                                    color: #888;
-                                    border-radius: 50%;
-                                    text-align: center;
-                                    font-size: 10px;
-                                    line-height: 14px;
-                                    font-family: sans-serif;
-                                    cursor: help;
-                                    transition: all 0.2s;
-                                    border: 1px solid #ddd;
-                               " onmouseover="this.style.backgroundColor='#c73848'; this.style.color='#fff';" 
-                                 onmouseout="this.style.backgroundColor='#eee'; this.style.color='#888';">?</span>
+                               <span style="display: inline-block; width: 14px; height: 14px; background-color: #eee; color: #888; border-radius: 50%; text-align: center; font-size: 10px; line-height: 14px; border: 1px solid #ddd;" onmouseover="this.style.backgroundColor='#c73848'; this.style.color='#fff';" onmouseout="this.style.backgroundColor='#eee'; this.style.color='#888';">?</span>
                             </a>
                         </span>
                         <span>${stampVal}</span>
+                    </div>`;
+                }
+
+                // --- NOWA SEKCJA: BIBLIOGRAPHY OF THE HEBREW BOOK (Kolumna AG) ---
+                let biblioVal = getVal(r.c[32]);
+                if (biblioVal && biblioVal !== "" && biblioVal !== "---" && biblioVal !== "-") {
+                    const bhbSearchUrl = `https://uli.nli.org.il/discovery/search?query=any,contains,${biblioVal}&tab=BHB_slot&search_scope=BHB&vid=972NNL_ULI_C:BHB&offset=0`;
+                    h += `
+                    <div class="detail-box">
+                        <span class="label">Bibliography of the Hebrew Book</span>
+                        <span>
+                            <a href="${bhbSearchUrl}" target="_blank" style="color: #c73848; text-decoration: underline; font-weight: bold;">
+                                ${biblioVal}
+                            </a>
+                        </span>
                     </div>`;
                 }
             }
@@ -1249,17 +1244,10 @@ function openModal(rowIndex) {
         const boundIds = boundWithRaw.split(',').map(id => id.trim());
         const boundLinks = boundIds.map(id => {
             const bookTitle = getTitleById(id); 
-            return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
-                        ${bookTitle}
-                    </a>`;
+            return `<a href="./?id=${id}" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">${bookTitle}</a>`;
         }).join('');
 
-        boundWithSection = `
-            <div class="detail-box">
-                <span class="label">Współoprawne / Bound with</span>
-                <span>${boundLinks}</span>
-            </div>
-        `;
+        boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><span>${boundLinks}</span></div>`;
     }
 
     // 4. Logika wstawiania pod sygnaturę
@@ -1276,38 +1264,22 @@ function openModal(rowIndex) {
     }
 
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
-
-    const provenanceHTML = `
-        <div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;">
-            <span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span>
-            <div id="provenance-graph-space" class="dynamic-graph-height"></div>
-        </div>
-    `;
+    const provenanceHTML = `<div id="provenance-container" style="display:none; margin-top:20px; border-top:1px solid #1a1a1a; padding-top:15px;"><span class="prov-label" style="font-weight:bold; font-size:12px;">MAPA PROWENIENCJI / PROVENANCE MAP</span><div id="provenance-graph-space" class="dynamic-graph-height"></div></div>`;
 
     // 5. Renderowanie do HTML
     const isMobile = window.innerWidth <= 768;
-
     document.getElementById('modalContent').innerHTML = `
         <div class="modal-body">
             <div class="modal-img-col">
-                <img src="${getVal(r.c[23])}" 
-                     onclick="openLightbox(this.src, false)" 
-                     style="max-width:100%; cursor: zoom-in;">
-                
+                <img src="${getVal(r.c[23])}" onclick="openLightbox(this.src, false)" style="max-width:100%; cursor: zoom-in;">
                 ${link ? `<a href="${link}" target="_blank" class="link-btn" style="margin-top:10px; display:block; text-align:center;">SZCZEGÓŁY / DETAILS</a>` : ''}
-                
-                <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">
-                    ${galleryHTML}
-                </div>
+                <div class="gallery-desktop" style="display: ${isMobile ? 'none' : 'block'};">${galleryHTML}</div>
             </div>
             <div class="modal-data-col">
                 ${finalDetailsHtml} 
                 ${copySection}
                 ${provenanceHTML}
-                
-                <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">
-                    ${galleryHTML}
-                </div>
+                <div class="gallery-mobile" style="display: ${isMobile ? 'block' : 'none'}; margin-top: 20px;">${galleryHTML}</div>
             </div>
         </div>
     `;
@@ -1321,7 +1293,6 @@ function openModal(rowIndex) {
     // 7. Obsługa grafu proweniencji
     const provText = (r.c[24] && r.c[24].v) ? String(r.c[24].v).trim() : "";
     const provDetails = (r.c[25] && r.c[25].v) ? String(r.c[25].v).trim() : "";
-
     if (provText && provText !== "-") {
         document.getElementById('provenance-container').style.display = 'block';
         setTimeout(() => {
@@ -2379,6 +2350,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
