@@ -1160,17 +1160,23 @@ function openModal(rowIndex) {
         let labelName = colLabels[i].label ? colLabels[i].label.toLowerCase() : "";
         let val = getVal(r.c[i]);
         const isSignature = (i === 14);
+        const isPrinter = (i === 10); // Kolumna K - Drukarz
 
         // 2. WYKLUCZENIA 
-        // Dodano indeks 31 (Hasła przedmiotowe) do wykluczeń pętli standardowej
         if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(i)) continue;
 
         if (labelName.includes("pełny opis") || labelName.includes("fotografie")) {
             continue; 
         }
 
-        if ((!val || val === "---") && !isSignature) continue;
-        if (isSignature && (!val || val === "---")) val = "-";
+        // --- POPRAWKA: WYMUSZENIE WYŚWIETLANIA DRUKARZA ---
+        // Jeśli pole jest puste, kontynuuj pętlę (pomiń), CHYBA ŻE to sygnatura lub drukarz
+        if ((!val || val === "---" || val === "") && !isSignature && !isPrinter) continue;
+
+        // Ustawianie wartości domyślnych dla pustych pól obowiązkowych
+        if (isSignature && (!val || val === "---" || val === "")) val = "-";
+        if (isPrinter && (!val || val === "---" || val === "")) val = "Nieznany / Unknown";
+        // --------------------------------------------------
 
         // 3. RENDEROWANIE STANDARDOWYCH BOXÓW
         if (val.startsWith('http')) {
@@ -2373,6 +2379,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
