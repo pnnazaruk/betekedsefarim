@@ -565,106 +565,45 @@ body.stats-mode #dashboard-view {
     }
 
     /* Adaptacja nagłówka i kart */
-#main-header { 
-    flex-direction: column; 
-    gap: 10px; 
-    padding: 10px; 
-    height: auto !important; 
-}
-
-.header-title { 
-    font-size: 18px; 
-    text-align: center; 
-}
-
-.header-links { 
-    display: flex;
-    flex-wrap: wrap; /* KLUCZ: pozwala przyciskom przejść do nowej linii */
-    gap: 6px; 
-    justify-content: center; 
-    width: 100%; 
-}
-
-.nav-tab-btn { 
-    margin-left: 0 !important; 
-    padding: 5px 8px; 
-    font-size: 10px; 
-    height: 35px; /* Stała wysokość zapobiega "skakaniu" układu */
-    flex: 1 1 calc(50% - 10px); /* Każdy przycisk zajmuje ok. połowy szerokości */
-    min-width: 120px; /* Minimalna szerokość, by tekst się nie łamał */
-    justify-content: center; 
-    text-align: center;
-}
+    #main-header { flex-direction: column; gap: 10px; padding: 10px; height: auto !important; }
+    .header-title { font-size: 18px; text-align: center; }
+    .header-links { gap: 5px; justify-content: center; width: 100%; }
+    .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 10px; height: 32px; flex: 1; justify-content: center; }
 
     .row-flex { flex-direction: column; gap: 5px; }
     .title-heb { text-align: left; direction: ltr; } 
     .author-row { flex-direction: column; gap: 10px; }
 
     /* Układ kart statystyk pod sobą */
-/* --- STATYSTYKI DASHBOARD --- */
-
-#dashboard-view {
-    padding: 20px !important;
-}
-
-/* Główny kontener statystyk */
 .stat-grid {
-    display: flex !important;
-    flex-wrap: wrap !important; /* Pozwala elementom stawać obok siebie */
-    gap: 20px !important;      /* GWARANTUJE ODSTĘPY między kartami */
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* Każda pojedyncza karta statystyk */
+        display: block !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 .chart-card {
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 15px !important;
-    box-sizing: border-box;
-    display: flex !important;
-    flex-direction: column;
-    /* Domyślnie na całą szerokość (Oś czasu, Relacje) */
-    width: 100% !important; 
-    margin: 0 !important; /* Marginesy zastępujemy gap-em w .stat-grid */
-}
+        width: 100% !important;
+        margin: 0 0 10px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
+    margin-bottom: 10px !important;
+        padding: 15px !important;
+        box-sizing: border-box;
+        border: 1px solid #1a1a1a;
+        display: block !important;
+    }
 
-/* Mapa wewnątrz karty */
 #map-container { 
-    height: 400px !important; 
-    width: 100% !important;
-    margin: 0 !important;
-    touch-action: pan-y !important;
-}
-
-/* --- UKŁAD DLA DESKTOPU (Komputery) --- */
-@media (min-width: 769px) {
-    /* Zakładamy, że Mapa i Lokalizacja to 3. i 4. karta z kolei */
-    /* Ustawiamy je obok siebie (50% szerokości minus połowa gapu) */
-    .chart-card:nth-child(3),
-    .chart-card:nth-child(4) {
-        width: calc(50% - 10px) !important;
+        height: 350px !important;
+        width: 100% !important;
+        margin: 0 !important; /* Czyścimy margines mapy, bo siedzi w chart-card */
+        margin-top: 0;
+        touch-action: pan-y !important;
     }
-}
-
-/* --- UKŁAD DLA MOBILE (Telefony) --- */
-@media (max-width: 768px) {
-    .chart-card {
-        width: 100% !important; /* Na mobile wszystko pionowo */
-    }
-    
-    #map-container {
-        height: 300px !important;
-    }
-
     #dashboard-view {
-        padding: 10px !important;
+        padding: 15px !important;
     }
-}
-
-/* Odstęp na samym dole, by ostatni element nie dotykał krawędzi ekranu */
-#dashboard-view > .stat-grid > :last-child {
-    margin-bottom: 80px !important;
+#dashboard-view > :last-child {
+        margin-bottom: 80px !important;
+    }
 }
 
         /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
@@ -2541,11 +2480,6 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
 
 
 
