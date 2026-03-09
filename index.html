@@ -125,6 +125,18 @@
     transition: transform 0.2s;
 }
 
+.shelf-item img.default-img {
+    object-fit: contain; /* Pokazuje całe zdjęcie bez ucinania rogów */
+    background: #e4e4e4; /* Nieco ciemniejsze tło dla odróżnienia */
+    padding: 5px;        /* Opcjonalny odstęp od krawędzi */
+    box-sizing: border-box;
+}
+
+.shelf-item:hover .img-container {
+    transform: translateY(-5px);
+    transition: transform 0.2s ease;
+}
+
 .shelf-item:hover img {
     transform: scale(1.03);
     box-shadow: 0 6px 12px rgba(0,0,0,0.25);
@@ -1455,20 +1467,26 @@ function renderShelf(rows) {
     const shelfContent = document.getElementById('shelf-content');
     if (!shelfContent) return;
 
+    const defaultUrl = "https://teatrnn.pl/cache/local/image/1280x1024/websites/wystawy/Jesziwa/teatrnn.jpeg/";
+
     shelfContent.innerHTML = rows.map(r => {
         const id = r.c[0] ? r.c[0].v : '';
-        const img = getVal(r.c[23]) || "https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png";
-        
-        // Pobieramy tytuł (indeks 1) zamiast sygnatury (indeks 14)
+        const imgUrl = getVal(r.c[23]) || defaultUrl;
         const title = getVal(r.c[1]) || "Bez tytułu";
-        const author = getVal(r.c[3]) || ""; // Opcjonalnie autor (indeks 3)
+        
+        // Sprawdzamy czy to obrazek domyślny
+        const isDefault = imgUrl.includes("teatrnn.jpeg");
 
         return `
             <div class="shelf-item" onclick="openModal('${id}')">
-                <img src="${img}" loading="lazy" alt="${title}">
+                <div class="img-container">
+                    <img src="${imgUrl}" 
+                         class="${isDefault ? 'default-img' : ''}" 
+                         loading="lazy" 
+                         alt="${title}">
+                </div>
                 <div class="shelf-info">
                     <div class="shelf-title">${title}</div>
-                    <div class="shelf-author">${author}</div>
                 </div>
             </div>`;
     }).join('');
@@ -2463,6 +2481,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
