@@ -602,22 +602,20 @@ body.stats-mode #dashboard-view {
 
     /* Układ kart statystyk pod sobą */
 .stat-grid {
-    display: flex !important;
-    flex-direction: column !important; /* Wszystko jeden pod drugim... */
-    gap: 20px !important;            /* ...ale z odstępem 20px */
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
+        display: block !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 .chart-card {
-    width: 100% !important;
-    margin: 0 !important;             /* Margin zastępujemy gapem w rodzicu */
-    padding: 15px !important;
-    box-sizing: border-box;
-    border: 1px solid #1a1a1a;
-    background: #fff;
-    display: block !important;
-}
+        width: 100% !important;
+        margin: 0 0 10px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
+    margin-bottom: 10px !important;
+        padding: 15px !important;
+        box-sizing: border-box;
+        border: 1px solid #1a1a1a;
+        display: block !important;
+    }
 
 #map-container { 
         height: 350px !important;
@@ -633,6 +631,7 @@ body.stats-mode #dashboard-view {
         margin-bottom: 80px !important;
     }
 }
+
 
         /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
         .nav-tab-btn { 
@@ -2508,6 +2507,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
