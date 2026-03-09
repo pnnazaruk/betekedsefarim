@@ -779,162 +779,152 @@ body.stats-mode #dashboard-view {
     <div id="shelf-content" class="shelf-grid"></div>
 </div>
 
-            <div id="dashboard-view">
-                <div class="chart-card">
-                    <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
-                    <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
+           <div id="dashboard-view">
+    <div class="stat-grid">
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
+            <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
+        </div>
+
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-header">
+                Relacja pomiędzy pięcioma najczęstszymi autorami a miejscem druku ich książek / 
+                Relationship between the five most frequent authors and the place of printing their books
+            </div>
+            <div id="sankey-container" style="height: 500px; width: 100%; position: relative;">
+                <canvas id="sankeyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of Books from the Yeshivas Chachmei Lublin Library</div>
+            <div id="map-container"></div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
+            <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">Częstotliwość występowania poszczególnych typów pieczęci biblioteki Jeszywas Chachmej Lublin / Frequency of various types of the Yeshivas Chachmei Lublin Lubrary Stamps</div>
+            <div id="chart-stamps-container" style="height: 350px;">
+                <canvas id="stampsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card" style="display: flex; flex-direction: column; min-height: 620px; overflow: hidden;">
+            <div class="chart-header">Udział zbiorów rabina Majera Szapiry oraz starodruków na tle biblioteki Jeszywas Chachmej Lublin / Rabbi Meir Shapira’s collection and early printed books as a share of the Yeshivas Chachmei Lublin library.</div>
+            
+            <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%; min-height: 320px;">
+                <canvas id="szapiraChart"></canvas>
+            </div>
+
+            <div style="display: flex; flex-direction: column; background: #fcfcfc; border-top: 1px solid #eee; font-size: 11px;">
+                <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center; background: rgba(199, 56, 72, 0.05);">
+                    <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #c73848; line-height: 1.2;">
+                        ZBIORY SZAPIRY<br><span style="font-size: 9px; font-weight: normal; color: #777;">THE SHAPIRA COLLECTION</span>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-szapira-count" style="font-size: 16px; font-weight: bold;">0</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Woluminy / Vol.</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-szapira-percent" style="font-size: 16px; font-weight: bold;">0%</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Udział / Share</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-szapira-old" style="font-size: 16px; font-weight: bold;">0</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-szapira-old-pct" style="font-size: 16px; font-weight: bold; color: #c73848;">0%</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
+                    </div>
                 </div>
-                <div class="chart-card">
-    <div class="chart-header">
-        Relacja pomiędzy pięcioma najczęstszymi autorami a miejscem druku ich książek / 
-        Relationship between the five most frequent authors and the place of printing their books
-    </div>
-    <div id="sankey-container" style="height: 500px; width: 100%; position: relative;">
-        <canvas id="sankeyChart"></canvas>
-    </div>
-</div>
-                <div class="stat-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of Books from the Yeshivas Chachmei Lublin Library</div>
-                        <div id="map-container"></div>
+
+                <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center;">
+                    <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #666; line-height: 1.2;">
+                        POZOSTAŁE<br><span style="font-size: 9px; font-weight: normal; color: #777;">OTHER</span>
                     </div>
-                    <div class="chart-card">
-                        <div class="chart-header">Obecna lokalizacja książek z biblioteki Jeszywas Chachmej Lublin / Current Location of Books from the Yeshivas Chachmei Lublin Library</div>
-                        <div id="chart-loc-container" style="height: 350px;"><canvas id="locChart"></canvas></div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-others-count" style="font-size: 16px; font-weight: bold;">0</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Woluminy / Vol.</div>
                     </div>
-                <div class="chart-card">
-    <div class="chart-header">Częstotliwość występowania poszczególnych typów pieczęci biblioteki Jeszywas Chachmej Lublin / Frequency of various types of the Yeshivas Chachmei Lublin Lubrary Stamps</div>
-    <div id="chart-stamps-container" style="height: 350px;">
-        <canvas id="stampsChart"></canvas>
-    </div>
-</div>
-<div class="chart-card" style="display: flex; flex-direction: column; min-height: 620px; overflow: hidden;">
-    <div class="chart-header">Udział zbiorów rabina Majera Szapiry oraz starodruków na tle biblioteki Jeszywas Chachmej Lublin / Rabbi Meir Shapira’s collection and early printed books as a share of the Yeshivas Chachmei Lublin library.</div>
-    
-    <div id="chart-szapira-container" style="flex: 1; position: relative; width: 100%; min-height: 320px;">
-        <canvas id="szapiraChart"></canvas>
-    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-others-percent" style="font-size: 16px; font-weight: bold;">0%</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Udział / Share</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-others-old" style="font-size: 16px; font-weight: bold;">0</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-others-old-pct" style="font-size: 16px; font-weight: bold; color: #666;">0%</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
+                    </div>
+                </div>
 
-    <div style="display: flex; flex-direction: column; background: #fcfcfc; border-top: 1px solid #eee; font-size: 11px;">
-        
-        <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center; background: rgba(199, 56, 72, 0.05);">
-            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #c73848; line-height: 1.2;">
-                ZBIORY SZAPIRY<br><span style="font-size: 9px; font-weight: normal; color: #777;">THE SHAPIRA COLLECTION</span>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-szapira-count" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Woluminy / Vol.</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-szapira-percent" style="font-size: 16px; font-weight: bold;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Udział / Share</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-szapira-old" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-szapira-old-pct" style="font-size: 16px; font-weight: bold; color: #c73848;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
-            </div>
-        </div>
-
-        <div style="display: flex; border-bottom: 1px solid #eee; height: 65px; align-items: center;">
-            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #666; line-height: 1.2;">
-                POZOSTAŁE<br><span style="font-size: 9px; font-weight: normal; color: #777;">OTHER</span>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-others-count" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Woluminy / Vol.</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-others-percent" style="font-size: 16px; font-weight: bold;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Udział / Share</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-others-old" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-others-old-pct" style="font-size: 16px; font-weight: bold; color: #666;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
-            </div>
-        </div>
-
-        <div style="display: flex; height: 65px; align-items: center; background: #f0f0f0;">
-            <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #000; line-height: 1.2;">
-                OGÓŁEM<br><span style="font-size: 9px; font-weight: normal; color: #777;">TOTAL</span>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-total-count" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Suma / Total Vol.</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div style="font-size: 16px; font-weight: bold;">100%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Całość / Total</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-total-old" style="font-size: 16px; font-weight: bold;">0</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
-            </div>
-            <div style="flex: 1; text-align: center;">
-                <div id="stat-total-old-pct" style="font-size: 16px; font-weight: bold; color: #000;">0%</div>
-                <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
-    <div class="chart-header">
-        Struktura tematyczna biblioteki Jeszywas Chachmej Lublin / Subject structure of the Chachmei Lublin Yeshiva library
-    </div>
-    
-    <div style="padding: 15px;">
-        <div style="height: 400px; width: 100%; position: relative;">
-            <canvas id="subjectBarChart"></canvas>
-        </div>
-
-        <div id="subject-metrics-container" style="
-            column-width: 180px; 
-            column-count: 4; 
-            column-gap: 30px; 
-            margin-top: 25px; 
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        ">
-            </div>
-    </div>
-</div>
-<div class="chart-card" style="grid-column: 1 / -1; margin-top: 0px; border-radius: 0; position: relative;">
-    <div class="chart-header" style="border-radius: 0;">Analiza Relacji / Relations Analysis</div>
-
-    <div style="padding: 15px; background: #fff; border-bottom: 1px solid #000; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-        <label style="font-size: 14px; font-weight: bold;">Analizuj / Analyze:</label>
-        <select id="graph-mode" style="padding: 5px; border: 1px solid #000; background: #fff; cursor: pointer;">
-            <option value="author">10 najczęstszych autorów / Top 10 most frequent authors</option>
-            <option value="printer">5 najczętszych drukarzy / Top 5 most frequent printers</option>
-        </select>
-
-        <button onclick="updateGraph()" class="graph-btn">Generuj / Generate</button>
-
-        <div style="display: flex; gap: 10px; margin-left: auto; font-size: 12px;">
-            <span><span style="color:#f2c635">●</span> Jeszywas Chachmej Lublin / Yeshivas Chachmei Lublin</span>
-            <span><span style="color:#c5c9c9">●</span> Tytuł / Title</span>
-            <span><span style="color:#678ed6">●</span> Autor / Author</span>
-            <span><span style="color:#6abbc4">◆</span> Drukarz / Printer</span>
-            <span><span style="color:#c73848">●</span> Miejsce / Place</span>
-        </div>
-    </div>
-
-    <div id="network-graph" style="height: 650px; background: #fff;"></div>
-
-    <div style="position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: #555; background: rgba(255,255,255,0.8); padding: 5px;">
-        PL: Przeciągnij, aby przesunąć. Użyj rolki, by przybliżyć. | EN: Drag to move. Use scroll to zoom.
-    </div>
-</div>
+                <div style="display: flex; height: 65px; align-items: center; background: #f0f0f0;">
+                    <div style="flex: 1.5; padding-left: 10px; font-weight: bold; color: #000; line-height: 1.2;">
+                        OGÓŁEM<br><span style="font-size: 9px; font-weight: normal; color: #777;">TOTAL</span>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-total-count" style="font-size: 16px; font-weight: bold;">0</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Suma / Total Vol.</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 16px; font-weight: bold;">100%</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Całość / Total</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-total-old" style="font-size: 16px; font-weight: bold;">0</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">Starodruki / Old Prints</div>
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <div id="stat-total-old-pct" style="font-size: 16px; font-weight: bold; color: #000;">0%</div>
+                        <div style="font-size: 8px; color: #777; text-transform: uppercase;">% Starodruków / % Old Prints</div>
+                    </div>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-header">
+                Struktura tematyczna biblioteki Jeszywas Chachmej Lublin / Subject structure of the Chachmei Lublin Yeshiva library
+            </div>
+            <div style="padding: 15px;">
+                <div style="height: 400px; width: 100%; position: relative;">
+                    <canvas id="subjectBarChart"></canvas>
+                </div>
+                <div id="subject-metrics-container" style="column-width: 180px; column-count: 4; column-gap: 30px; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee;">
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-card" style="grid-column: 1 / -1; position: relative;">
+            <div class="chart-header">Analiza Relacji / Relations Analysis</div>
+            <div style="padding: 15px; background: #fff; border-bottom: 1px solid #000; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <label style="font-size: 14px; font-weight: bold;">Analizuj / Analyze:</label>
+                <select id="graph-mode" style="padding: 5px; border: 1px solid #000; background: #fff; cursor: pointer;">
+                    <option value="author">10 najczęstszych autorów / Top 10 most frequent authors</option>
+                    <option value="printer">5 najczętszych drukarzy / Top 5 most frequent printers</option>
+                </select>
+                <button onclick="updateGraph()" class="graph-btn">Generuj / Generate</button>
+                <div style="display: flex; gap: 10px; margin-left: auto; font-size: 12px;">
+                    <span><span style="color:#f2c635">●</span> Jeszywas Chachmej Lublin</span>
+                    <span><span style="color:#c5c9c9">●</span> Tytuł</span>
+                    <span><span style="color:#678ed6">●</span> Autor</span>
+                    <span><span style="color:#6abbc4">◆</span> Drukarz</span>
+                    <span><span style="color:#c73848">●</span> Miejsce</span>
+                </div>
+            </div>
+            <div id="network-graph" style="height: 650px; background: #fff;"></div>
+            <div style="position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: #555; background: rgba(255,255,255,0.8); padding: 5px;">
+                PL: Przeciągnij, aby przesunąć. Użyj rolki, by przybliżyć. | EN: Drag to move. Use scroll to zoom.
+            </div>
+        </div>
+    </div> </div> </main>
     </div>
 
     <div id="modalOverlay" onclick="closeModal(event)"><div id="modalWindow"><button class="close-modal" onclick="closeModalManual()">&times;</button><div id="modalContent" class="modal-body"></div></div></div>
@@ -2506,6 +2496,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
