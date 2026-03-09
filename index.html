@@ -127,7 +127,6 @@
 
 .shelf-item img.default-img {
     object-fit: contain; /* Pokazuje całe zdjęcie bez ucinania rogów */
-    background: #e4e4e4; /* Nieco ciemniejsze tło dla odróżnienia */
     padding: 5px;        /* Opcjonalny odstęp od krawędzi */
     box-sizing: border-box;
 }
@@ -1487,6 +1486,7 @@ function renderShelf(rows) {
                 </div>
                 <div class="shelf-info">
                     <div class="shelf-title">${title}</div>
+                    <div class="shelf-author">${author}</div>
                 </div>
             </div>`;
     }).join('');
@@ -2481,6 +2481,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
