@@ -601,57 +601,104 @@ body.stats-mode #dashboard-view {
     .author-row { flex-direction: column; gap: 10px; }
 
     /* Układ kart statystyk pod sobą */
-.stat-grid {
-        display: block !important;
-        gap: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-.chart-card {
-        width: 100% !important;
-        margin: 0 0 10px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
-    margin-bottom: 10px !important;
-        padding: 15px !important;
-        box-sizing: border-box;
-        border: 1px solid #1a1a1a;
-        display: block !important;
-    }
+/* --- KONTENER GŁÓWNY DASHBOARDU --- */
+#dashboard-view { 
+    display: none; 
+    width: 100%; 
+    padding: 20px !important; /* Margines od krawędzi ekranu */
+    background: #f9f9f9; 
+    flex-direction: column !important; 
+    gap: 20px !important; /* RÓWNY ODSTĘP PIONOWY MIĘDZY ELEMENTAMI */
+    box-sizing: border-box; 
+    overflow-y: auto; 
+}
 
-#map-container { 
-        height: 350px !important;
-        width: 100% !important;
-        margin: 0 !important; /* Czyścimy margines mapy, bo siedzi w chart-card */
-        margin-top: 0;
-        touch-action: pan-y !important;
-    }
-    #dashboard-view {
-        padding: 15px !important;
-    }
-#dashboard-view > :last-child {
-        margin-bottom: 80px !important;
+/* Widoczność dashboardu w trybie statystyk */
+body.stats-mode #dashboard-view { 
+    display: flex !important; 
+}
+
+/* --- KARTY (WSPÓLNY STYL) --- */
+.chart-card { 
+    background: #fff; 
+    border: 1px solid #1a1a1a; 
+    padding: 15px !important; 
+    box-sizing: border-box; 
+    width: 100% !important;
+    margin: 0 !important; /* Zerujemy marginesy, bo używamy 'gap' w rodzicu */
+    display: flex !important;
+    flex-direction: column;
+}
+
+/* Odstęp dla ostatniej karty na samym dole strony */
+#dashboard-view > :last-child, 
+.stat-grid > :last-child {
+    margin-bottom: 60px !important;
+}
+
+/* --- SIATKA DLA MAPY I LOKALIZACJI --- */
+.stat-grid { 
+    display: grid !important; 
+    grid-template-columns: 1.5fr 1fr !important; /* Mapa szersza, lokalizacja węższa */
+    gap: 20px !important; /* IDENTYCZNY ODSTĘP JAK W CAŁYM DASHBOARDZIE */
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Responsywność siatki dla mniejszych ekranów */
+@media (max-width: 1024px) {
+    .stat-grid {
+        grid-template-columns: 1fr !important;
     }
 }
 
-        /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
-        .nav-tab-btn { 
-            background: none; border: 1px solid #1a1a1a; padding: 8px 15px; cursor: pointer; font-size: 11px; 
-            font-weight: bold; text-transform: uppercase; height: 35px; display: inline-flex; align-items: center; 
-            margin-left: 10px; color: #1a1a1a; text-decoration: none; transition: background 0.2s ease; box-sizing: border-box;
-        }
-        .nav-tab-btn:hover { background: #f0f0f0; }
-        .nav-tab-btn.active { background: #1a1a1a; color: #fff; }
+/* --- NAGŁÓWKI I ELEMENTY WEWNĘTRZNE --- */
+.chart-header { 
+    font-size: 11px; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    margin-bottom: 15px; 
+    border-bottom: 1px solid #eee; 
+    padding-bottom: 5px; 
+}
 
-        /* FIX: Dashboard zajmuje całą szerokość po ukryciu sidebaru */
-        body.stats-mode #app-container { display: block !important; }
-        body.stats-mode #sidebar, body.stats-mode .controls, body.stats-mode #container { display: none !important; }
+#map-container { 
+    height: 400px !important; 
+    width: 100% !important; 
+    border: 1px solid #1a1a1a; 
+    touch-action: pan-y !important;
+}
 
-        #dashboard-view { display: none; width: 100%; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; box-sizing: border-box; overflow-y: auto; }
-        body.stats-mode #dashboard-view { display: flex; }
+/* --- PRZYCISKI NAWIGACJI --- */
+.nav-tab-btn { 
+    background: none; 
+    border: 1px solid #1a1a1a; 
+    padding: 8px 15px; 
+    cursor: pointer; 
+    font-size: 11px; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    height: 35px; 
+    display: inline-flex; 
+    align-items: center; 
+    margin-left: 10px; 
+    color: #1a1a1a; 
+    text-decoration: none; 
+    transition: background 0.2s ease; 
+    box-sizing: border-box;
+}
 
-        .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
-        .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
-        #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
-        .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+.nav-tab-btn:hover { background: #f0f0f0; }
+.nav-tab-btn.active { background: #1a1a1a; color: #fff; }
+
+/* FIX: Ukrywanie elementów mapy w trybie statystyk */
+body.stats-mode #app-container { display: block !important; }
+body.stats-mode #sidebar, 
+body.stats-mode .controls, 
+body.stats-mode #container { 
+    display: none !important; 
+}
     /*Stylizacja dymka (tooltipa) proweniencji */
         div.vis-tooltip {
             position: absolute;
@@ -778,22 +825,20 @@ body.stats-mode #dashboard-view {
         <div id="shelf-container" style="display: none;">
     <div id="shelf-content" class="shelf-grid"></div>
 </div>
-
-            <div id="dashboard-view">
-                <div class="chart-card" style="margin-bottom: 25px !important;">
+          <div id="dashboard-view">
+                <div class="chart-card">
                     <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
                     <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
                 </div>
-                
                 <div class="chart-card">
-    <div class="chart-card" style="margin-bottom: 25px !important;">
+    <div class="chart-header">
         Relacja pomiędzy pięcioma najczęstszymi autorami a miejscem druku ich książek / 
         Relationship between the five most frequent authors and the place of printing their books
     </div>
     <div id="sankey-container" style="height: 500px; width: 100%; position: relative;">
         <canvas id="sankeyChart"></canvas>
     </div>
-</div>
+</div> 
                 <div class="stat-grid">
                     <div class="chart-card">
                         <div class="chart-header">Miejsca druku książek z biblioteki Jeszywas Chachmej Lublin / Printing Locations of Books from the Yeshivas Chachmei Lublin Library</div>
@@ -2507,6 +2552,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
