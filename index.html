@@ -601,15 +601,32 @@ body.stats-mode #dashboard-view {
     .author-row { flex-direction: column; gap: 10px; }
 
     /* Układ kart statystyk pod sobą */
-.chart-card {
-    width: 100% !important;
-    background: #fff;
-    border: 1px solid #1a1a1a;
-    padding: 15px !important;
+.stat-grid {
+    display: grid !important;
+    /* Dwie kolumny: lewa szersza (1.5), prawa węższa (1) */
+    grid-template-columns: 1.5fr 1fr !important; 
+    /* TO JEST JEDYNY ODSTĘP (PIONOWY I POZIOMY) */
+    gap: 20px !important; 
+    
+    margin: 0 !important;
+    padding: 20px !important;
     box-sizing: border-box;
+}
+
+/* 2. POJEDYNCZA KARTA - ZERO MARGINESÓW */
+.chart-card {
     display: flex !important;
     flex-direction: column;
-    margin: 0 !important; /* Gap załatwia sprawę odstępów */
+    width: 100% !important;
+    height: 100% !important; /* Karty w jednym rzędzie będą miały tę samą wysokość */
+    
+    /* KLUCZ: Usuwamy wszystkie marginesy, które psują odstępy */
+    margin: 0 !important; 
+    
+    padding: 20px !important;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    box-sizing: border-box;
 }
 
 .chart-card:nth-child(1),
@@ -648,8 +665,6 @@ body.stats-mode #dashboard-view {
         #dashboard-view { display: none; width: 100%; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; box-sizing: border-box; overflow-y: auto; }
         body.stats-mode #dashboard-view { display: flex; }
 
-        .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
-        .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
         #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
         .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     /*Stylizacja dymka (tooltipa) proweniencji */
@@ -2506,6 +2521,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
