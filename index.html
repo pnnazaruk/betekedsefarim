@@ -164,10 +164,8 @@
 .shelf-author {
     font-size: 10px;
     color: #666;
-    margin-top: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-top: 1px; /* Minimalny odstęp od roku */
+    line-height: 1.2;
 }
 
 .shelf-sig {
@@ -178,12 +176,12 @@
     font-family: monospace;
     text-transform: uppercase;
 }
-
 .shelf-year {
     font-size: 10px;
-    color: #999; /* Nieco jaśniejszy niż autor, by zachować hierarchię */
+    color: #888;
     font-weight: bold;
-    margin-top: 2px;
+    margin-top: 0; /* Usunięcie marginesu górnego */
+    line-height: 1.2;
 }
         
 .photo-slider-wrapper {
@@ -2505,6 +2503,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
