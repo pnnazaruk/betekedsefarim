@@ -92,6 +92,39 @@
     border: none !important;
 }
 
+.shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 30px;
+    padding: 30px;
+    background: #fff;
+}
+
+.shelf-item {
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.shelf-item:hover { transform: translateY(-8px); }
+
+.shelf-item img {
+    width: 130px;
+    height: 185px;
+    object-fit: cover;
+    box-shadow: 4px 6px 15px rgba(0,0,0,0.15);
+    border: 1px solid #ddd;
+}
+
+.shelf-sig {
+    margin-top: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #1a1a1a;
+    font-family: monospace;
+    text-transform: uppercase;
+}
+        
 .photo-slider-wrapper {
     display: flex;
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -572,6 +605,7 @@ body.stats-mode #dashboard-view {
         <div class="header-links">
         <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank" class="nav-tab-btn">O projekcie / About</a>
         <button class="nav-tab-btn active" id="tab-catalog" onclick="switchTab('catalog')">Katalog / Catalog</button>
+        <button class="nav-tab-btn" id="tab-shelf" onclick="switchTab('shelf')">Półka / Shelf</button>
         <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki / Statistics</button>
         </div>
 
@@ -661,6 +695,9 @@ body.stats-mode #dashboard-view {
             </div>
             <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
             <div id="container"></div>
+        <div id="shelf-container" style="display: none;">
+    <div id="shelf-content" class="shelf-grid"></div>
+</div>
 
             <div id="dashboard-view">
                 <div class="chart-card">
@@ -1097,6 +1134,7 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
                             <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
                         </div></div></div>`).join('');
             document.getElementById('inlineCounter').innerText = rows.length;
+            renderShelf(rows);
         }
 
         function copyLink(id) {
@@ -1311,53 +1349,81 @@ function openModal(rowIndex) {
         /* KONIEC KODU WZORCOWEGO - LOGIKA DODATKOWA STATYSTYK */
 
         let mapInstance, timelineChart, locChart, stampsChart, szapiraChart, mapInitialized = false;
-
 function switchTab(mode) {
+    // 1. Aktualizacja klas przycisków
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`tab-${mode}`).classList.add('active');
+    const targetBtn = document.getElementById(`tab-${mode}`);
+    if (targetBtn) targetBtn.classList.add('active');
 
-    // Zamykamy sidebar, aby nie blokował widoku na mobile
+    // 2. Zamykanie sidebaru na mobile
     document.getElementById('sidebar').classList.remove('open');
 
-    if(mode === 'stats') {
-        // Kluczowe: dodajemy klasę do html i body, aby odblokować CSS
+    // 3. Zarządzanie widocznością kontenerów
+    const catalogView = document.getElementById('container');
+    const shelfView = document.getElementById('shelf-container');
+    const statsView = document.getElementById('dashboard-view');
+
+    // Resetowanie widoków
+    catalogView.style.display = 'none';
+    if (shelfView) shelfView.style.display = 'none';
+    if (statsView) statsView.style.display = 'none';
+
+    if (mode === 'stats') {
         document.body.classList.add('stats-mode');
         document.documentElement.classList.add('stats-mode');
+        if (statsView) statsView.style.display = 'block';
 
-        if(!mapInitialized) {
+        if (!mapInitialized) {
             const isMobile = window.innerWidth < 768;
-
-            // KONFIGURACJA MAPY DLA MOBILE I PC
             const mapOptions = isMobile ? { 
-                dragging: true,           // Pozwalamy na ruch...
-                touchZoom: true,          // ...i powiększanie palcami
-                tap: true,
-                scrollWheelZoom: false,   // Ale wyłączamy scroll kółkiem myszy (by nie psuć scrolla strony)
-                // Wymuszenie użycia dwóch palców do przesuwania mapy na telefonie
-                // Dzięki temu jeden palec zawsze przewija stronę!
-                bounceAtZoomLimits: true
+                dragging: true, touchZoom: true, tap: true, 
+                scrollWheelZoom: false, bounceAtZoomLimits: true 
             } : {};
 
             mapInstance = L.map('map-container', mapOptions).setView([50, 20], 4);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(mapInstance);
 
-            // Specjalny "bezpiecznik" dla mobile:
             if (isMobile) {
-                // Informujemy użytkownika (opcjonalnie), że mapę obsługuje się dwoma palcami
                 mapInstance.on('focus', () => { mapInstance.scrollWheelZoom.enable(); });
             }
-
             mapInitialized = true;
         }
         setTimeout(() => { 
             renderStats(); 
-            if(mapInstance) mapInstance.invalidateSize(); 
+            if (mapInstance) mapInstance.invalidateSize(); 
         }, 300);
-    } else {
+
+    } else if (mode === 'shelf') {
         document.body.classList.remove('stats-mode');
         document.documentElement.classList.remove('stats-mode');
+        if (shelfView) shelfView.style.display = 'block';
         window.scrollTo(0,0);
+        filterAndSort(); // Odświeża zawartość półki przy przełączaniu
+
+    } else { // tryb 'catalog'
+        document.body.classList.remove('stats-mode');
+        document.documentElement.classList.remove('stats-mode');
+        catalogView.style.display = 'block';
+        window.scrollTo(0,0);
+        filterAndSort();
     }
+}
+function renderShelf(rows) {
+    const shelfContent = document.getElementById('shelf-content');
+    if (!shelfContent) return;
+
+    shelfContent.innerHTML = rows.map(r => {
+        const id = r.c[0] ? r.c[0].v : '';
+        // Indeks 23: Zdjęcie, Indeks 14: Sygnatura
+        const img = getVal(r.c[23]) || "https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png";
+        const sig = getVal(r.c[14]) || "-";
+        
+        return `
+            <div class="shelf-item" onclick="openModal('${id}')">
+                <img src="${img}" loading="lazy" alt="Okładka">
+                <div class="shelf-sig">${sig}</div>
+            </div>`;
+    }).join('');
 }
 
         function parseDMS(dmsStr) {
@@ -2349,3 +2415,4 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
