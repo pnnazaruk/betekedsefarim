@@ -602,7 +602,6 @@ body.stats-mode #dashboard-view {
 
     /* Układ kart statystyk pod sobą */
 
-
 #map-container { 
         height: 350px !important;
         width: 100% !important;
@@ -618,45 +617,6 @@ body.stats-mode #dashboard-view {
     }
 }
 
-/* GŁÓWNY KONTENER - JEDEN I SPÓJNY */
-.stat-grid {
-    display: grid !important;
-    grid-template-columns: 1.5fr 1fr !important; /* Twoje proporcje */
-    gap: 20px !important;    /* JEDYNE źródło odstępów (pion i poziom) */
-    margin: 0 !important;
-    padding: 20px !important;
-}
-
-/* KARTA - USUWAMY MARGINESY, KTÓRE PSUJĄ ODSTĘPY */
-.chart-card {
-    width: 100% !important;
-    margin: 0 !important;    /* KLUCZ: Margines musi być 0, żeby gap był równy */
-    padding: 20px !important;
-    border: 1px solid #1a1a1a;
-    background: #fff;
-    box-sizing: border-box;
-    display: flex !important;
-    flex-direction: column;
-}
-
-/* PEŁNA SZEROKOŚĆ DLA PIERWSZYCH DWÓCH WYKRESÓW */
-.chart-card:nth-child(1),
-.chart-card:nth-child(2) {
-    grid-column: span 2 !important;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-    .stat-grid {
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
-    }
-    .chart-card:nth-child(1),
-    .chart-card:nth-child(2) {
-        grid-column: span 1 !important;
-    }
-}
-        
         /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
         .nav-tab-btn { 
             background: none; border: 1px solid #1a1a1a; padding: 8px 15px; cursor: pointer; font-size: 11px; 
@@ -673,6 +633,8 @@ body.stats-mode #dashboard-view {
         #dashboard-view { display: none; width: 100%; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; box-sizing: border-box; overflow-y: auto; }
         body.stats-mode #dashboard-view { display: flex; }
 
+        .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
+        .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
         #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
         .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     /*Stylizacja dymka (tooltipa) proweniencji */
