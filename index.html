@@ -152,13 +152,13 @@
     font-weight: bold;
     color: #1a1a1a;
     text-transform: uppercase;
-    line-height: 1.2;
-    /* Efekt ucinania tekstu po 2 liniach */
+    line-height: 1.1; /* Nieco ciaśniejsza interlinia */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;  
     overflow: hidden;
-    height: 26px; /* Stała wysokość, by miniatury były w rzędzie */
+    height: 24px; /* Zmniejszone z 26px */
+    margin-bottom: 2px; /* Kontroluje dystans do roku */
 }
 
 .shelf-author {
@@ -2505,6 +2505,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
