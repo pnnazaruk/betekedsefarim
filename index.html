@@ -1471,21 +1471,21 @@ function renderShelf(rows) {
     shelfContent.innerHTML = rows.map(r => {
         const id = r.c[0] ? r.c[0].v : '';
         const imgUrl = getVal(r.c[23]) || defaultUrl;
-        const title = getVal(r.c[1]) || "Bez tytułu";
         
-        // Sprawdzamy czy to obrazek domyślny
+        // POBIERANIE DANYCH
+        const title = getVal(r.c[1]) || "Bez tytułu";
+        const author = getVal(r.c[3]) || ""; // Autor jest w kolumnie 4 (indeks 3)
+        
         const isDefault = imgUrl.includes("teatrnn.jpeg");
 
         return `
             <div class="shelf-item" onclick="openModal('${id}')">
                 <div class="img-container">
-                    <img src="${imgUrl}" 
-                         class="${isDefault ? 'default-img' : ''}" 
-                         loading="lazy" 
-                         alt="${title}">
+                    <img src="${imgUrl}" class="${isDefault ? 'default-img' : ''}" loading="lazy">
                 </div>
                 <div class="shelf-info">
                     <div class="shelf-title">${title}</div>
+                    <div class="shelf-author">${author}</div>
                 </div>
             </div>`;
     }).join('');
@@ -2480,6 +2480,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
