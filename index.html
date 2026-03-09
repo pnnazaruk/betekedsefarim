@@ -178,6 +178,13 @@
     font-family: monospace;
     text-transform: uppercase;
 }
+
+.shelf-year {
+    font-size: 10px;
+    color: #999; /* Nieco jaśniejszy niż autor, by zachować hierarchię */
+    font-weight: bold;
+    margin-top: 2px;
+}
         
 .photo-slider-wrapper {
     display: flex;
@@ -1490,7 +1497,8 @@ function renderShelf(rows) {
         
         // POBIERANIE DANYCH
         const title = getVal(r.c[1]) || "Bez tytułu";
-        const author = getVal(r.c[3]) || ""; // Autor jest w kolumnie 4 (indeks 3)
+        const author = getVal(r.c[3]) || ""; 
+        const year = getVal(r.c[5]) || ""; // Zmień [14] na właściwy indeks kolumny z rokiem
         
         const isDefault = imgUrl.includes("teatrnn.jpeg");
 
@@ -1501,6 +1509,7 @@ function renderShelf(rows) {
                 </div>
                 <div class="shelf-info">
                     <div class="shelf-title">${title}</div>
+                    <div class="shelf-year">${year}</div>
                     <div class="shelf-author">${author}</div>
                 </div>
             </div>`;
@@ -2496,6 +2505,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
