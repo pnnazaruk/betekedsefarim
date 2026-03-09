@@ -602,14 +602,20 @@ body.stats-mode #dashboard-view {
 
     /* Układ kart statystyk pod sobą */
 .chart-card {
-        width: 100% !important;
-        margin: 0 0 10px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
-    margin-bottom: 10px !important;
-        padding: 15px !important;
-        box-sizing: border-box;
-        border: 1px solid #1a1a1a;
-        display: block !important;
-    }
+    width: 100% !important;
+    background: #fff;
+    border: 1px solid #1a1a1a;
+    padding: 15px !important;
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column;
+    margin: 0 !important; /* Gap załatwia sprawę odstępów */
+}
+
+.chart-card:nth-child(1),
+.chart-card:nth-child(2) {
+    grid-column: span 2 !important;
+}
 
 #map-container { 
         height: 350px !important;
@@ -2500,6 +2506,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
