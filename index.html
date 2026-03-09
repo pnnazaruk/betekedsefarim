@@ -39,46 +39,6 @@
             padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
             cursor: pointer; z-index: 3500; font-size: 13px;
         }
-.sw-btn {
-    padding: 6px 12px;
-    cursor: pointer;
-    border: 1px solid #1a1a1a;
-    background: #fff;
-    font-size: 11px;
-    font-weight: bold;
-    transition: 0.2s;
-}
-.sw-btn.active { background: #1a1a1a; color: #fff; }
-
-.shelf-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 30px;
-    padding: 20px;
-}
-.shelf-item {
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: transform 0.2s ease;
-}
-.shelf-item:hover { transform: translateY(-10px); }
-.shelf-item img {
-    width: 140px;
-    height: 200px;
-    object-fit: cover;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    border-radius: 2px 5px 5px 2px;
-    background-color: #f0f0f0;
-}
-.shelf-item .shelf-sig {
-    margin-top: 10px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #333;
-    text-align: center;
-}
 
 #provenance-container {
     margin-top: 20px;
@@ -701,9 +661,6 @@ body.stats-mode #dashboard-view {
             </div>
             <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
             <div id="container"></div>
-            <div id="shelf-view" style="display: none;">
-    <div class="shelf-grid" id="shelf-content"></div>
-</div>
 
             <div id="dashboard-view">
                 <div class="chart-card">
@@ -1151,49 +1108,7 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
                 setTimeout(() => btn.innerText = "KOPIUJ / COPY", 2000);
             });
         }
-function changeView(view) {
-    const listCont = document.getElementById('container');
-    const shelfCont = document.getElementById('shelf-view');
-    const btnList = document.getElementById('btn-list');
-    const btnShelf = document.getElementById('btn-shelf');
 
-    if (view === 'shelf') {
-        listCont.style.display = 'none';
-        shelfCont.style.display = 'block';
-        btnShelf.classList.add('active');
-        btnList.classList.remove('active');
-        renderShelf(); // Wywołuje renderowanie półki
-    } else {
-        listCont.style.display = 'block';
-        shelfCont.style.display = 'none';
-        btnList.classList.add('active');
-        btnShelf.classList.remove('active');
-    }
-}
-
-function renderShelf() {
-    const shelfContent = document.getElementById('shelf-content');
-    // Sprawdzamy czy dane są załadowane. Upewnij się, że rawRows to nazwa Twojej zmiennej z danymi
-    if (!rawRows || shelfContent.innerHTML !== "") return; 
-
-    let html = "";
-    rawRows.forEach(row => {
-        const id = row.c[0] ? row.c[0].v : null;
-        if (!id || id === "ID") return; 
-
-        // Indeksy z Twojego arkusza: 23 - zdjęcie, 14 - sygnatura
-        const img = (row.c[23] && row.c[23].v) ? row.c[23].v : "https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png";
-        const sig = (row.c[14] && row.c[14].v) ? row.c[14].v : "-";
-        
-        html += `
-            <div class="shelf-item" onclick="openModal('${id}')">
-                <img src="${img}" loading="lazy" alt="Książka">
-                <div class="shelf-sig">${sig}</div>
-            </div>`;
-    });
-    shelfContent.innerHTML = html;
-}
-        
 function openModal(rowIndex) {
     // 1. Znalezienie danych wiersza
     if (!rawRows) return;
@@ -2434,14 +2349,3 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
-
-
-
-
-
-
-
-
-
-
