@@ -12,164 +12,680 @@
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
     <style>
-    /* 1. FUNDAMENTY I NAGŁÓWEK */
-    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
-    body { display: flex; flex-direction: column; }
-    
+        /* ORYGINALNY STYL WZORCOWY - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fff; color: #1a1a1a; }
+        body { display: flex; flex-direction: column; }
     #main-header {
-        flex: 0 0 auto; background: #fff; color: #1a1a1a; padding: 15px 25px;
-        display: flex; flex-direction: row; justify-content: space-between; align-items: center;
-        border-bottom: 2px solid #1a1a1a; z-index: 4000;
+            flex: 0 0 auto; 
+            background: #fff; 
+            color: #1a1a1a; 
+            padding: 15px 25px;
+            display: flex; 
+            /* ZMIANA: Standardowy kierunek i rozpychanie elementów na boki */
+            flex-direction: row; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #1a1a1a; 
+            z-index: 4000;
+        }
+        .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
+        .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
+        .header-links a { color: #1a1a1a; text-decoration: none; }
+
+        #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; position: relative; }
+
+        #mobile-toggle { 
+            display: none; background: #1a1a1a; color: #fff; border: none; 
+            padding: 12px; font-weight: bold; width: 100%; text-transform: uppercase; 
+            cursor: pointer; z-index: 3500; font-size: 13px;
+        }
+
+#provenance-container {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 2px solid #1a1a1a;
+    width: 100%;
+}
+
+/* To jest Twój główny styl dla kontenera grafu */
+#provenance-graph-space {
+    width: 100%;
+    height: 300px; /* Domyślnie dla telefonów */
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    margin-top: 10px;
+}
+
+/* Dla urządzeń stacjonarnych nadpisujemy wysokość używając ID */
+@media (min-width: 1024px) {
+    #provenance-graph-space {
+        height: 600px; /* Większy rozmiar na komputerze */
     }
-    .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
-    .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
-    .header-links a { color: #1a1a1a; text-decoration: none; }
+}
+.prov-label {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #c73848;
+}
 
-    #app-container { display: flex; flex-direction: row; flex: 1; overflow: hidden; position: relative; }
-
-    /* 2. SIDEBAR I FILTRY (FASETKI) */
-    #sidebar { 
-        width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
-        padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
-        transition: transform 0.3s ease;
+        #network-graph {
+        height: 600px; /* Stała wysokość na desktopie */
+        width: 100%;
+        background: #ffffff;
+        border-radius: 0;
+        margin-top: 10px;
+        border: 1px solid #eee;
+        box-shadow: none;
     }
-    details.facet-container { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 5px; }
-    summary.facet-summary { 
-        list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-        font-size: 11px; font-weight: bold; text-transform: uppercase; outline: none; direction: ltr; text-align: left;
-    }
-    summary.facet-summary::-webkit-details-marker { display: none; }
-    summary.facet-summary::before { content: '▸'; margin-right: 8px; transition: transform 0.2s; display: inline-block; }
-    details[open] summary.facet-summary::before { transform: rotate(90deg); }
-
-    summary.heb { direction: rtl; text-align: right; font-family: "SBL Hebrew", serif; font-size: 14px; text-transform: none; }
-    summary.heb::before { content: none; }
-    summary.heb::after { content: '◂'; margin-left: 8px; transition: transform 0.2s; display: inline-block; }
-    details[open] summary.heb::after { transform: rotate(-90deg); }
-
-    .active-badge { font-size: 9px; background: #1a1a1a; color: #fff; padding: 0 5px; border-radius: 3px; margin-left: 5px; }
-    .facet-inner-content { padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .facet-mini-search { width: 100%; padding: 5px; font-size: 12px; border: 1px solid #ccc; box-sizing: border-box; outline: none; margin-bottom: 5px; }
-    .facet-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; border: 1px solid #eee; background: #fff; display: flex; flex-direction: column; }
-    .facet-item { font-size: 12px; padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; direction: ltr; }
-    .facet-item:hover { background: #f5f5f5; }
-    .facet-item.active { background: #1a1a1a !important; color: #fff !important; }
-    .facet-item.heb { direction: rtl; text-align: right; font-family: "SBL Hebrew", serif; font-size: 14px; }
-    .count-pill { font-size: 9px; background: #eee; padding: 2px 5px; border-radius: 10px; color: #333; }
-    .active .count-pill { background: #444; color: #fff; }
-
-    /* 3. DASHBOARD I STATYSTYKI (UKŁAD DESKTOP) */
-    #dashboard-view { 
-        display: none; width: 100%; padding: 20px; background: #f9f9f9; 
-        flex-direction: column; gap: 20px; box-sizing: border-box; overflow-y: auto; 
-    }
-    body.stats-mode #dashboard-view { display: flex; }
-    body.stats-mode #app-container { display: block !important; }
-    body.stats-mode #sidebar, body.stats-mode .controls, body.stats-mode #container { display: none !important; }
-
-    .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; box-sizing: border-box; }
-    .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
-    #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
-    .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-
-    /* 4. LISTA ELEMENTÓW I KONTROLKI */
-    #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-    #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
-    #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
-    
-    .nav-tab-btn { 
-        background: none; border: 1px solid #1a1a1a; padding: 8px 15px; cursor: pointer; font-size: 11px; 
-        font-weight: bold; text-transform: uppercase; height: 35px; display: inline-flex; align-items: center; 
-        margin-left: 10px; color: #1a1a1a; text-decoration: none; transition: background 0.2s ease; box-sizing: border-box;
-    }
-    .nav-tab-btn:hover { background: #f0f0f0; }
-    .nav-tab-btn.active { background: #1a1a1a; color: #fff; }
-
-    #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; box-sizing: border-box; background: #fff; scroll-behavior: smooth; }
-    .item-card { border: 1px solid #eee; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; transition: all 0.2s ease; cursor: pointer; }
-    .item-card:hover { border-color: #1a1a1a; background: #fcfcfc; }
-    .item-content { padding: 18px; }
-    .row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
-    .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; flex: 1; }
-    .title-heb { font-size: 19px; color: #1a1a1a; text-align: right; direction: rtl; flex: 1; font-family: "SBL Hebrew", serif; }
-    .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 20px; }
-    .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-    .column-he { font-size: 16px; color: #222; text-align: right; direction: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
-
-    /* 5. MODALE I GRAFY */
-    #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
-    #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
-    .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
-    .modal-body { display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start; }
-    .modal-img-col { flex: 0 0 200px; text-align: center; }
-    .modal-img-col img { width: 100%; height: auto; max-height: 400px; object-fit: contain; margin-bottom: 15px; cursor: zoom-in; transition: transform 0.2s ease; }
-    .modal-data-col { flex: 1; min-width: 300px; }
-    .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
-    .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
-
-    #provenance-container { margin-top: 20px; padding-top: 15px; border-top: 2px solid #1a1a1a; width: 100%; }
-    #provenance-graph-space { width: 100%; height: 300px; background: #fdfdfd; border: 1px solid #eee; margin-top: 10px; }
-    @media (min-width: 1024px) { #provenance-graph-space { height: 600px; } }
-    
-    #network-graph { height: 600px; width: 100%; background: #ffffff; margin-top: 10px; border: 1px solid #eee; }
-    div.vis-tooltip { position: absolute; visibility: hidden; padding: 10px; max-width: 250px; font-family: "SBL Hebrew", "Segoe UI", serif; font-size: 13px; background-color: rgba(26, 26, 26, 0.95); color: #ffffff; border-radius: 4px; z-index: 10000; border: 1px solid #444; }
-
-    /* 6. PÓŁKA (SHELF VIEW) */
-    #shelf-container { display: none; height: calc(100vh - 60px); overflow-y: auto; padding-bottom: 50px; background: #fff; }
-    .shelf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 25px; padding: 20px; }
-    .shelf-item { cursor: pointer; text-align: center; transition: transform 0.2s ease; }
-    .shelf-item:hover { transform: translateY(-8px); }
-    .shelf-item img { width: 130px; height: 185px; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.15); border: 1px solid #eaeaea; }
-    .shelf-title { font-size: 11px; font-weight: bold; color: #1a1a1a; text-transform: uppercase; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 26px; }
-
-    /* 7. SLIDER I LIGHTBOX */
-    .photo-slider-container { position: relative; width: 100%; margin: 15px 0; overflow: hidden; }
-    .photo-slider-wrapper { display: flex; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .photo-slider-wrapper img { width: 100%; flex-shrink: 0; max-height: 400px; object-fit: contain; cursor: zoom-in; }
-    .photo-slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.3); color: white; border: none; width: 30px; height: 30px; cursor: pointer; z-index: 10; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    #lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; }
-    #lightbox-img { max-width: 90%; max-height: 90%; }
-
-    /* 8. KLAWIATURA I INNE */
-    .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; padding: 10px; background: #f0f0f0; border: 1px solid #1a1a1a; margin-top: 5px; }
-    .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; }
-    .bound-with-link { color: #1a1a1a; text-decoration: none; }
-    .bound-with-link:hover { font-weight: bold; }
-
-    /* 9. RESPONSYWNOŚĆ (MOBILE) */
     @media (max-width: 768px) {
-        #mobile-toggle { display: block; background: #1a1a1a; color: #fff; padding: 12px; width: 100%; border: none; cursor: pointer; }
-        #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); }
-        #sidebar.open { transform: translateX(0); width: 85%; }
-        
-        #main-header { flex-direction: column; gap: 10px; padding: 10px; height: auto !important; }
-        .header-links { flex-wrap: wrap; justify-content: center; gap: 6px; }
-        .nav-tab-btn { margin-left: 0 !important; flex: 1 1 calc(50% - 10px); min-width: 120px; justify-content: center; }
-
-        /* Poprawka statystyk na mobile */
-        .stat-grid { display: block !important; }
-        .chart-card { margin-bottom: 15px !important; width: 100% !important; display: block !important; }
-        #map-container { height: 350px !important; }
-        
-        body.stats-mode { overflow-y: auto !important; height: auto !important; }
-        body.stats-mode #app-container, body.stats-mode #main-content { height: auto !important; min-height: 100vh !important; display: block !important; overflow: visible !important; }
-        body.stats-mode #dashboard-view { height: auto !important; display: flex !important; padding-bottom: 80px !important; }
-        body.stats-mode #mobile-toggle { display: none !important; }
-
-        .row-flex { flex-direction: column; gap: 5px; }
-        .title-heb { text-align: left; direction: ltr; }
-        .modal-img-col { flex: 0 0 auto; width: 100%; }
-        .modal-img-col img { max-height: 250px; }
+        #network-graph { height: 400px; } /* Niższy graf na telefonach */
     }
-</style></head><body>
+
+/* --- LEKKI SLIDER (Bez ramki, tła i cieni) --- */
+.photo-slider-container {
+    position: relative;
+    width: 100%;
+    margin: 15px 0;
+    overflow: hidden;
+    background: transparent !important;
+    border: none !important;
+}
+
+#shelf-container {
+    display: none; /* Ukryty domyślnie */
+    height: calc(100vh - 60px); /* Wysokość ekranu minus header */
+    overflow-y: auto;           /* To włączy przewijanie! */
+    padding-bottom: 50px;       /* Miejsce na dole */
+    background: #fff;
+}
+        
+.shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    /* Usuwamy stąd jakiekolwiek height: 100% */
+}
+
+.shelf-item {
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.shelf-item:hover { transform: translateY(-8px); }
+
+.shelf-item img {
+    width: 130px;
+    height: 185px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border: 1px solid #eaeaea;
+    transition: transform 0.2s;
+}
+
+.shelf-item img.default-img {
+    object-fit: contain; /* Pokazuje całe zdjęcie bez ucinania rogów */
+    padding: 5px;        /* Opcjonalny odstęp od krawędzi */
+    box-sizing: border-box;
+}
+
+.shelf-item:hover .img-container {
+    transform: translateY(-5px);
+    transition: transform 0.2s ease;
+}
+
+.shelf-item:hover img {
+    transform: scale(1.03);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.25);
+}
+
+.shelf-info {
+    margin-top: 10px;
+    padding: 0 5px;
+    text-align: center;
+}
+
+.shelf-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    line-height: 1.2;
+    /* Efekt ucinania tekstu po 2 liniach */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+    height: 26px; /* Stała wysokość, by miniatury były w rzędzie */
+}
+
+.shelf-author {
+    font-size: 10px;
+    color: #666;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shelf-sig {
+    margin-top: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #1a1a1a;
+    font-family: monospace;
+    text-transform: uppercase;
+}
+        
+.photo-slider-wrapper {
+    display: flex;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-100%);
+}
+    
+.photo-slider-wrapper img {
+    width: 100%;
+    flex-shrink: 0;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    cursor: zoom-in;
+    border: none !important;
+    outline: none !important;
+}
+
+/* Styl strzałek - bardziej dyskretne */
+.photo-slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.3); /* Bardzo lekki czarny */
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 10;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.photo-slider-btn:hover { background: rgba(0, 0, 0, 0.8); }
+.photo-prev-btn { left: 10px; }
+.photo-next-btn { right: 10px; }
+
+/* Lightbox (Pop-up zdjęcia) */
+#lightbox-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+#lightbox-img {
+    max-width: 90%;
+    max-height: 90%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px; right: 30px;
+    color: white;
+    font-size: 40px;
+    cursor: pointer;
+}
+/* Strzałki wewnątrz Lightboxa (powiększenia) */
+.lightbox-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    font-size: 40px;
+    padding: 20px;
+    cursor: pointer;
+    z-index: 10001;
+    transition: background 0.3s;
+    user-select: none;
+}
+
+.lightbox-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.lightbox-prev { left: 10px; }
+.lightbox-next { right: 10px; }
+
+/* Ukrycie strzałek, gdy jest tylko jedno zdjęcie */
+.hide-nav { display: none !important; }
+        
+/* Ukrywanie paska przewijania (opcjonalne, dla estetyki) */
+.mini-gallery::-webkit-scrollbar {
+    height: 4px;
+}
+.mini-gallery::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+/* Responsywność dla urządzeń mobilnych */
+@media (max-width: 768px) {
+    /* Czyścimy stare kontenery, by nie dodawały ramek ani tła */
+    .mobile-gallery-container, 
+    .gallery-mobile {
+        order: 10; /* Galeria pod opisem */
+        width: 100%;
+        margin-top: 20px;
+        padding-top: 10px;
+        border: none !important; /* Usuwa linię #eee */
+        background: transparent !important;
+    }
+
+    /* Usuwamy sztywne wymiary ze starej klasy, jeśli gdzieś została w HTML */
+    .gallery-item {
+        flex: 1 1 auto; 
+        height: auto;
+        border: none !important;
+    }
+
+    /* SZLIF DLA GŁÓWNEGO OBRAZKA NA TELEFONIE */
+    .modal-img-col {
+        flex: 0 0 auto; /* Pozwala zdjęciu zająć naturalną szerokość ekranu */
+        width: 100%;
+    }
+
+    .modal-img-col img {
+        max-height: 250px; /* Nieco mniejszy, by nie zajmował całego ekranu */
+        border: none !important;
+        margin-bottom: 10px;
+        cursor: zoom-in;
+    }
+
+    /* WIĘKSZE PRZYCISKI SLIDERA DLA PALCÓW */
+    .photo-slider-btn {
+        width: 45px;
+        height: 45px;
+        background: rgba(0, 0, 0, 0.4) !important; /* Trochę ciemniejsze dla lepszej widoczności */
+        font-size: 20px;
+    }
+
+    /* Ustawienia menu mobilnego (zostawiamy bez zmian) */
+    #mobile-toggle { display: block; }
+    #sidebar { 
+        position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; 
+        transform: translateX(-100%); 
+        box-shadow: 5px 0 15px rgba(0,0,0,0.2); 
+    }
+    #sidebar.open { transform: translateX(0); width: 85%; }
+}
+
+        #sidebar { 
+            width: 280px; flex: 0 0 auto; background: #f9f9f9; border-right: 2px solid #1a1a1a; 
+            padding: 20px; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; 
+            transition: transform 0.3s ease;
+        }
+
+/* Kontener główny fasetki */
+details.facet-container { 
+    border-bottom: 1px solid #ccc; 
+    padding-bottom: 10px; 
+    margin-bottom: 5px; 
+}
+
+/* NAGŁÓWEK (Summary) - Domyślnie styl Polsko/Angielski (Lewa strona) */
+summary.facet-summary { 
+    list-style: none; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    font-size: 11px; 
+    font-weight: bold; 
+    text-transform: uppercase; 
+    outline: none;
+    direction: ltr;     /* Wymuszenie lewej strony */
+    text-align: left;
+}
+
+summary.facet-summary::-webkit-details-marker { display: none; }
+
+/* Trójkącik dla wersji polskiej (po lewej stronie tekstu) */
+summary.facet-summary::before { 
+    content: '▸'; 
+    margin-right: 8px; 
+    transition: transform 0.2s; 
+    display: inline-block; 
+}
+details[open] summary.facet-summary::before { transform: rotate(90deg); }
+
+/* NAGŁÓWEK HEBRAJSKI (Nadpisanie - Prawa strona) */
+summary.heb { 
+    direction: rtl; 
+    text-align: right;
+    font-family: "SBL Hebrew", serif; 
+    font-size: 14px; 
+    text-transform: none; 
+}
+/* Usuwamy trójkącik z lewej, dodajemy po prawej dla wersji HEB */
+summary.heb::before { content: none; }
+summary.heb::after { 
+    content: '◂'; 
+    margin-left: 8px; 
+    transition: transform 0.2s; 
+    display: inline-block; 
+}
+details[open] summary.heb::after { transform: rotate(-90deg); }
+
+/* BADGE (Licznik zaznaczonych przy nagłówku) */
+.active-badge { 
+    font-size: 9px; 
+    background: #1a1a1a; 
+    color: #fff; 
+    padding: 0 5px; 
+    border-radius: 3px; 
+    margin-left: 5px; 
+}
+
+/* WNĘTRZE I LISTA */
+.facet-inner-content { padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.facet-mini-search { width: 100%; padding: 5px; font-size: 12px; border: 1px solid #ccc; box-sizing: border-box; outline: none; margin-bottom: 5px; }
+
+.facet-list { 
+    list-style: none; padding: 0; margin: 0; max-height: 150px; 
+    overflow-y: auto; border: 1px solid #eee; background: #fff; 
+    display: flex; flex-direction: column; 
+}
+
+/* ELEMENTY LISTY (li) - Domyślnie Lewa strona */
+.facet-item { 
+    font-size: 12px; 
+    padding: 6px 8px; 
+    cursor: pointer; 
+    border-bottom: 1px solid #f0f0f0; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    direction: ltr;
+}
+.facet-item:hover { background: #f5f5f5; }
+.facet-item.active { background: #1a1a1a !important; color: #fff !important; }
+
+/* ELEMENTY LISTY - HEBRAJSKIE (Prawa strona) */
+.facet-item.heb { 
+    direction: rtl; 
+    text-align: right; 
+    font-family: "SBL Hebrew", serif; 
+    font-size: 14px; 
+}
+
+/* PIGUŁKA LICZNIKA (Ta mała szara przy nazwie na liście) */
+.count-pill { 
+    font-size: 9px; 
+    background: #eee; 
+    padding: 2px 5px; 
+    border-radius: 10px; 
+    color: #333; 
+}
+.active .count-pill { background: #444; color: #fff; }
+
+        .slider-wrapper { padding: 10px 0; }
+        .slider-wrapper.heb { direction: rtl; }
+        input[type=range] { width: 100%; accent-color: #1a1a1a; }
+        .slider-val { font-size: 12px; font-weight: bold; display: flex; justify-content: space-between; margin-top: 5px; }
+
+        #main-content { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .controls { flex: 0 0 auto; background: #fff; padding: 15px 10px; border-bottom: 2px solid #1a1a1a; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+
+        .search-wrapper { 
+            position: relative; 
+            width: 100%; 
+        }
+
+        #search { width: 100%; padding: 10px 60px 10px 15px; border: 1px solid #1a1a1a; font-size: 17px; box-sizing: border-box; outline: none; background: #fdfdfd; }
+        #inlineCounter { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #aaa; pointer-events: none; }
+
+        .kb-toggle { font-size: 11px; font-weight: bold; text-decoration: underline; cursor: pointer; text-transform: uppercase; color: #555; margin-bottom: 5px; }
+        .keyboard { display: none; grid-template-columns: repeat(9, 1fr); gap: 5px; padding: 10px; background: #f0f0f0; border: 1px solid #1a1a1a; margin-top: 5px; }
+        .key { background: #fff; border: 1px solid #1a1a1a; padding: 10px 5px; text-align: center; cursor: pointer; font-family: "SBL Hebrew", serif; font-size: 18px; transition: background 0.2s; }
+        .key:hover { background: #e0e0e0; }
+
+        .sort-wrapper { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; }
+        .sort-container { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; flex: 1; min-width: 180px; }
+        .sort-container.heb { flex-direction: row-reverse; font-family: "SBL Hebrew", serif; font-size: 14px; }
+        select { padding: 8px; border: 1px solid #1a1a1a; border-radius: 0; background: #fff; cursor: pointer; font-size: 13px; flex-grow: 1; }
+
+        #container { flex: 1 1 auto; overflow-y: scroll; padding: 15px 10px; box-sizing: border-box; background: #fff; scroll-behavior: smooth; }
+        .item-card { border: 1px solid #eee; margin-bottom: 15px; background: #fff; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; transition: all 0.2s ease; cursor: pointer; }
+        .item-card:hover { border-color: #1a1a1a; background: #fcfcfc; }
+        .item-content { padding: 18px; }
+        .row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; flex: 1; }
+        .title-heb { font-size: 19px; color: #1a1a1a; text-align: right; direction: rtl; flex: 1; font-family: "SBL Hebrew", serif; }
+        .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 20px; }
+        .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .column-he { font-size: 16px; color: #222; text-align: right; direction: rtl; flex: 1; display: flex; flex-direction: column; gap: 4px; font-family: "SBL Hebrew", serif; }
+.graph-btn {
+    background: #fff;
+    border: 1px solid #000;
+    padding: 5px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+.graph-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+        #modalOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 5000; }
+        #modalWindow { background: #fff; width: 90%; max-width: 800px; max-height: 90%; overflow-y: auto; padding: 30px; position: relative; border: 2px solid #1a1a1a; }
+        .close-modal { position: absolute; top: 15px; right: 15px; font-size: 30px; cursor: pointer; border: none; background: none; }
+        .modal-body { display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start; }
+        .modal-img-col { flex: 0 0 200px; text-align: center; }
+       .modal-img-col img { 
+    width: 100%; 
+    height: auto;
+    max-height: 400px; 
+    object-fit: contain; 
+    border: none; 
+    margin-bottom: 15px; 
+    cursor: zoom-in; 
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.modal-img-col img:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+        .modal-data-col { flex: 1; min-width: 300px; }
+        .detail-box { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .label { font-size: 10px; font-weight: bold; color: #777; text-transform: uppercase; display: block; margin-bottom: 3px; }
+        .link-btn { display: inline-block; background: #1a1a1a; color: #fff !important; padding: 10px 20px; font-size: 12px; text-decoration: none; text-transform: uppercase; font-weight: bold; margin-top: 10px; transition: background 0.3s; border: none; cursor: pointer; }
+        .link-btn:hover { background: #555; }
+        .clear-btn { font-size: 9px; cursor: pointer; text-decoration: underline; color: #666; font-weight: bold; text-transform: uppercase; }
+        body.stats-mode {
+    overflow-y: auto !important;
+}
+
+body.stats-mode #app-container,
+body.stats-mode #main-content {
+    overflow: visible !important;
+    height: auto !important;
+}
+
+body.stats-mode #dashboard-view {
+    overflow-y: visible !important;
+    height: auto !important;
+}
+
+@media (max-width: 768px) {
+    #mobile-toggle { display: block; }
+    #sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 3000; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+    #sidebar.open { transform: translateX(0); width: 85%; }
+
+    html.stats-mode,
+    body.stats-mode {
+        overflow-y: auto !important; 
+        overflow-x: hidden !important;
+        height: auto !important;     
+        position: relative !important;
+    }
+
+    body.stats-mode #app-container,
+    body.stats-mode #main-content {
+        height: auto !important;     
+        min-height: 100vh !important;
+        overflow: visible !important; 
+        display: block !important;    
+        flex: none !important;
+    }
+
+    body.stats-mode #dashboard-view {
+        height: auto !important;
+        overflow: visible !important;
+        display: flex !important;
+        flex-direction: column !important; 
+        padding: 15px !important;
+        padding-bottom: 80px !important; 
+    }
+
+    body.stats-mode #mobile-toggle {
+        display: none !important; 
+    }
+
+    /* Adaptacja nagłówka i kart */
+#main-header { 
+    flex-direction: column; 
+    gap: 10px; 
+    padding: 10px; 
+    height: auto !important; 
+}
+
+.header-title { 
+    font-size: 18px; 
+    text-align: center; 
+}
+
+.header-links { 
+    display: flex;
+    flex-wrap: wrap; /* KLUCZ: pozwala przyciskom przejść do nowej linii */
+    gap: 6px; 
+    justify-content: center; 
+    width: 100%; 
+}
+
+.nav-tab-btn { 
+    margin-left: 0 !important; 
+    padding: 5px 8px; 
+    font-size: 10px; 
+    height: 35px; /* Stała wysokość zapobiega "skakaniu" układu */
+    flex: 1 1 calc(50% - 10px); /* Każdy przycisk zajmuje ok. połowy szerokości */
+    min-width: 120px; /* Minimalna szerokość, by tekst się nie łamał */
+    justify-content: center; 
+    text-align: center;
+}
+
+    .row-flex { flex-direction: column; gap: 5px; }
+    .title-heb { text-align: left; direction: ltr; } 
+    .author-row { flex-direction: column; gap: 10px; }
+
+    /* Układ kart statystyk pod sobą */
+.stat-grid {
+        display: block !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+.chart-card {
+        width: 100% !important;
+        margin: 0 0 10px 0 !important; /* Góra: 0, Boki: 0, Dół: 20px */
+    margin-bottom: 10px !important;
+        padding: 15px !important;
+        box-sizing: border-box;
+        border: 1px solid #1a1a1a;
+        display: block !important;
+    }
+
+#map-container { 
+        height: 350px !important;
+        width: 100% !important;
+        margin: 0 !important; /* Czyścimy margines mapy, bo siedzi w chart-card */
+        margin-top: 0;
+        touch-action: pan-y !important;
+    }
+    #dashboard-view {
+        padding: 15px !important;
+    }
+#dashboard-view > :last-child {
+        margin-bottom: 80px !important;
+    }
+}
+
+        /* --- ZMIANY DLA STATYSTYK I PRZYCISKÓW --- */
+        .nav-tab-btn { 
+            background: none; border: 1px solid #1a1a1a; padding: 8px 15px; cursor: pointer; font-size: 11px; 
+            font-weight: bold; text-transform: uppercase; height: 35px; display: inline-flex; align-items: center; 
+            margin-left: 10px; color: #1a1a1a; text-decoration: none; transition: background 0.2s ease; box-sizing: border-box;
+        }
+        .nav-tab-btn:hover { background: #f0f0f0; }
+        .nav-tab-btn.active { background: #1a1a1a; color: #fff; }
+
+        /* FIX: Dashboard zajmuje całą szerokość po ukryciu sidebaru */
+        body.stats-mode #app-container { display: block !important; }
+        body.stats-mode #sidebar, body.stats-mode .controls, body.stats-mode #container { display: none !important; }
+
+        #dashboard-view { display: none; width: 100%; padding: 20px; background: #f9f9f9; flex-direction: column; gap: 20px; box-sizing: border-box; overflow-y: auto; }
+        body.stats-mode #dashboard-view { display: flex; }
+
+        .chart-card { background: #fff; border: 1px solid #1a1a1a; padding: 15px; }
+        .stat-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+        #map-container { height: 400px; width: 100%; border: 1px solid #1a1a1a; }
+        .chart-header { font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    /*Stylizacja dymka (tooltipa) proweniencji */
+        div.vis-tooltip {
+            position: absolute;
+            visibility: hidden;
+            padding: 10px;
+            white-space: normal;
+            max-width: 250px;
+            font-family: "SBL Hebrew", "Segoe UI", serif;
+            font-size: 13px;
+            background-color: rgba(26, 26, 26, 0.95); /* Ciemne tło z lekką przezroczystością */
+            color: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            z-index: 10000; /* Musi być wyższy niż modal (5000) */
+            border: 1px solid #444;
+        }
+        /* Styl dla linków współoprawnych */
+.bound-with-link {
+    font-weight: normal;
+    color: #1a1a1a; /* Wymuszenie czarnego koloru */
+}
+
+.bound-with-link:hover {
+    font-weight: bold;
+    color: #1a1a1a; /* Pozostaje czarny przy najechaniu */
+}
+    </style></head><body>
 
     <header id="main-header">
 
         <div class="header-links">
         <a href="https://teatrnn.pl/wystawy/biblioteka-jesziwy/" target="_blank" class="nav-tab-btn">O projekcie / About</a>
         <button class="nav-tab-btn active" id="tab-catalog" onclick="switchTab('catalog')">Katalog / Catalog</button>
-        <button class="nav-tab-btn" id="tab-shelf" onclick="switchTab('shelf')">Półka / Bookshelf</button>
+        <button class="nav-tab-btn" id="tab-shelf" onclick="switchTab('shelf')">Półka / Shelf</button>
         <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki / Statistics</button>
         </div>
 
@@ -264,13 +780,12 @@
 </div>
 
             <div id="dashboard-view">
-                <div class="chart-card" style="margin-bottom: 25px !important;">
+                <div class="chart-card">
                     <div class="chart-header">Lata wydania książek z biblioteki Jeszywas Chachmej Lublin / Imprint Dates of the Yeshivas Chachmei Lublin Library Volumes</div>
                     <div style="height: 250px;"><canvas id="timelineChart"></canvas></div>
                 </div>
-                
                 <div class="chart-card">
-    <div class="chart-card" style="margin-bottom: 25px !important;">
+    <div class="chart-header">
         Relacja pomiędzy pięcioma najczęstszymi autorami a miejscem druku ich książek / 
         Relationship between the five most frequent authors and the place of printing their books
     </div>
@@ -1991,7 +2506,6 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
 
 
 
