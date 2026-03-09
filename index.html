@@ -565,10 +565,36 @@ body.stats-mode #dashboard-view {
     }
 
     /* Adaptacja nagłówka i kart */
-    #main-header { flex-direction: column; gap: 10px; padding: 10px; height: auto !important; }
-    .header-title { font-size: 18px; text-align: center; }
-    .header-links { gap: 5px; justify-content: center; width: 100%; }
-    .nav-tab-btn { margin-left: 0; padding: 5px 8px; font-size: 10px; height: 32px; flex: 1; justify-content: center; }
+#main-header { 
+    flex-direction: column; 
+    gap: 10px; 
+    padding: 10px; 
+    height: auto !important; 
+}
+
+.header-title { 
+    font-size: 18px; 
+    text-align: center; 
+}
+
+.header-links { 
+    display: flex;
+    flex-wrap: wrap; /* KLUCZ: pozwala przyciskom przejść do nowej linii */
+    gap: 6px; 
+    justify-content: center; 
+    width: 100%; 
+}
+
+.nav-tab-btn { 
+    margin-left: 0 !important; 
+    padding: 5px 8px; 
+    font-size: 10px; 
+    height: 35px; /* Stała wysokość zapobiega "skakaniu" układu */
+    flex: 1 1 calc(50% - 10px); /* Każdy przycisk zajmuje ok. połowy szerokości */
+    min-width: 120px; /* Minimalna szerokość, by tekst się nie łamał */
+    justify-content: center; 
+    text-align: center;
+}
 
     .row-flex { flex-direction: column; gap: 5px; }
     .title-heb { text-align: left; direction: ltr; } 
@@ -2480,6 +2506,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
