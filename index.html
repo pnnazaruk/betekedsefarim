@@ -1223,6 +1223,8 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
         }
 
 function openModal(rowIndex) {
+    const modalContent = document.getElementById('modalContent');
+    if (modalContent) modalContent.scrollTop = 0;
     // 1. Znalezienie danych wiersza
     if (!rawRows) return;
     const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
@@ -2509,6 +2511,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
