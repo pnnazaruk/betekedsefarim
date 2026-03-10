@@ -1223,8 +1223,10 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
         }
 
 function openModal(rowIndex) {
-const overlay = document.getElementById('modalOverlay');
-if (overlay) overlay.scrollTop = 0;
+const topElement = document.querySelector('.modal-img-col');
+    if (topElement) {
+        topElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }
     // 1. Znalezienie danych wiersza
     if (!rawRows) return;
     const r = rawRows.find(row => row.c[0] && row.c[0].v == rowIndex);
@@ -2511,6 +2513,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
