@@ -379,9 +379,11 @@ details[open] summary.facet-summary::before { transform: rotate(90deg); }
 summary.heb { 
     direction: rtl; 
     text-align: right;
+    display: flex;             /* Upewniamy się, że to flex */
+    justify-content: flex-start; /* Elementy zaczną się od prawej (przez RTL) */
+    gap: 10px;                 /* Odstęp między tekstem a licznikiem */
     font-family: "SBL Hebrew", serif; 
     font-size: 14px; 
-    text-transform: none; 
 }
 /* Usuwamy trójkącik z lewej, dodajemy po prawej dla wersji HEB */
 summary.heb::before { content: none; }
@@ -392,6 +394,11 @@ summary.heb::after {
     display: inline-block; 
 }
 details[open] summary.heb::after { transform: rotate(-90deg); }
+
+summary.heb .active-badge {
+    margin-left: 0;
+    margin-right: auto; /* To wypchnie badge maksymalnie na lewą stronę */
+}
 
 /* BADGE (Licznik zaznaczonych przy nagłówku) */
 .active-badge { 
@@ -433,6 +440,9 @@ details[open] summary.heb::after { transform: rotate(-90deg); }
     text-align: right; 
     font-family: "SBL Hebrew", serif; 
     font-size: 14px; 
+    display: flex;
+    justify-content: space-between; /* Nazwa na prawo, licznik na lewo */
+    align-items: center;
 }
 
 /* PIGUŁKA LICZNIKA (Ta mała szara przy nazwie na liście) */
@@ -2513,6 +2523,7 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
+
 
 
 
