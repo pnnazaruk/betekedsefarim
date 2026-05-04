@@ -940,7 +940,7 @@ body.stats-mode #dashboard-view {
         let colLabels = [];
         let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set(), subject: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
-        let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+        let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&headers=1`;
         let fuse;
         let isInitialLoad = true;
 
