@@ -1208,7 +1208,24 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
                         <div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
                             <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
                         </div></div></div>`).join('');
-            document.getElementById('inlineCounter').innerText = rows.length;
+// --- LOGIKA INTELIGENTNEGO LICZNIKA ---
+    const searchVal = document.getElementById('search').value.trim();
+    
+    // Sprawdzamy, czy jakikolwiek filtr fasetowy jest aktywny
+    const hasActiveFilters = Object.values(activeFilters).some(filterSet => filterSet.size > 0);
+
+    // Sprawdzamy, czy suwaki lat są w pozycji domyślnej (1500-1939 / 5260-5700)
+    // Jeśli suwaki są "rozwinięte" na max, uznajemy, że filtr lat nie jest aktywny
+    const isYearFiltered = document.getElementById('yearSlider').value != 1939 || 
+                           document.getElementById('hebYearSlider').value != 5700;
+
+    if (searchVal === "" && !hasActiveFilters && !isYearFiltered) {
+        // Jeśli nie ma szukania ani filtrów -> Pokaż CAŁĄ bazę (naprawia brakujące 3 sztuki)
+        document.getElementById('inlineCounter').innerText = rawRows.length;
+    } else {
+        // Jeśli użytkownik coś filtruje -> Pokaż liczbę przefiltrowanych
+        document.getElementById('inlineCounter').innerText = rows.length;
+    }
             renderShelf(rows);
         }
 
