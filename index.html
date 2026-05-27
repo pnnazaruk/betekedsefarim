@@ -133,6 +133,58 @@
     transition: transform 0.2s;
 }
 
+/* Styl dla paska narzędziowego nad półką */
+.shelf-toolbar {
+    padding: 15px 20px 5px 20px;
+    display: flex;
+    justify-content: flex-end; /* Przycisk po prawej stronie */
+    background: #fff;
+}
+
+/* Kontener przełącznika */
+.shelf-lang-switcher {
+    display: inline-flex;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #f9f9f9;
+}
+
+/* Przyciski PL / HEB */
+.shelf-lang-btn {
+    background: none;
+    border: none;
+    padding: 6px 16px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #555;
+    outline: none;
+}
+
+.shelf-lang-btn:hover {
+    background: #eee;
+}
+
+/* Styl dla aktywnego języka */
+.shelf-lang-btn.active {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* KLUCZOWE: Odwrócenie kierunku półki dla wersji hebrajskiej */
+.shelf-grid.shelf-rtl {
+    direction: rtl;
+}
+
+/* Delikatne dostosowanie fontu hebrajskiego, by był bardziej czytelny */
+.shelf-title.font-heb {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 13px; /* Czcionka hebrajska naturalnie bywa mniejsza optycznie, warto ją o 1-2px zwiększyć */
+    line-height: 1.2;
+}
+
 .shelf-item img.default-img {
     object-fit: contain; /* Pokazuje całe zdjęcie bez ucinania rogów */
     padding: 5px;        /* Opcjonalny odstęp od krawędzi */
@@ -788,7 +840,14 @@ body.stats-mode #dashboard-view {
             </div>
             <div id="loader" style="padding:20px;">Wczytywanie / Loading...</div>
             <div id="container"></div>
-        <div id="shelf-container" style="display: none;">
+<div id="shelf-container">
+    <div class="shelf-toolbar">
+        <div class="shelf-lang-switcher">
+            <button id="shelf-btn-pl" class="shelf-lang-btn active" onclick="toggleShelfLanguage('PL')">PL</button>
+            <button id="shelf-btn-heb" class="shelf-lang-btn" onclick="toggleShelfLanguage('HEB')">עברית</button>
+        </div>
+    </div>
+    
     <div id="shelf-content" class="shelf-grid"></div>
 </div>
 
@@ -951,6 +1010,7 @@ body.stats-mode #dashboard-view {
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
         let fuse;
         let isInitialLoad = true;
+        let currentShelfLanguage = 'PL'; // Globalna zmienna sterująca językiem półki
 
         function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
         function hebrewYearToNumber(s) { 
@@ -1524,32 +1584,65 @@ function renderShelf(rows) {
 
     const defaultUrl = "https://teatrnn.pl/cache/local/image/1280x1024/websites/wystawy/Jesziwa/teatrnn.jpeg/";
 
+    // Sprawdzamy kierunek: jeśli hebrajski, dodajemy klasę zmieniającą układ od prawej do lewej
+    if (currentShelfLanguage === 'HEB') {
+        shelfContent.classList.add('shelf-rtl');
+    } else {
+        shelfContent.classList.remove('shelf-rtl');
+    }
+
     shelfContent.innerHTML = rows.map(r => {
         const id = r.c[0] ? r.c[0].v : '';
         const imgUrl = getVal(r.c[23]) || defaultUrl;
         
-        // POBIERANIE DANYCH (Zwróć uwagę na indeks 7 dla miejsca wydania z kolumny H)
-        const title = getVal(r.c[1]) || "Bez tytułu";
-        const author = getVal(r.c[3]) || ""; 
-        const year = getVal(r.c[5]) || ""; 
-        const place = getVal(r.c[7]) || ""; 
+        // DYNAMICZNE POBIERANIE DANYCH W ZALEŻNOŚCI O WYBRANEGO JĘZYKA
+        let title, author, year, place;
+
+        if (currentShelfLanguage === 'HEB') {
+            title = getVal(r.c[2]) || "ללא כותרת";       // Kolumna C (indeks 2)
+            author = getVal(r.c[4]) || "";               // Kolumna E (indeks 4)
+            year = getVal(r.c[6]) || "";                 // Kolumna G (indeks 6)
+            place = getVal(r.c[22]) || getVal(r.c[7]) || ""; // Kolumna W (indeks 22), alternatywnie PL jeśli brak
+        } else {
+            title = getVal(r.c[1]) || "Bez tytułu";      // Kolumna B (indeks 1)
+            author = getVal(r.c[3]) || "";               // Kolumna D (indeks 3)
+            year = getVal(r.c[5]) || "";                 // Kolumna F (indeks 5)
+            place = getVal(r.c[7]) || "";                // Kolumna H (indeks 7)
+        }
         
         const isDefault = imgUrl.includes("teatrnn.jpeg");
+        const rtlAttr = currentShelfLanguage === 'HEB' ? 'dir="rtl"' : '';
 
-        // Zwracany szablon HTML z nową strukturą i kolejnością
         return `
             <div class="shelf-item" onclick="openModal('${id}')">
                 <div class="img-container">
                     <img src="${imgUrl}" class="${isDefault ? 'default-img' : ''}" loading="lazy">
                 </div>
-                <div class="shelf-info">
-                    <div class="shelf-title">${title}</div>
+                <div class="shelf-info" ${rtlAttr}>
+                    <div class="shelf-title ${currentShelfLanguage === 'HEB' ? 'font-heb' : ''}">${title}</div>
                     <div class="shelf-author">${author}</div>
                     <div class="shelf-year">${year}</div>
                     <div class="shelf-place">${place}</div>
                 </div>
             </div>`;
     }).join('');
+}
+
+// FUNKCJA ZMIENIAJĄCA JĘZYK PÓŁKI (wywoływana kliknięciem przycisku)
+function toggleShelfLanguage(lang) {
+    currentShelfLanguage = lang;
+    
+    // Wizualna aktualizacja aktywności przycisków
+    document.querySelectorAll('.shelf-lang-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeBtn = document.getElementById(`shelf-btn-${lang.toLowerCase()}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // Ponowne wyrenderowanie półki przy użyciu aktualnie widocznych/przefiltrowanych wierszy
+    // W Twoim kodzie funkcja filterAndSort() ma dostęp do aktualnego stanu, 
+    // najbezpieczniej wywołać ją ponownie, by odświeżyć widok:
+    filterAndSort();
 }
 
         function parseDMS(dmsStr) {
