@@ -108,6 +108,14 @@
     /* Usuwamy stąd jakiekolwiek height: 100% */
 }
 
+.shelf-place {
+    font-size: 10px;
+    color: #888;
+    font-style: italic;
+    margin-top: 1px;
+    line-height: 1.2;
+}
+
 .shelf-item {
     cursor: pointer;
     text-align: center;
@@ -1520,13 +1528,15 @@ function renderShelf(rows) {
         const id = r.c[0] ? r.c[0].v : '';
         const imgUrl = getVal(r.c[23]) || defaultUrl;
         
-        // POBIERANIE DANYCH
+        // POBIERANIE DANYCH (Zwróć uwagę na indeks 7 dla miejsca wydania z kolumny H)
         const title = getVal(r.c[1]) || "Bez tytułu";
         const author = getVal(r.c[3]) || ""; 
-        const year = getVal(r.c[5]) || ""; // Zmień [14] na właściwy indeks kolumny z rokiem
+        const year = getVal(r.c[5]) || ""; 
+        const place = getVal(r.c[7]) || ""; 
         
         const isDefault = imgUrl.includes("teatrnn.jpeg");
 
+        // Zwracany szablon HTML z nową strukturą i kolejnością
         return `
             <div class="shelf-item" onclick="openModal('${id}')">
                 <div class="img-container">
@@ -1534,8 +1544,9 @@ function renderShelf(rows) {
                 </div>
                 <div class="shelf-info">
                     <div class="shelf-title">${title}</div>
-                    <div class="shelf-year">${year}</div>
                     <div class="shelf-author">${author}</div>
+                    <div class="shelf-year">${year}</div>
+                    <div class="shelf-place">${place}</div>
                 </div>
             </div>`;
     }).join('');
