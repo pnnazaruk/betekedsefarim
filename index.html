@@ -144,8 +144,8 @@
 /* Kontener przełącznika */
 .shelf-lang-switcher {
     display: inline-flex;
-    border: 1px solid #ccc;
-    border-radius: 20px;
+    border: 1px solid #1a1a1a; /* Zmiana na ciemniejszą ramkę, żeby pasowała do czarnego przycisku */
+    border-radius: 0;          /* Usunięcie zaokrąglenia kontenera */
     overflow: hidden;
     background: #f9f9f9;
 }
@@ -154,6 +154,7 @@
 .shelf-lang-btn {
     background: none;
     border: none;
+    border-radius: 0;          /* Usunięcie zaokrąglenia samych przycisków */
     padding: 6px 16px;
     font-size: 11px;
     font-weight: bold;
