@@ -794,12 +794,6 @@ body.stats-mode #dashboard-view {
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
 <details class="facet-container" id="det-subject"><summary class="facet-summary">Temat / Subject <span class="active-badge" style="display:none">0</span></summary>
     <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')"><ul id="subjectListPL" class="facet-list"></ul> </div></details>
-            <details class="facet-container" id="det-collection">
-    <summary class="facet-summary">Kolekcje / Collections <span class="active-badge" style="display:none">0</span></summary>
-    <div class="facet-inner-content">
-        <ul id="collectionListPL" class="facet-list"></ul>
-    </div>
-</details>
             <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-city-he"><summary class="facet-summary heb">עיר <span class="active-badge" style="display:none">0</span></summary>
@@ -1012,7 +1006,7 @@ body.stats-mode #dashboard-view {
         /* POCZĄTEK KODU WZORCOWEGO - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
         let rawRows = [];
         let colLabels = [];
-        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set(), subject: new Set(), collection: new Set() };
+        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set(), subject: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
         let fuse;
@@ -1087,7 +1081,7 @@ async function init() {
 
         function clearFacet(type) {
             if (type === 'all') { 
-                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); activeFilters.subject.clear(); activeFilters.collection.clear();
+                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); activeFilters.subject.clear(); 
                 document.getElementById('yearSlider').value = 1939;
                 document.getElementById('hebYearSlider').value = 5700;
                 updateYearLabel(1939); updateHebYearLabel(5700);
@@ -1138,32 +1132,8 @@ const filtered = searchFiltered.filter(r => {
             return subjPL.split(';').map(p => p.trim()).includes(s);
         });
 
-    let matchCollection = true;
-        if (activeFilters.collection && activeFilters.collection.size > 0) {
-            matchCollection = false;
-            
-            // Mapowanie wybranej nazwy na konkretny indeks kolumny w arkuszu Google
-            const collectionColumnsMap = [
-                { name: "Majer Szapira", index: 29 },          // AD
-                { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
-                { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
-                { name: "Manes Gold", index: 35 },             // AJ
-                { name: "Arje Cwi Frumer", index: 36 }          // AK
-            ];
-
-            // Sprawdzamy, czy książka ma "x" w którejkolwiek z zaznaczonych w filtrze boczny kolekcji
-            collectionColumnsMap.forEach(col => {
-                if (activeFilters.collection.has(col.name)) {
-                    let cellVal = getVal(r.c[col.index]).trim().toLowerCase();
-                    if (cellVal === 'x') {
-                        matchCollection = true;
-                    }
-                }
-            });
-        }
-
     // 4. Zwrócenie wyniku (dodajemy matchSubj na końcu)
-    return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj && matchCollection;
+    return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj;
 });
 
             const sortVal = sPL !== "none" ? sPL : sHE;
@@ -1199,22 +1169,13 @@ const filtered = searchFiltered.filter(r => {
         }
 
 function updateFacetsUI(term, maxYear, maxHebYear) {
-    // 1. Inicjalizacja liczników (DODANO: collection: {})
-    const counts = { city: {}, author: {}, printer: {}, loc: {}, subject: {}, collection: {} };
+    // 1. Inicjalizacja liczników (dodano subject)
+    const counts = { city: {}, author: {}, printer: {}, loc: {}, subject: {} };
     const plToHe = { city: {}, author: {} };
     let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
 
-    // DODANO DLA KOLEKCJI: Mapa indeksów i nazw stałych
-    const collectionColumnsMap = [
-        { name: "Majer Szapira", index: 29 },          // AD
-        { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
-        { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
-        { name: "Manes Gold", index: 35 },             // AJ
-        { name: "Arje Cwi Frumer", index: 36 }          // AK
-    ];
-
     searchFiltered.forEach(r => {
-        // 2. Pobranie wartości 
+        // 2. Pobranie wartości (dodano subjPL z kolumny index 31)
         const cityPL = getVal(r.c[7]), authPL = getVal(r.c[3]), prnPL = getVal(r.c[10]), locPL = getVal(r.c[11]);
         const subjPL = getVal(r.c[31]); 
         const cityHE = getVal(r.c[22]) || cityPL, authHE = getVal(r.c[4]) || authPL;
@@ -1232,52 +1193,32 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
             })
         );
 
-        // DODANO DLA KOLEKCJI: Ogólny warunek sprawdzający, czy wiersz przechodzi przez filtr kolekcji bocznych
-        let matchCollectionCond = true;
-        if (activeFilters.collection && activeFilters.collection.size > 0) {
-            matchCollectionCond = false;
-            collectionColumnsMap.forEach(col => {
-                if (activeFilters.collection.has(col.name)) {
-                    if (getVal(r.c[col.index]).trim().toLowerCase() === 'x') {
-                        matchCollectionCond = true;
-                    }
-                }
-            });
-        }
-
-        // 4. Warunki "Pass" dla każdej kategorii (DODANO && matchCollectionCond do każdego z nich!)
+        // 4. Warunki "Pass" dla każdej kategorii (każdy uwzględnia matchSubjCond)
         const passCity = (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
                          (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
                          (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
-                         matchSubjCond && matchCollectionCond;
+                         matchSubjCond;
 
         const passAuth = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
                          (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
                          (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
-                         matchSubjCond && matchCollectionCond;
+                         matchSubjCond;
 
         const passPrn = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
                         (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) && 
-                        matchSubjCond && matchCollectionCond;
+                        matchSubjCond;
 
         const passLoc = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
                         (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                        matchSubjCond && matchCollectionCond;
+                        matchSubjCond;
 
+        // Warunek pass dla samego tematu (nie może uwzględniać filtra subject, żeby pokazać inne opcje)
         const passSubj = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
                          (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
                          (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) &&
-                         matchCollectionCond;
-
-        // DODANO DLA KOLEKCJI: Warunek pass dla samej kolekcji (nie może uwzględniać filtra kolekcji, by pokazać pozostałe opcje)
-        const passColl = (activeFilters.city.size === 0 || activeFilters.city.has(isUnknown(cityPL)?'_UNK_':cityPL.trim())) && 
-                         (activeFilters.author.size === 0 || activeFilters.author.has(isUnknown(authPL)?'_UNK_':authPL.trim())) && 
-                         (activeFilters.printer.size === 0 || activeFilters.printer.has(isUnknown(prnPL)?'_UNK_':prnPL.trim())) && 
-                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim())) &&
-                         matchSubjCond;
+                         (activeFilters.loc.size === 0 || activeFilters.loc.has(isUnknown(locPL)?'_UNK_':locPL.trim()));
 
         // 5. Zliczanie wartości
         if (passCity) { let k = isUnknown(cityPL)?'_UNK_':cityPL.trim(); counts.city[k] = (counts.city[k]||0)+1; plToHe.city[k] = isUnknown(cityPL)?'לא ידוע':cityHE.trim(); }
@@ -1296,47 +1237,27 @@ function updateFacetsUI(term, maxYear, maxHebYear) {
                 });
             }
         }
-
-        // DODANO DLA KOLEKCJI: Logika zliczania wystąpień 'x' na podstawie passColl
-        if (passColl) {
-            collectionColumnsMap.forEach(col => {
-                let val = getVal(r.c[col.index]).trim().toLowerCase();
-                if (val === 'x') {
-                    counts.collection[col.name] = (counts.collection[col.name] || 0) + 1;
-                }
-            });
-        }
     });
 
-    // --- DODANO DLA KOLEKCJI: Fizyczne wygenerowanie listy w HTML na samym końcu funkcji ---
-    const collectionListUL = document.getElementById('collectionListPL');
-    if (collectionListUL) {
-        // Wszystkie 5 zdefiniowanych kolekcji inicjalizujemy wartością 0, jeśli nie ma ich w counts (żeby pokazać opcje puste jako (0))
-        const allCollectionNames = ["Arje Cwi Frumer", "Icchak Ajzik Pinaj", "Książnica im. Chafec Chajima", "Majer Szapira", "Manes Gold"];
-        
-        collectionListUL.innerHTML = allCollectionNames.map(name => {
-            const count = counts.collection[name] || 0;
-            const isChecked = activeFilters.collection && activeFilters.collection.has(name);
-            return `
-                <li class="facet-item ${count === 0 && !isChecked ? 'disabled' : ''}">
-                    <label>
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleFilter('${name}', 'collection')">
-                        <span class="facet-name">${name}</span>
-                        <span class="facet-count">(${count})</span>
-                    </label>
-                </li>
-            `;
-        }).join('');
-        
-        const badge = document.querySelector('#det-collection .active-badge');
-        if (badge) {
-            const activeCount = activeFilters.collection ? activeFilters.collection.size : 0;
-            badge.innerText = activeCount;
-            badge.style.display = activeCount > 0 ? 'inline-block' : 'none';
-        }
-    }
+    // 6. Renderowanie list w UI
+    renderFacetList('authorListPL', counts.author, 'author', false, 'Wszystko/ All', 'Nieznany', null);
+    renderFacetList('cityListPL', counts.city, 'city', false, 'Wszystko/ All', 'Nieznane', null);
+    renderFacetList('printerListPL', counts.printer, 'printer', false, 'Wszystko/ All', 'Nieznany', null);
+    renderFacetList('locListPL', counts.loc, 'loc', false, 'Wszystko/ All', 'Nieznana', null);
+    renderFacetList('subjectListPL', counts.subject, 'subject', false, 'Wszystko/ All', 'Nieznane', null);
+    
+    renderFacetList('authorListHE', counts.author, 'author', true, 'הכל', 'לא ידוע', plToHe.author);
+    renderFacetList('cityListHE', counts.city, 'city', true, 'הכל', 'לא ידוע', plToHe.city);
 
-    // PAMIĘTAJ: Pod tym kodem w Twojej oryginalnej funkcji znajduje się dalsze renderowanie dla pozostałych list (updateFacetListUI dla city, author itp.). Zostaw je tak jak były!
+    // Aktualizacja plakietek (badge) z liczbą wybranych filtrów
+    Object.keys(activeFilters).forEach(t => { 
+        let b = document.querySelector(`#det-${t} .active-badge`); 
+        if(b) { 
+            b.innerText = activeFilters[t].size; 
+            b.style.display = activeFilters[t].size > 0 ? 'inline' : 'none'; 
+        } 
+    });
+}
 
         function renderFacetList(id, counts, type, isHeb, allLabel, unkLabel, heMap) {
             const list = document.getElementById(id); let html = `<li class="facet-item ${activeFilters[type].size===0?'active':''}" onclick="clearFacet('${type}')">${allLabel}</li>`;
