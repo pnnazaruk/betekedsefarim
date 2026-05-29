@@ -794,6 +794,12 @@ body.stats-mode #dashboard-view {
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'locListPL')"><ul id="locListPL" class="facet-list"></ul></div></details>
 <details class="facet-container" id="det-subject"><summary class="facet-summary">Temat / Subject <span class="active-badge" style="display:none">0</span></summary>
     <div class="facet-inner-content"><input type="text" class="facet-mini-search" placeholder="Filtruj..." onkeyup="filterFacetList(this, 'subjectListPL')"><ul id="subjectListPL" class="facet-list"></ul> </div></details>
+            <details class="facet-container" id="det-collection">
+    <summary class="facet-summary">Kolekcje / Collections <span class="active-badge" style="display:none">0</span></summary>
+    <div class="facet-inner-content">
+        <ul id="collectionListPL" class="facet-list"></ul>
+    </div>
+</details>
             <details class="facet-container" id="det-author-he"><summary class="facet-summary heb">מחבר <span class="active-badge" style="display:none">0</span></summary>
                 <div class="facet-inner-content"><input type="text" class="facet-mini-search" dir="rtl" placeholder="סנן..." onkeyup="filterFacetList(this, 'authorListHE')"><ul id="authorListHE" class="facet-list"></ul></div></details>
             <details class="facet-container" id="det-city-he"><summary class="facet-summary heb">עיר <span class="active-badge" style="display:none">0</span></summary>
@@ -1006,7 +1012,7 @@ body.stats-mode #dashboard-view {
         /* POCZĄTEK KODU WZORCOWEGO - NIEZMIENIONY ANI JEDEN ZNAK LOGIKI */
         let rawRows = [];
         let colLabels = [];
-        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set(), subject: new Set() };
+        let activeFilters = { city: new Set(), author: new Set(), printer: new Set(), loc: new Set(), subject: new Set(), collection: new Set() };
         let sheetId = '1N--MCZSwjbLchUT37i-Ph5TwHoMxqNXUsO_zPngtokg';
         let url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
         let fuse;
@@ -1081,7 +1087,7 @@ async function init() {
 
         function clearFacet(type) {
             if (type === 'all') { 
-                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); activeFilters.subject.clear(); 
+                activeFilters.city.clear(); activeFilters.author.clear(); activeFilters.printer.clear(); activeFilters.loc.clear(); activeFilters.subject.clear(); ctiveFilters.collection.clear();
                 document.getElementById('yearSlider').value = 1939;
                 document.getElementById('hebYearSlider').value = 5700;
                 updateYearLabel(1939); updateHebYearLabel(5700);
@@ -1132,8 +1138,32 @@ const filtered = searchFiltered.filter(r => {
             return subjPL.split(';').map(p => p.trim()).includes(s);
         });
 
+    let matchCollection = true;
+        if (activeFilters.collection && activeFilters.collection.size > 0) {
+            matchCollection = false;
+            
+            // Mapowanie wybranej nazwy na konkretny indeks kolumny w arkuszu Google
+            const collectionColumnsMap = [
+                { name: "Majer Szapira", index: 29 },          // AD
+                { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
+                { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
+                { name: "Manes Gold", index: 35 },             // AJ
+                { name: "Arje Cwi Frumer", index: 36 }          // AK
+            ];
+
+            // Sprawdzamy, czy książka ma "x" w którejkolwiek z zaznaczonych w filtrze boczny kolekcji
+            collectionColumnsMap.forEach(col => {
+                if (activeFilters.collection.has(col.name)) {
+                    let cellVal = getVal(r.c[col.index]).trim().toLowerCase();
+                    if (cellVal === 'x') {
+                        matchCollection = true;
+                    }
+                }
+            });
+        }
+
     // 4. Zwrócenie wyniku (dodajemy matchSubj na końcu)
-    return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj;
+    return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj && matchCollection;
 });
 
             const sortVal = sPL !== "none" ? sPL : sHE;
