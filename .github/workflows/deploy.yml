@@ -21,3 +21,6 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./
         server-dir: ./
+        port: 21
+        security: ftps         # WYMUSZA SZYFROWANIE (Naprawia ECONNRESET)
+        passive: true          # WYMUSZA TRYB PASYWNY (Bezpieczny dla zapory)
