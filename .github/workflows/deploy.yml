@@ -22,5 +22,4 @@ jobs:
         local-dir: ./
         server-dir: ./
         port: 21
-        security: ftps         # WYMUSZA SZYFROWANIE (Naprawia ECONNRESET)
-        passive: true          # WYMUSZA TRYB PASYWNY (Bezpieczny dla zapory)
+        security: strict       # POPRAWIONE: Wymusza bezpieczne szyfrowanie FTPS zgodnie ze specyfikacją akcji
