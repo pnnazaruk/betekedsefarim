@@ -20,7 +20,7 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./
-        server-dir: ./public_html/
+        server-dir: ./domains/yeshivalibrary.org/public_html/
         port: 21
         security: strict
-        dangerous-clean-slate: true  # USUWA STARE PLIKI HOSTIDO, KTÓRE BLOKOWAŁY STRONĘ
+        dangerous-clean-slate: true  # Czyści fabryczny plik "Tu powstanie coś niesamowitego..."
