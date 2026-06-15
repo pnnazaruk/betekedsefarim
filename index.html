@@ -1,7 +1,23 @@
 <!DOCTYPE html><html lang="pl"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Library of Yeshivas Chachmei Lublin </title>
+    <title>Library of Yeshivas Chachmei Lublin</title>
+    
+    <!-- Dwujęzyczny opis strony dla międzynarodowych wyników wyszukiwania (max 160 znaków) -->
+    <meta name="description" content="Cyfrowa rekonstrukcja bazy proweniencyjnej księgozbioru JChL. | Digital reconstruction and provenance database of the Yeshivas Chachmei Lublin library.">
+    
+    <!-- Międzynarodowe słowa kluczowe (Transliteracje, angielski, polski i hebrajski) -->
+    <meta name="keywords" content="Yeshivas Chachmei Lublin, Yeshivat Chachmei Lublin, Chachmei Lublin Yeshiva, Lublin Yeshiva Library, starodruki hebrajskie, Hebrew rare books, provenance research, Majer Szapira, Meir Shapira, ספרים בישיבת חכמי לובלין">
+    
+    <!-- PROTOKÓŁ OPEN GRAPH (Dla mediów społecznościowych i komunikatorów na całym świecie) -->
+    <meta property="og:title" content="Library of Yeshivas Chachmei Lublin | Digital Catalogue & Provenance Database">
+    <meta property="og:description" content="Digital reconstruction and history of the pre-war rabbinical library volumes. Cyfrowa rekonstrukcja przedwojennego księgozbioru lubelskiej jesziwy.">
+    <meta property="og:url" content="https://yeshivalibrary.org">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png">
+
+    <!-- TWÓJ SYGNAŁ DLA GOOGLE: Strona zawiera treści wielojęzyczne -->
+    <meta http-equiv="content-language" content="pl, en">
     <link rel="icon" href="https://teatrnn.pl/files/websites/wystawy/Jesziwa/aukcje/bes.png" type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 
@@ -28,7 +44,8 @@
             border-bottom: 2px solid #1a1a1a; 
             z-index: 4000;
         }
-        .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl; text-align: right; }
+        .header-title { font-family: "SBL Hebrew", serif; font-size: 24px; font-weight: bold; direction: rtl;
+text-align: right; margin: 0; }
         .header-links { display: flex; gap: 20px; font-size: 12px; text-transform: uppercase; font-weight: bold; }
         .header-links a { color: #1a1a1a; text-decoration: none; }
 
@@ -537,7 +554,7 @@ details[open] summary.heb::after { transform: rotate(-90deg); }
         .item-card:hover { border-color: #1a1a1a; background: #fcfcfc; }
         .item-content { padding: 18px; }
         .row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
-        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; flex: 1; }
+        .title-pl { font-weight: bold; font-size: 17px; text-transform: uppercase; flex: 1; margin: 0; }
         .title-heb { font-size: 19px; color: #1a1a1a; text-align: right; direction: rtl; flex: 1; font-family: "SBL Hebrew", serif; }
         .author-row { border-top: 1px solid #eee; padding-top: 10px; margin-top: 8px; display: flex; justify-content: space-between; gap: 20px; }
         .column-pl { font-size: 15px; color: #333; flex: 1; display: flex; flex-direction: column; gap: 4px; }
@@ -755,7 +772,10 @@ body.stats-mode #dashboard-view {
         <button class="nav-tab-btn" id="tab-stats" onclick="switchTab('stats')">Statystyki / Statistics</button>
         </div>
 
-        <div class="header-title" dir="rtl">בית עקד ספרים בישיבת חכמי לובלין</div>
+<h1 class="header-title" dir="rtl" style="margin: 0; font-size: 24px;">
+            <span style="display: none;">Library of Yeshivas Chachmei Lublin - Digital Catalogue | Cyfrowy Katalog Biblioteki Jeszywas Chachmej Lublin</span>
+            בית עקד ספרים בישיבת חכמי לובלין
+        </h1>
     </header>
 
     <button id="mobile-toggle" onclick="toggleSidebar()">☰ Filtry / Filters / מסננים</button>
@@ -1350,14 +1370,28 @@ function renderFacetList(id, counts, type, isHeb, allLabel, unkLabel, heMap) {
             list.innerHTML = html;
         }
 
-        function render(rows) {
+function render(rows) {
             const container = document.getElementById('container');
             container.innerHTML = rows.map(r => `
-                <div class="item-card" onclick="openModal('${r.c[0].v}')">
-                    <div class="item-content"><div class="row-flex"><span class="title-pl">${getVal(r.c[1])}</span><span class="title-heb">${getVal(r.c[2])}</span></div>
-                        <div class="author-row"><div class="column-pl"><span>${getVal(r.c[3])}</span><span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span></div>
-                            <div class="column-he"><span>${getVal(r.c[4])}</span><span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span></div>
-                        </div></div></div>`).join('');
+                <article class="item-card" onclick="openModal('${r.c[0].v}')" style="display: flex; flex-direction: column;">
+                    <div class="item-content">
+                        <div class="row-flex">
+                            <!-- Zmiana span na h2 jako kluczowe nagłówki dla wyszukiwarki -->
+                            <h2 class="title-pl" style="margin: 0; font-size: 17px; font-weight: bold; text-transform: uppercase; flex: 1;">${getVal(r.c[1])}</h2>
+                            <h2 class="title-heb" style="margin: 0; font-size: 19px; color: #1a1a1a; text-align: right; direction: rtl; flex: 1; font-family: 'SBL Hebrew', serif;">${getVal(r.c[2])}</h2>
+                        </div>
+                        <div class="author-row">
+                            <div class="column-pl">
+                                <strong style="font-weight: 600;">${getVal(r.c[3])}</strong>
+                                <span style="font-size:12px;color:#888">${getVal(r.c[7])}, ${getVal(r.c[5])}</span>
+                            </div>
+                            <div class="column-he">
+                                <strong style="font-weight: 600; font-family: 'SBL Hebrew', serif;">${getVal(r.c[4])}</strong>
+                                <span style="font-size:13px;color:#888">${getVal(r.c[22]) || getVal(r.c[7])}, ${getVal(r.c[6])}</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>`).join('');
 // --- LOGIKA INTELIGENTNEGO LICZNIKA ---
     const searchVal = document.getElementById('search').value.trim();
     
