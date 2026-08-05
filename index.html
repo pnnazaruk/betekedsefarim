@@ -1442,7 +1442,7 @@ function render(rows) {
         }
 
 function openModal(rowIndex) {
-const topElement = document.querySelector('.modal-img-col');
+    const topElement = document.querySelector('.modal-img-col');
     if (topElement) {
         topElement.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
@@ -1496,8 +1496,8 @@ const topElement = document.querySelector('.modal-img-col');
         const isSignature = (i === 14);
         const isPrinter = (i === 10);
 
-        // Wykluczenia
-        if ([8, 17, 18, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(i)) continue;
+        // Wykluczenia (USUNIĘTY INDEKS 19 - obsłużony osobno poniżej)
+        if ([8, 17, 18, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31].includes(i)) continue;
         if (labelName.includes("pełny opis") || labelName.includes("fotografie")) continue;
 
         if ((!val || val === "---" || val === "") && !isSignature && !isPrinter) continue;
@@ -1578,21 +1578,35 @@ const topElement = document.querySelector('.modal-img-col');
             </div>`;
     }
 
+    // --- PRZYGOTOWANIE SEKCJI ŹRÓDŁO / SOURCE (Kolumna T = indeks 19) ---
+    let sourceSection = "";
+    let sourceVal = getVal(r.c[19]);
+    if (sourceVal && sourceVal !== "" && sourceVal !== "---" && sourceVal !== "-") {
+        sourceSection = `
+            <div class="detail-box">
+                <span class="label">Źródło / Source</span>
+                <span>
+                    <a href="${sourceVal}" target="_blank" rel="noopener noreferrer" class="bound-with-link" style="color: #1a1a1a; text-decoration: none; display: block;">
+                        Źródło / Source
+                    </a>
+                </span>
+            </div>`;
+    }
+
     // --- PRZYGOTOWANIE SEKCJI WSPÓŁOPRAWNE ---
-if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
-    const boundIds = boundWithRaw.split(',').map(id => id.trim());
-    const boundLinks = boundIds.map(id => {
-        const bookTitle = getTitleById(id); 
-        // ZMIANA: Zamiast <a href="..."> dajemy onclick, który wywoła funkcję bez przeładowania strony
-        return `<a href="javascript:void(0)" 
-                   onclick="openModal('${id}')" 
-                   class="bound-with-link" 
-                   style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
-                   ${bookTitle}
-                </a>`;
-    }).join('');
-    boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><span>${boundLinks}</span></div>`;
-}
+    if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
+        const boundIds = boundWithRaw.split(',').map(id => id.trim());
+        const boundLinks = boundIds.map(id => {
+            const bookTitle = getTitleById(id); 
+            return `<a href="javascript:void(0)" 
+                       onclick="openModal('${id}')" 
+                       class="bound-with-link" 
+                       style="color: #1a1a1a; text-decoration: none; display: block; margin-bottom: 5px;">
+                       ${bookTitle}
+                    </a>`;
+        }).join('');
+        boundWithSection = `<div class="detail-box"><span class="label">Współoprawne / Bound with</span><span>${boundLinks}</span></div>`;
+    }
 
     // --- SKŁADANIE FINALNEGO HTML ---
     let finalDetailsHtml = h;
@@ -1604,8 +1618,9 @@ if (boundWithRaw && boundWithRaw !== "-" && boundWithRaw !== "0") {
         finalDetailsHtml = regex.test(h) ? h.replace(regex, `$1${boundWithSection}`) : h + boundWithSection;
     }
 
-    // DODANIE BHB NA SAMYM KOŃCU DANYCH (ale przed przyciskiem KOPIUJ)
+    // DODANIE BHB ORAZ ŹRÓDŁA NA SAMYM KOŃCU DANYCH (przed przyciskiem KOPIUJ)
     finalDetailsHtml += bhbSection;
+    finalDetailsHtml += sourceSection;
 
     // SEKCJA LINKU (zawsze na samym dole kolumny danych)
     const copySection = `<div class="detail-box"><span class="label">Link do rekordu / Link to record</span><button id="copyBtn" class="link-btn" onclick="copyLink('${rowIndex}')">KOPIUJ / COPY</button></div>`;
