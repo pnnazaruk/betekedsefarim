@@ -1058,17 +1058,22 @@ body.stats-mode #dashboard-view {
         let currentShelfLanguage = 'PL'; // Globalna zmienna sterująca językiem półki
 
         function extractYear(s) { if (!s || s === "---") return 0; let match = String(s).match(/\d{4}/); return match ? parseInt(match[0]) : 0; }
-        function hebrewYearToNumber(s) { 
-            if (!s || s === "---") return 999999; 
-            let c = String(s).replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
+function hebrewYearToNumber(s) { 
+            if (!s || s === "---" || s === "-") return 999999; 
+            
+            // Jeśli jest zakres/data łamana (np. תע"ה-תע"ז lub תע"ה/תע"ז), bierzemy tylko pierwszy człon
+            let firstYearOnly = String(s).split(/[\/\-\–\—]/)[0];
+
+            let c = firstYearOnly.replace(/[\\\"\'\.\s\(\)\[\]]/g, "").trim(); 
             let v = {'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ך':20,'ל':30,'מ':40,'ם':40,'נ':50,'ן':50,'ס':60,'ע':70,'פ':80,'ף':80,'צ':90,'ץ':90,'ק':100,'ר':200,'ש':300,'ת':400}; 
             let sum = 0; let cleanC = c.match(/[\u0590-\u05FF]/g);
             if (cleanC) { for (let i=0; i < cleanC.length; i++) sum += v[cleanC[i]] || 0; }
             if (sum > 0 && sum < 1000) sum += 5000; return sum || 999999; 
         }
+
         function numberToHebrewYear(num) {
             let n = parseInt(num); if (n > 5000) n -= 5000;
-            let heb = ""; vArr = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], lArr = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
+            let heb = ""; let vArr = [400,300,200,100,90,80,70,60,50,40,30,20,10,9,8,7,6,5,4,3,2,1], lArr = ['ת','ש','ר','ק','צ','פ','ע','ס','נ','מ','ל','כ','י','ט','ח','ז','ו','ה','ד','ג','ב','א'];
             for(let i=0; i<vArr.length; i++) { while(n >= vArr[i]) { heb += lArr[i]; n -= vArr[i]; } }
             return heb;
         }
