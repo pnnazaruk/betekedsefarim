@@ -1186,13 +1186,15 @@ function filterAndSort(updateURL = true) {
                 if (activeFilters.collection && activeFilters.collection.size > 0) {
                     matchCollection = false;
                     
-                    const collectionColumnsMap = [
-                        { name: "Majer Szapira", index: 29 },          // AD
-                        { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
-                        { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
-                        { name: "Manes Gold", index: 35 },             // AJ
-                        { name: "Arje Cwi Frumer", index: 36 }          // AK
-                    ];
+const collectionColumnsMap = [
+    { name: "Majer Szapira", index: 29 },                 // AD
+    { name: "Icchak Ajzik Pinaj", index: 33 },            // AH
+    { name: "Książnica im. Chafec Chajima", index: 34 },  // AI
+    { name: "Manes Gold", index: 35 },                    // AJ
+    { name: "Arje Cwi Frumer", index: 36 },               // AK
+    { name: "Icek Szejnbrün", index: 37 },                // AL
+    { name: "Abraham Rendler", index: 38 }                // AM
+];
 
                     collectionColumnsMap.forEach(col => {
                         if (activeFilters.collection.has(col.name)) {
@@ -1246,13 +1248,15 @@ function filterAndSort(updateURL = true) {
             const plToHe = { city: {}, author: {} };
             let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
 
-            const collectionColumnsMap = [
-                { name: "Majer Szapira", index: 29 },          // AD
-                { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
-                { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
-                { name: "Manes Gold", index: 35 },             // AJ
-                { name: "Arje Cwi Frumer", index: 36 }          // AK
-            ];
+const collectionColumnsMap = [
+        { name: "Majer Szapira", index: 29 },                 // AD
+        { name: "Icchak Ajzik Pinaj", index: 33 },            // AH
+        { name: "Książnica im. Chafec Chajima", index: 34 },  // AI
+        { name: "Manes Gold", index: 35 },                    // AJ
+        { name: "Arje Cwi Frumer", index: 36 },               // AK
+        { name: "Icek Szejnbrün", index: 37 },                // AL
+        { name: "Abraham Rendler", index: 38 }                // AM
+    ];
 
             searchFiltered.forEach(r => {
                 // 2. Pobranie wartości
@@ -1351,7 +1355,7 @@ function filterAndSort(updateURL = true) {
             // --- RENDEROWANIE INTERFEJSU DLA KOLEKCJI ---
             const collectionListUL = document.getElementById('collectionListPL');
             if (collectionListUL) {
-                const allCollectionNames = ["Arje Cwi Frumer", "Icchak Ajzik Pinaj", "Książnica im. Chafec Chajima", "Majer Szapira", "Manes Gold"];
+                const allCollectionNames = ["Abraham Rendler", "Arje Cwi Frumer", "Icchak Ajzik Pinaj", "Icek Szejnbrün", "Książnica im. Chafec Chajima", "Majer Szapira", "Manes Gold"];
                 allCollectionNames.forEach(name => {
                     if (!counts.collection[name]) counts.collection[name] = 0;
                 });
