@@ -1182,28 +1182,28 @@ function filterAndSort(updateURL = true) {
                     });
 
                 // 4. NOWOŚĆ: Logika dopasowania pod kątem nowej fasetki Kolekcje
-let matchCollection = true;
-if (activeFilters.collection && activeFilters.collection.size > 0) {
-    matchCollection = false;
-    
-    const collectionColumnsMap = [
-        { name: "Majer Szapira", index: 29 },                 // AD
-        { name: "Icchak Ajzik Pinaj", index: 33 },            // AH
-        { name: "Książnica im. Chafec Chajima", index: 34 },  // AI
-        { name: "Manes Gold", index: 35 },                    // AJ
-        { name: "Arje Cwi Frumer", index: 36 },               // AK
-        { name: "Icek Szejnbrün", index: 37 },                // AL
-        { name: "Abraham Rendler", index: 38 }                // AM
-    ];
+                let matchCollection = true;
+                if (activeFilters.collection && activeFilters.collection.size > 0) {
+                    matchCollection = false;
+                    
+                    const collectionColumnsMap = [
+                        { name: "Majer Szapira", index: 29 },          // AD
+                        { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
+                        { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
+                        { name: "Manes Gold", index: 35 },             // AJ
+                        { name: "Arje Cwi Frumer", index: 36 }          // AK
+                    ];
 
-    collectionColumnsMap.forEach(col => {
-        if (activeFilters.collection.has(col.name)) {
-let cellVal = (r.c && r.c[col.index]) ? getVal(r.c[col.index]).trim().toLowerCase() : '';            if (cellVal === 'x') {
-                matchCollection = true;
-            }
-        }
-    });
-}
+                    collectionColumnsMap.forEach(col => {
+                        if (activeFilters.collection.has(col.name)) {
+                            let cellVal = getVal(r.c[col.index]).trim().toLowerCase();
+                            if (cellVal === 'x') {
+                                matchCollection = true;
+                            }
+                        }
+                    });
+                }
+
                 // Zwrócenie wyniku (Uwzględnia nowy filtr na samym końcu)
                 return matchYear && matchCity && matchAuth && matchPrn && matchLoc && matchSubj && matchCollection;
             });
@@ -1246,15 +1246,13 @@ let cellVal = (r.c && r.c[col.index]) ? getVal(r.c[col.index]).trim().toLowerCas
             const plToHe = { city: {}, author: {} };
             let searchFiltered = (term && fuse) ? fuse.search(term).map(r => r.item.original) : rawRows;
 
-const collectionColumnsMap = [
-        { name: "Majer Szapira", index: 29 },                 // AD
-        { name: "Icchak Ajzik Pinaj", index: 33 },            // AH
-        { name: "Książnica im. Chafec Chajima", index: 34 },  // AI
-        { name: "Manes Gold", index: 35 },                    // AJ
-        { name: "Arje Cwi Frumer", index: 36 },               // AK
-        { name: "Icek Szejnbrün", index: 37 },                // AL
-        { name: "Abraham Rendler", index: 38 }                // AM
-    ];
+            const collectionColumnsMap = [
+                { name: "Majer Szapira", index: 29 },          // AD
+                { name: "Icchak Ajzik Pinaj", index: 33 },     // AH
+                { name: "Książnica im. Chafec Chajima", index: 34 }, // AI
+                { name: "Manes Gold", index: 35 },             // AJ
+                { name: "Arje Cwi Frumer", index: 36 }          // AK
+            ];
 
             searchFiltered.forEach(r => {
                 // 2. Pobranie wartości
@@ -1353,7 +1351,7 @@ const collectionColumnsMap = [
             // --- RENDEROWANIE INTERFEJSU DLA KOLEKCJI ---
             const collectionListUL = document.getElementById('collectionListPL');
             if (collectionListUL) {
-                const allCollectionNames = ["Abraham Rendler", "Arje Cwi Frumer", "Icchak Ajzik Pinaj", "Icek Szejnbrün", "Książnica im. Chafec Chajima", "Majer Szapira", "Manes Gold"];
+                const allCollectionNames = ["Arje Cwi Frumer", "Icchak Ajzik Pinaj", "Książnica im. Chafec Chajima", "Majer Szapira", "Manes Gold"];
                 allCollectionNames.forEach(name => {
                     if (!counts.collection[name]) counts.collection[name] = 0;
                 });
@@ -2791,7 +2789,6 @@ if (e.key === "Escape") {
 });
         init();
     </script></body></html>
-
 
 
 
